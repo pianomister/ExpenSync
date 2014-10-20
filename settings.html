@@ -1,0 +1,108 @@
+<!-- Settings -->
+<div class="navbar">
+	<div class="navbar-inner">
+		<div class="left"><a href="#" class="back link"><i class="icon icon-back"></i><span>Menu</span></a></div>
+		<div class="center sliding">Settings</div>
+		<div class="right"><a href="#" class="link" id="settings-button-save">Save</a></div>
+	</div>
+</div>
+<div class="pages">
+	<div data-page="settings" class="page">
+		<div class="page-content">
+
+			<div class="content-block-title">Cost categories</div>
+			<div class="list-block">
+				<ul>
+					<li><a href="settings_categories.html" class="item-link item-content">
+						<div class="item-inner">
+							Manage categories
+						</div>
+					</a></li>
+				</ul>
+			</div>
+
+			<div class="content-block-title">Presets</div>
+			<div class="list-block">
+				<ul>
+					<li><div class="item-content">
+						<div class="item-inner">
+							<div class="item-title label">Balance</div>
+							<div class="item-input">
+								<input type="number" placeholder="-0.00" id="settings-preset_balance">
+							</div>
+						</div>
+					</div></li>
+				</ul>
+				<div class="list-block-label">Add the account balance you had before using this app. So the total balance represents your real account balance.</div>
+			</div>
+			
+			<div class="content-block-title">User interface</div>
+			<div class="list-block">
+				<ul>
+					<li><div class="item-content">
+						<div class="item-inner">
+							<div class="item-title label">Format</div>
+							<div class="item-input">
+								<select id="settings-ui_money_format">
+									<option value="comma">Comma: 1,23</option>
+									<option value="dot">Dot: 1.23</option>
+								</select>
+							</div>
+						</div>
+					</div></li>
+				</ul>
+			</div>
+
+			<div class="content-block-title">Backup &amp; Sync</div>
+			<div class="list-block">
+				<ul>
+					<li><div class="item-content">
+						<div class="item-inner">
+							<div class="item-title label">Enabled</div>
+							<div class="item-input">
+								<label class="label-switch">
+									<input type="checkbox" id="settings-sync_enabled">
+									<div class="checkbox">
+								</label>
+							</div>
+						</div>
+					</div></li>
+					<li><div class="item-content">
+						<div class="item-inner">
+							<div class="item-title label">On startup</div>
+							<div class="item-input">
+								<label class="label-switch">
+									<input type="checkbox" id="settings-sync_startup">
+									<div class="checkbox">
+								</label>
+							</div>
+						</div>
+					</div></li>
+					<!--li><div class="item-content">
+						<div class="item-inner">
+							<div class="item-title label">Continuously</div>
+							<div class="item-input">
+								<label class="label-switch">
+									<input type="checkbox">
+									<div class="checkbox">
+								</label>
+							</div>
+						</div>
+					</div></li-->
+				</ul>
+				<div class="list-block-label">
+					<p>Synchronization will keep alive the connection to Dropbox during app usage. Remember to close this app if you use your device on cellular networks to save traffic.</p>
+				</div>
+			</div>
+			<div class="list-block">
+				<ul><li>
+				<a class="item-link list-button color-red" onclick="deleteLocalDatabase()">Drop local database</a>
+				</li></ul>
+				<div class="list-block-label">
+					<p>This deletes all data you saved locally. Data saved in Dropbox is not affected.</p>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>

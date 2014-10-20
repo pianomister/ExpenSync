@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html manifest="expenses.manifest" class="with-statusbar-overlay">
+  <head>
+    <meta charset="utf-8">
+    <title>ExpenSync</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+	<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="format-detection" content="telephone=no">
+	<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+	<link rel="shortcut icon" href="favicon.ico"/>
+	<!--link rel="apple-touch-startup-image" sizes="640x1136" href="ausgaben_startup1136.png" /-->
+	<link rel="apple-touch-startup-image" sizes="640x920" href="img/startup640x920.png" />
+	<!--link rel="apple-touch-startup-image" sizes="320x460" href="ausgaben_startup460.png" /-->
+    <link rel="stylesheet" href="css/framework7.min.css">
+	<link rel="stylesheet" href="css/framework7.themes.min.css">
+	<link rel="stylesheet" href="css/ionicons.min.css">
+    <link rel="stylesheet" href="css/expenses.css">
+  </head>
+  <body class="theme-white">
+    <!-- Status bar overlay for fullscreen mode-->
+    <div class="statusbar-overlay"></div>
+	<!-- Popup: Edit item -->
+	<div class="popup popup-edit-item">
+		<div class="view navbar-fixed">
+			<div class="pages">
+				<div class="page">
+					<div class="navbar">
+						<div class="navbar-inner">
+							<div class="left">
+                <a class="link popup-edit-item-save" href="#">Save</a>
+              </div>
+							<div class="center">Edit item</div>
+							<div class="right">
+                <a class="link close-popup" href="#">Cancel</a>
+              </div>
+						</div>
+					</div>
+					<div class="page-content">
+
+						<div class="content-block-title">Edit expense</div>
+						<div class="list-block tablet-inset">
+							<ul>
+								<li><div class="item-content">
+									<div class="item-inner">
+										<div class="item-title label">Cost</div>
+										<div class="item-input">
+											<input id="form-edit-price" type="number" placeholder="-0.00">
+										</div>
+									</div>
+								</div></li>
+								<li><div class="item-content">
+									<div class="item-inner">
+										<div class="item-title label">Category</div>
+										<div class="item-input">
+											<select id="form-edit-category">
+											</select>
+										</div>
+									</div>
+								</div></li>
+								<li><div class="item-content">
+									<div class="item-inner">
+										<div class="item-title label">Description</div>
+										<div class="item-input">
+											<input id="form-edit-description" type="text" placeholder="(optional)">
+										</div>
+									</div>
+								</div></li>
+								<li><div class="item-content">
+									<div class="item-inner">
+										<div class="item-title label">Date</div>
+										<div class="item-input">
+											<input id="form-edit-date" type="date" placeholder="(opt. YYYY-MM-DD)">
+										</div>
+									</div>
+								</div></li>
+							</ul>
+						</div>
+						<div class="content-block">
+							<p><a class="button button-big button-fill color-green" id="form-edit-restore">Restore / un-delete</a></p>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <!-- Views-->
+    <div class="views">
+      <!-- Put panels-overlay and left-panel with view inside of views-->
+      <!-- Panels overlay-->
+      <div class="panel-overlay"></div>
+      <!-- Left panel with reveal effect-->
+      <div class="panel panel-left panel-cover layout-dark">
+        <!-- Left view-->
+        <div class="view view-left navbar-through">
+          <div class="navbar">
+            <div class="navbar-inner">
+              <div class="left">
+                <a href="settings.html" class="link icon-only">
+                  <i class="icon ion ion-ios7-gear-outline"></i>
+                </a>
+              </div>
+              <div class="center sliding">Menu</div>
+              <div class="right"></div>
+            </div>
+          </div>
+          <div class="pages">
+            <div data-page="index-left" class="page">
+              <div class="page-content">
+                <div class="content-block-title">Expenses by month</div>
+                <div class="list-block">
+                  <ul id="menu-list">
+                  </ul>
+                </div>
+                <div class="list-block">
+                  <ul>
+                    <li><a href="index.html" data-view=".view-main" class="item-link close-panel">
+                        <div class="item-content">
+                          <div class="item-inner">
+                            <div class="item-title">Overview</div>
+                          </div>
+                        </div></a></li>
+					<li><a href="about.html" data-view=".view-main" class="item-link close-panel">
+                        <div class="item-content">
+                          <div class="item-inner">
+                            <div class="item-title">About</div>
+                          </div>
+                        </div></a></li>
+                  </ul>
+                </div>
+				<div class="content-block">
+					2014 &copy; Stephan Giesau
+				</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Right view, it is main view-->
+      <div class="view view-main navbar-through">
+        <div class="navbar">
+          <div class="navbar-inner">
+            <div class="center sliding">Expenses Overview</div>
+            <div class="right">
+              <a href="#" data-panel="left" class="link open-panel icon-only">
+                <i class="icon icon-bars"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Pages-->
+        <div class="pages">
+          <!-- Page, data-page contains page name-->
+			<div data-page="index-1" class="page">
+				<!-- Scrollable page content-->
+				<div class="page-content">
+					<div class="row">
+						<div class="col-100 tablet-50">
+							<div class="content-block-title">Add new expense</div>
+							<div class="list-block tablet-inset">
+								<ul>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title label">Cost</div>
+											<div class="item-input">
+												<input id="form-add-price" type="number" placeholder="-0.00">
+											</div>
+										</div>
+									</div></li>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title label">Category</div>
+											<div class="item-input">
+												<select id="form-add-category">
+												</select>
+											</div>
+										</div>
+									</div></li>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title label">Description</div>
+											<div class="item-input">
+												<input id="form-add-description" type="text" placeholder="(optional)">
+											</div>
+										</div>
+									</div></li>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title label">Date</div>
+											<div class="item-input">
+												<input id="form-add-date" type="date" placeholder="(opt. YYYY-MM-DD)">
+											</div>
+										</div>
+									</div></li>
+									<li>
+										<a id="form-add-submit" class="list-button item-link">Add item</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-100 tablet-50">
+							<div class="content-block-title">Your balance</div>
+							<div class="list-block tablet-inset">
+								<ul>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title">Total balance</div>
+											<div class="item-after" id="total-balance"></div>
+										</div>
+									</div></li>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title">Current month</div>
+											<div class="item-after" id="total-balance-month"></div>
+										</div>
+									</div></li>
+									<li><div class="item-content">
+										<div class="item-inner">
+											<div class="item-title">Last month's total</div>
+											<div class="item-after" id="total-balance-lastmonth"></div>
+										</div>
+									</div></li>
+								</ul>
+							</div>
+
+							<div class="content-block-title">Backup &amp; Sync</div>
+							<div class="content-block index-sync">
+								<p><a class="button" onclick="syncInit();">Sync now with Dropbox</a></p>
+								<p>You might be asked to login with Dropbox first before you can use synchronization.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+        </div>
+      </div>
+    </div>
+    <!-- Path to JS Libraries -->
+	<script type="text/javascript" src="js/framework7.min.js"></script>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/localstoragedb.min.js"></script>
+	<script type="text/javascript" src="js/dropbox-datastores-1.2.0.js"></script>
+	<script type="text/javascript" src="js/md5.js"></script>
+	<script type="text/javascript" src="js/expenses-backend.js"></script>
+	<script type="text/javascript" src="js/expenses-sync.js"></script>
+    <script type="text/javascript" src="js/expenses-frontend.js"></script>
+  </body>
+</html>

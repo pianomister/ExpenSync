@@ -1,0 +1,27 @@
+CACHE MANIFEST
+css/expenses.css
+css/framework7.min.css
+css/framework7.themes.min.css
+css/ionicons.min.css
+fonts/ionicons.eot
+fonts/ionicons.svg
+fonts/ionicons.ttf
+fonts/ionicons.woff
+js/md5.js
+js/expenses-backend.js
+js/expenses.js
+js/expenses-sync.js
+js/jquery.min.js
+js/framework7.min.js
+js/localstoragedb.min.js
+js/dropbox-datastores-1.2.0.js
+img/startup640x920.png
+index.html
+about.html
+settings.html
+settings_categories.html
+
+NETWORK:
+*
+
+#19.10.2014 01:25

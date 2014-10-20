@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="44"
+   height="44"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="icon_expenses.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.5"
+     inkscape:cx="862.06315"
+     inkscape:cy="333.46045"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:snap-global="true"
+     inkscape:object-nodes="true" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-244.11356,-68.719322)">
+    <rect
+       style="fill:#3399cc;fill-opacity:1;stroke:none"
+       id="rect2998"
+       width="144"
+       height="144"
+       x="149.90182"
+       y="24.219322"
+       inkscape:export-filename="C:\xampp\htdocs\expenses\img\icon256.png"
+       inkscape:export-xdpi="160"
+       inkscape:export-ydpi="160" />
+    <text
+       xml:space="preserve"
+       style="font-size:226.21817017px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Set Pro;-inkscape-font-specification:Myriad Set Pro"
+       x="125.12045"
+       y="196.93506"
+       id="text2994"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.96592583,-0.25881905,0.25881905,0.96592583,0,0)"><tspan
+         sodipodi:role="line"
+         id="tspan2996"
+         x="125.12045"
+         y="196.93506">€</tspan></text>
+    <rect
+       y="24.219322"
+       x="397.38919"
+       height="144"
+       width="144"
+       id="rect3768"
+       style="fill:#3399cc;fill-opacity:1;stroke:none"
+       inkscape:export-filename="C:\xampp\htdocs\expenses\apple-touch-icon.png"
+       inkscape:export-xdpi="95"
+       inkscape:export-ydpi="95" />
+    <path
+       style="font-size:226.21817017px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Set Pro;-inkscape-font-specification:Myriad Set Pro"
+       d="M 175.78125 -44.5 C 172.11567 -34.507997 170.8749 -22.325252 172.125 -7.9375 L 158.375 -4.25 L 158.59375 6.21875 L 173.46875 2.21875 C 173.8295 4.1519686 174.23435 6.1404745 174.6875 8.125 C 175.14066 10.109688 175.64074 12.115798 176.1875 14.15625 C 176.46028 15.174366 176.72662 16.198558 177 17.21875 C 177.27338 18.239085 177.63495 19.312133 178.09375 20.4375 L 165.4375 23.8125 L 165.65625 34.3125 L 181.40625 30.09375 C 195.91469 66.173186 217.9591 80.236332 247.53125 72.3125 C 260.20556 68.916426 268.92979 63.691481 273.75 56.625 L 267.1875 45.28125 C 261.15509 51.895894 253.9918 56.306132 245.6875 58.53125 C 225.58446 63.917855 209.7648 52.915693 198.21875 25.5625 L 242.59375 13.6875 L 241.46875 3.4375 L 194.71875 15.96875 C 194.25993 14.843387 193.89836 13.77034 193.625 12.75 C 193.3516 11.729813 193.05402 10.70562 192.78125 9.6875 C 192.23447 7.6470525 191.73439 5.640942 191.28125 3.65625 C 190.82808 1.671729 190.42323 -0.28552696 190.0625 -2.21875 L 241 -15.84375 L 240.75 -26.34375 L 188.96875 -12.46875 C 188.01517 -25.727133 189.43589 -36.399086 193.21875 -44.5 L 175.78125 -44.5 z "
+       transform="translate(244.11356,68.719322)"
+       id="text3770" />
+    <rect
+       y="-791.7807"
+       x="719.90179"
+       height="960"
+       width="640"
+       id="rect2987"
+       style="fill:#3399cc;fill-opacity:1;stroke:none"
+       inkscape:export-filename="C:\xampp\htdocs\expenses\img\startup640x960.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <rect
+       inkscape:export-ydpi="90"
+       inkscape:export-xdpi="90"
+       inkscape:export-filename="C:\xampp\htdocs\expenses\img\startup640x920.png"
+       style="fill:#3399cc;fill-opacity:1;stroke:none"
+       id="rect3779"
+       width="640"
+       height="920"
+       x="719.90179"
+       y="-751.7807" />
+    <g
+       id="g3771"
+       transform="translate(0,-48.981651)">
+      <g
+         transform="translate(570.5126,-408.00002)"
+         id="g2993">
+        <rect
+           inkscape:export-ydpi="95"
+           inkscape:export-xdpi="95"
+           inkscape:export-filename="C:\xampp\htdocs\expenses\apple-touch-icon.png"
+           style="fill:#3399cc;fill-opacity:1;stroke:none"
+           id="rect2989"
+           width="144"
+           height="144"
+           x="397.38919"
+           y="24.219322" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path2991"
+           transform="translate(244.11356,68.719322)"
+           d="m 175.78125,-44.5 c -3.66558,9.992003 -4.90635,22.174748 -3.65625,36.5625 l -13.75,3.6875 0.21875,10.46875 14.875,-4 c 0.36075,1.9332186 0.7656,3.9217245 1.21875,5.90625 0.45316,1.984688 0.95324,3.990798 1.5,6.03125 0.27278,1.018116 0.53912,2.042308 0.8125,3.0625 0.27338,1.020335 0.63495,2.093383 1.09375,3.21875 l -12.65625,3.375 0.21875,10.5 15.75,-4.21875 c 14.50844,36.079436 36.55285,50.142582 66.125,42.21875 12.67431,-3.396074 21.39854,-8.621019 26.21875,-15.6875 l -6.5625,-11.34375 c -6.03241,6.614644 -13.1957,11.024882 -21.5,13.25 -20.10304,5.386605 -35.9227,-5.615557 -47.46875,-32.96875 l 44.375,-11.875 -1.125,-10.25 -46.75,12.53125 c -0.45882,-1.125363 -0.82039,-2.19841 -1.09375,-3.21875 -0.2734,-1.020187 -0.57098,-2.04438 -0.84375,-3.0625 -0.54678,-2.0404475 -1.04686,-4.046558 -1.5,-6.03125 -0.45317,-1.984521 -0.85802,-3.94177696 -1.21875,-5.875 l 50.9375,-13.625 -0.25,-10.5 -51.78125,13.875 c -0.95358,-13.258383 0.46714,-23.930336 4.25,-32.03125 l -17.4375,0 z"
+           style="font-size:226.21817017px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Set Pro;-inkscape-font-specification:Myriad Set Pro" />
+        <rect
+           y="24.219322"
+           x="397.38919"
+           height="144"
+           width="144"
+           id="rect3769"
+           style="fill:none;stroke:#ffffff;stroke-width:2;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+           inkscape:export-filename="C:\xampp\htdocs\expenses\apple-touch-icon.png"
+           inkscape:export-xdpi="95"
+           inkscape:export-ydpi="95" />
+      </g>
+      <text
+         sodipodi:linespacing="125%"
+         id="text2997"
+         y="-155.56992"
+         x="885.91541"
+         style="font-size:67.05774689px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Pro;-inkscape-font-specification:Myriad Pro"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;fill-opacity:1;font-family:Myriad Pro;-inkscape-font-specification:Myriad Pro"
+           y="-155.56992"
+           x="885.91541"
+           id="tspan2999"
+           sodipodi:role="line">ExpenSync</tspan></text>
+    </g>
+  </g>
+</svg>
