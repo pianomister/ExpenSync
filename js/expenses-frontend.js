@@ -1,5 +1,5 @@
 properties = {
-	version: '0.1',
+	version: '0.2',
 	name: 'ExpenSync',
 	developer: 'Stephan Giesau',
 	website: 'http://www.stephan-giesau.de/',
@@ -62,7 +62,7 @@ if( db.isNew() ) {
 	dateNow = Date.now();
 	_categories = ["Other", "Groceries", "Canteen", "Eating Out", "Fun", "Clothing", "Car", "Transport", "Travel", "Household", "Salary", "Finance", "Medical", "Education", "Rent / Loan", "Communication"];
 	_cat_icons  = ["ion-ios7-more", "ion-ios7-cart", "ion-fork", "ion-ios7-wineglass", "ion-ios7-musical-notes", "ion-ios7-pricetags", "ion-model-s", "ion-plane", "ion-map", "ion-ios7-home", "ion-ios7-briefcase", "ion-cash", "ion-ios7-medkit", "ion-university", "ion-ios7-home", "ion-ios7-telephone"];
-	
+
 	for(i = 0; i < _categories.length; i++) {
 
 		db.insert("category", {
@@ -74,10 +74,10 @@ if( db.isNew() ) {
 			disabled: false
 		});
 	}
-	
+
 	// create "item" table
     db.createTable("item", ['uniqueid', "timestamp", "lastupdate", "category", "price", "description", "deleted"]);
-	
+
     db.commit();
 }
 
@@ -97,18 +97,18 @@ function createUniqueid(timestamp, salt) {
  * returns a price, suitable colored and currency format
  */
 function formatPrice(price) {
-	
+
 	colorClass = 'green';
 	if(price < 0)
 		colorClass = 'red';
-	
+
 	formattedPrice = parseFloat(price).toFixed(2);
-	
+
 	// get number format from settings
 	money_format = db.query('settings', {key: 'ui_money_format'});
 	if(money_format[0].value == 'comma')
 		formattedPrice = formattedPrice.replace('.', ',');
-	
+
 	return '<span class="color-' + colorClass + '">' + formattedPrice + '</span>';
 }
 
@@ -125,19 +125,19 @@ function formatDate(dateString, forFieldInput) {
 	forFieldInput = forFieldInput || false;
 
 	date = new Date(dateString);
-	
+
 	day = date.getDate();
 	if((day+'').length == 1) day = '0'+day;
-	
+
 	month = date.getMonth()+1; // month is 0-based
 	if((month+'').length == 1) month = '0'+month;
-	
+
 	hours = date.getHours();
 	if((hours+'').length == 1) hours = '0'+hours;
-	
+
 	minutes = date.getMinutes();
 	if((minutes+'').length == 1) minutes = '0'+minutes;
-	
+
 	if(forFieldInput)
 		return date.getFullYear() + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
 	else
@@ -163,19 +163,19 @@ function createCategoryOptions(domElement, selectedID, appendZero) {
 
 	// empty dropdown list
 	$list.empty();
-	
+
 	// if zero element should be appended
 	if(appendZero)
 	$list.append(
 		$('<option>').val(0).text('All')
 	);
-	
+
 	var categories = db.query('category');
 
 	for(i = 0; i < categories.length; i++) {
-	
+
 		var $option = $('<option>').val(categories[i].ID).text(categories[i].description)
-		
+
 		// select entry if defined
 		if(selectedID && selectedID == categories[i].ID)
 			$option.attr('selected', 'selected');
@@ -192,10 +192,10 @@ function createCategoryOptions(domElement, selectedID, appendZero) {
  * @return false if invalid, else an object with validated and formatted values
  */
 function validateItemForm(price, category, description, date, deleted) {
-		
+
 	var validPrice, validCategory, validDescription, validDate, validDeleted;
 	deleted = deleted || false;
-	
+
 	// check if minimum input (price) is given
 	if(price != 0 && price != null && parseFloat(price) != NaN && price.length != 0) {
 
@@ -203,14 +203,14 @@ function validateItemForm(price, category, description, date, deleted) {
 		validCategory = parseInt(category);
 		validDescription = description;
 		validDeleted = (deleted == 'true');
-	
+
 		// check if date is given, if yes, try to parse it
 		if(date == undefined || date == null || date.length == 0 || Date.parse(date) == NaN) {
 			validDate = Date.now();
 		} else {
 			validDate = Date.parse(date);
 		}
-		
+
 		var returnObj = {
 			price: validPrice,
 			category: validCategory,
@@ -218,10 +218,9 @@ function validateItemForm(price, category, description, date, deleted) {
 			date: validDate,
 			deleted: validDeleted
 		};
-		//TODO
-		console.log(returnObj);
+
 		return returnObj;
-		
+
 	} else {
 		expApp.alert('Please fill in a cost.');
 	}
@@ -239,10 +238,10 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 	// calculate list balance
 	var listBalance = 0;
-	
+
 	// get categories
 	var _category = db.queryAll('category', {sort: [['ID', 'ASC']]});
-		
+
 	// get items according to request params
 	items = db.queryAll('item', { query: itemQuery,
 								  sort: itemSort,
@@ -251,12 +250,12 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 	// add items to expenses list
 	for(i = 0; i < items.length; i++) {
-		
+
 		var row = items[i];
 		var rowCategory = _category[row.category-1];
 		var description = row.description;
 		var category = ' | ' + rowCategory.description;
-		
+
 		if(description == null || description.length == 0) {
 			description = '<span class="color-gray">' + rowCategory.description + '</span>';
 			category = '';
@@ -282,67 +281,67 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			'	</div>' +
 			'</li>'
 		);
-		
+
 		// add cost to list balance
 		listBalance += row.price;
 	}
-	
+
 	//flush list to DOM element
 	$(domList).html( $list.html() );
 
 	// output list balance
 	$balance.html( formatPrice(listBalance) );
-	
+
 	// handler for editing items - open popup
 	$$('.page-expenses-list .edit-item').on('click', function (e) {
-	
+
 		var editID = $(e.target).attr('data-uniqueid');
-		
+
 		// get item data and fill in the form on popup
 		var editItem = db.query('item', {uniqueid: editID})[0];
-		
+
 		$('.popup-edit-item').attr('data-uniqueid', editID);
 		$('.popup-edit-item #form-edit-price').val(editItem.price);
 		$('.popup-edit-item #form-edit-description').val(editItem.description);
 		$('.popup-edit-item #form-edit-date').val( formatDate(editItem.timestamp, true) );
 		$('.popup-edit-item').attr('data-deleted', editItem.deleted);
 		createCategoryOptions( $('.popup-edit-item #form-edit-category'), editItem.category );
-		
+
 		// if deleted, show restore button and add restore handler
 		if( editItem.deleted ) {
-		
+
 			$('.popup-edit-item #form-edit-restore').show();
-			
+
 			$('.popup-edit-item #form-edit-restore').on('click', function(e) {
-			
+
 				$('.popup-edit-item').attr('data-deleted', false);
 				$('.popup-edit-item-save').click();
 			});
-			
+
 		} else {
-		
+
 			$('.popup-edit-item #form-edit-restore').hide();
 		}
-		
+
 		// save handler
 		$('.popup-edit-item-save').on('click', function(e) {
-		
+
 			e.preventDefault();
 			var editID = $('.popup-edit-item').attr('data-uniqueid');
-			
+
 			if(editID.length > 1) {
-			
+
 				// TODO refactoring: mit validierung von form-add zusammenlegen
 				var newPrice = $('.popup-edit-item #form-edit-price').val();
 				var newCategory = $('.popup-edit-item #form-edit-category').val();
 				var newDescription = $('.popup-edit-item #form-edit-description').val();
 				var newDate = $('.popup-edit-item #form-edit-date').val();
 				var newDeleted = $('.popup-edit-item').attr('data-deleted');
-				
+
 				var validItem = validateItemForm(newPrice, newCategory, newDescription, newDate, newDeleted);
-				
+
 				if(validItem) {
-				
+
 					db.update('item', {uniqueid: editID},
 						function(row) {
 							row.price = validItem.price;
@@ -356,29 +355,29 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 					db.commit();
 					console.log( db.query('item',{uniqueid:editID})[0].lastupdate - Date.now() );//TODO
 				}
-				
+
 				expApp.closeModal('.popup-edit-item');
-				
+
 				//TODO re-render list and menu to update everything
 				pageIndexLeft.trigger();
 				pageIndex.trigger();
 			}
 		});
-		
+
 		expApp.popup('.popup-edit-item');
-		
+
 		if(properties.debug) {//TODO
 			expApp.alert( 'ID: ' + editID + '<br>Lastupdate: ' + editItem.lastupdate );
 		}
 	});
-	
+
 	// handler for deleting items
 	$$('.page-expenses-list .swipeout').on('deleted', function (e) {
-	
+
 		delID = $(e.target).attr('data-uniqueid');
-		
+
 		console.log('deleted item ', delID);
-	
+
 		// mark item as deleted
 		db.update('item', {uniqueid: delID},
 			function(row) {
@@ -388,16 +387,16 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			});
 		db.commit();
 		delItem = db.query('item', {uniqueid: delID});
-		
+
 		// get category description
 		delItemCategory = db.query('category', {ID: delItem[0].category});
-		
+
 		// set item description if available
 		notificationDescription = '';
 		if(delItem[0].description != null && delItem[0].description.length != 0) {
 			notificationDescription = ': ' + delItem[0].description;
 		}
-		
+
 		//trigger refresh of menu
 		pageIndexLeft.trigger();
 		pageIndex.trigger();
@@ -408,7 +407,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			message: formatPrice(delItem[0].price) + '</span> for <span class="color-blue">' + delItemCategory[0].description + '</span>' + notificationDescription,
 			hold: 1000
 		});
-		
+
 	});
 }
 
@@ -443,10 +442,10 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 	entriesAvailable = false;
 
 	for(i = 15; i >= 0; i--) {
-		
-		startDate.setFullYear(currentYear, currentMonth);	
+
+		startDate.setFullYear(currentYear, currentMonth);
 		endDate.setFullYear(currentYear, currentMonth+1);
-		
+
 		// create menu link label and data object (is given to expenses page)
 		// data object contains information which list to show
 		monthLabel = i18n.month[currentMonth] + ' ' + currentYear;
@@ -456,7 +455,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 			end: endDate.getTime(),
 			title: monthLabel
 		};
-		
+
 		// get items for current month
 		monthBalance = 0;
 		monthItems = db.query('item',
@@ -469,9 +468,9 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 		// only generate link if month has items
 		if(monthItems.length > 0) {
-			
+
 			entriesAvailable = true;
-		
+
 			// calculate month balance
 			for(j = 0; j < monthItems.length; j++) {
 				monthBalance += monthItems[j].price;
@@ -486,17 +485,17 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 				'</div></a></li>'
 			);
 		}
-			
+
 		currentMonth--;
 		if(currentMonth == -1) {
 			currentMonth = 11;
 			currentYear--;
 		}
 	}
-	
+
 	// if no entries found, show notice
 	if(!entriesAvailable) {
-	
+
 		$('#menu-list').append(
 			'<li><div class="item-content">' +
 			'	<div class="item-inner">' +
@@ -505,7 +504,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 		);
 	// if entries, show additional sortings.
 	} else {
-		
+
 		$('#menu-list').append(
 				'<li><a href="expenses-list.html?request=lastupdate" data-view=".view-main" class="item-link close-panel item-content">' +
 				'	<div class="item-inner">' +
@@ -536,16 +535,16 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function() {
-		
+
 		addPrice = $(page.container).find('#form-add-price').val();
 		addCategory = $(page.container).find('#form-add-category').val();
 		addDescription = $(page.container).find('#form-add-description').val();
 		addDate = $(page.container).find('#form-add-date').val();
-		
+
 		var validItem = validateItemForm(addPrice, addCategory, addDescription, addDate, false);
-		
+
 		if(validItem) {
-		
+
 			// insert new item in DB
 			addID = db.insert('item', {
 				uniqueid: createUniqueid( Date.now(), addDate+addDescription+addPrice+addCategory ),
@@ -557,30 +556,30 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 				deleted: false
 			});
 			db.commit();
-			
+
 			addCategoryDescription = db.query('category', {ID: addCategory});
-			
+
 			notificationDescription = '';
 			if(addDescription != null && addDescription.length != 0) {
 				notificationDescription = ': ' + addDescription;
 			}
-			
+
 			expApp.addNotification({
 				title: 'Expense added',
 				message: formatPrice(addPrice) + ' for <span class="color-blue">' + addCategoryDescription[0].description + '</span>' + notificationDescription,
 				hold: 1000
 			});
-			
+
 			//trigger refresh of menu
 			pageIndexLeft.trigger();
-			pageIndex.trigger();			
+			pageIndex.trigger();
 		}
 	});
-	
+
 	// hide sync options if disabled
 	if( !getSettings('sync_enabled') )
 		$('.index-sync').html('<p>You can synchronize all expenses with your Dropbox. Enable Synchronization in <a href="settings.html" data-view=".view-left" class="open-panel">settings</a>.</p>');
-	
+
 	// calculate balances
 	// total balance
 	allItems = db.query('item', {deleted: false});
@@ -590,7 +589,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 		totalBalance += allItems[i].price;
 	}
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
-	
+
 	// current month's balance
 	currentMonth = (new Date()).getMonth();
 	currentYear = (new Date()).getFullYear();
@@ -608,11 +607,11 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 			}
 		});
 	currentBalance = 0;
-	for(i = 0; i < currentItems.length; i++) {		
+	for(i = 0; i < currentItems.length; i++) {
 		currentBalance += currentItems[i].price;
 	}
 	$(page.container).find('#total-balance-month').html( formatPrice(currentBalance) );
-	
+
 	// last month's total balance
 	lastBalance = totalBalance - currentBalance;
 	$(page.container).find('#total-balance-lastmonth').html( formatPrice(lastBalance) );
@@ -621,18 +620,18 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 /* ===== expenses-list ===== */
 expApp.onPageInit('expenses-list', function (page) {
-    
+
 	//TODO
 	console.debug(page.query);
-	
+
 	// add categories to dropdown select
 	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
 
-	// category select dropdown	
+	// category select dropdown
 	/*$(page.container).find('#expenses-list-category').on('change', function(e) {
-	
+
 		var catID = $(e.delegateTarget).val();
-		
+
 		page.query.category = catID;
 		mainView.loadPage('expenses-list.html?' + $.param(page.query));
 	});*/
@@ -642,19 +641,19 @@ expApp.onPageInit('expenses-list', function (page) {
 	itemQuery = {deleted: false};
 	itemSort = [['timestamp', 'DESC']];
 	itemLimit = null;
-	
+
 	// override standards for special conditions
 	switch(page.query.request) {
-		
+
 		case 'timerange':
-		
+
 			// if no range is defined, get latest
 			if(page.query.start == null || page.query.end == null) {
 				itemLimit = 50;
 				page.query.title = 'Latest by date (error)';
 				break;
 			}
-		
+
 			itemQuery = function(row) {
 					if(!row.deleted &&
 						row.timestamp >= page.query.start &&
@@ -664,7 +663,7 @@ expApp.onPageInit('expenses-list', function (page) {
 						return false;
 				};
 			break;
-			
+
 		case 'deleted':
 			itemQuery = {deleted: true};
 			itemSort = [['lastupdate', 'DESC']];
@@ -684,13 +683,13 @@ expApp.onPageInit('expenses-list', function (page) {
 			page.query.title = 'Latest by date';
 			break;
 	}
-	
+
 	// add page title
 	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
 
 	// add items to list
 	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, $(page.container).find('#expenses-list-balance') );
-	
+
 });
 
 
@@ -700,29 +699,29 @@ expApp.onPageInit('expenses-list', function (page) {
 
 /* ===== settings ===== */
 expApp.onPageInit('settings', function (page) {
-	
+
 	// load settings
 	settings_rows = db.query('settings');
 	settings = [];
-	
+
 	for(i = 0; i < settings_rows.length; i++) {
 
 		settings[ settings_rows[i].key ] = settings_rows[i].value;
 	}
-	
+
 	$('#settings-preset_balance').val( settings['preset_balance'] );
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
-	
+
 	if(settings['sync_enabled'])
 		$('#settings-sync_enabled').prop('checked', 'checked');
-	
+
 	if(settings['sync_startup'])
 		$('#settings-sync_startup').prop('checked', 'checked');
-	
-	
+
+
 	// save settings
 	$('#settings-button-save').on('click', function() {
-		
+
 		db.update('settings',
 			{key: 'preset_balance'},
 			function(row) {
@@ -748,7 +747,7 @@ expApp.onPageInit('settings', function (page) {
 				return row;
 			});
 		db.commit();
-		
+
 		expApp.addNotification({
 			title: 'Settings saved',
 			message: 'Some settings require a reload.',
@@ -768,9 +767,9 @@ expApp.onPageInit('settings-categories', function (page) {
 	_category = db.queryAll('category', {sort: [['ID', 'DESC']]});
 
 	for(i = 0; i < _category.length; i++) {
-	
+
 		cat = _category[i];
-		
+
 		checked = cat.disabled ? '' : ' checked="checked"';
 
 		$('#settings-categories-list').prepend(
@@ -780,10 +779,10 @@ expApp.onPageInit('settings-categories', function (page) {
 			'		<div class="item-media">' +
 			'			<i class="icon icon-form-checkbox"></i>' +
 			'		</div>' +
-			'		<div class="item-inner">' + 
+			'		<div class="item-inner">' +
 			'			<div class="item-title">' + cat.description + '</div>' +
 			'			<div class="item-after">' +
-			'				<i class="icon ion ' + cat.icon + '"></i>' +			
+			'				<i class="icon ion ' + cat.icon + '"></i>' +
 			'			</div>' +
 			'		</div>' +
 			'	</label>' +
