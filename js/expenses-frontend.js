@@ -365,10 +365,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		});
 
 		expApp.popup('.popup-edit-item');
-
-		if(properties.debug) {//TODO
-			expApp.alert( 'ID: ' + editID + '<br>Lastupdate: ' + editItem.lastupdate );
-		}
 	});
 
 	// handler for deleting items
@@ -534,7 +530,14 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	createCategoryOptions( $(page.container).find('#form-add-category') );
 
 	// add expense form: submit handler
-	$(page.container).find('#form-add-submit').on('click', function() {
+	$(page.container).find('#form-add-submit').on('click', function(e) {
+
+		// disable button to prevent multiple entries (by accident)
+		that = $( e.target );
+		that.addClass('disabled');
+		window.setTimeout(function() {
+			that.removeClass('disabled');
+		}, 1000);
 
 		addPrice = $(page.container).find('#form-add-price').val();
 		addCategory = $(page.container).find('#form-add-category').val();

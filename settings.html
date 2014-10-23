@@ -35,7 +35,7 @@
 				</ul>
 				<div class="list-block-label">Add the account balance you had before using this app. So the total balance represents your real account balance.</div>
 			</div>
-			
+
 			<div class="content-block-title">User interface</div>
 			<div class="list-block">
 				<ul>
@@ -95,11 +95,16 @@
 				</div>
 			</div>
 			<div class="list-block">
-				<ul><li>
-				<a class="item-link list-button color-red" onclick="deleteLocalDatabase()">Drop local database</a>
-				</li></ul>
+				<ul>
+					<li>
+						<a class="item-link list-button" onclick="syncSignOut()">Sign out from Dropbox</a>
+					</li>
+					<li>
+						<a class="item-link list-button color-red" onclick="deleteLocalDatabase()">Drop local database</a>
+					</li>
+				</ul>
 				<div class="list-block-label">
-					<p>This deletes all data you saved locally. Data saved in Dropbox is not affected.</p>
+					<p>Dropping deletes all data you saved locally. Data saved in Dropbox is not affected.</p>
 				</div>
 			</div>
 
