@@ -37,6 +37,17 @@ var expApp = new Framework7({
 // Export selectors engine
 var $$ = Dom7;
 
+// Add views
+var leftView = expApp.addView('.view-left', {
+		// Because we use fixed-through navbar we can enable dynamic navbar
+		dynamicNavbar: true
+});
+var mainView = expApp.addView('.view-main', {
+		// Because we use fixed-through navbar we can enable dynamic navbar
+		dynamicNavbar: true
+});
+
+
 // Load DB
 // Initialise. If the database doesn't exist, it is created
 var db = new localStorageDB("expenSync", localStorage);
@@ -57,7 +68,7 @@ if( db.isNew() ) {
     db.createTableWithData('settings', settings_rows);
 
     // create 'category' table
-    db.createTable("category", ["timestamp", "lastupdate", "description", "icon", "order", "disabled"]);
+    db.createTable('category', ['uniqueid', 'timestamp', 'lastupdate', 'synchronized', 'description', 'icon', 'order', 'disabled']);
 
 	dateNow = Date.now();
 	_categories = ["Other", "Groceries", "Canteen", "Eating Out", "Fun", "Clothing", "Car", "Transport", "Travel", "Household", "Salary", "Finance", "Medical", "Education", "Rent / Loan", "Communication"];
@@ -66,8 +77,10 @@ if( db.isNew() ) {
 	for(i = 0; i < _categories.length; i++) {
 
 		db.insert("category", {
+			uniqueid: createUniqueid( i, i, true ),
 			timestamp: i,
 			lastupdate: i,
+			synchronized: true,
 			description: _categories[i],
 			icon: _cat_icons[i],
 			order: i+1,
@@ -75,8 +88,8 @@ if( db.isNew() ) {
 		});
 	}
 
-	// create "item" table
-    db.createTable("item", ['uniqueid', "timestamp", "lastupdate", "category", "price", "description", "deleted"]);
+	// create 'item' table
+    db.createTable('item', ['uniqueid', "timestamp", "lastupdate", 'synchronized', "category", "price", "description", "deleted"]);
 
     db.commit();
 }
@@ -86,9 +99,15 @@ if( db.isNew() ) {
 /**
  * create a unique ID for items based on time, a given salt and browser's user agent
  */
-function createUniqueid(timestamp, salt) {
+function createUniqueid(timestamp, salt, noUserAgent) {
 
-	return calcMD5(timestamp + salt + navigator.userAgent);
+	noUserAgent = noUserAgent || false;
+
+	var str = '' + timestamp + salt;
+	if(!noUserAgent)
+		str += navigator.userAgent;
+
+	return calcMD5( str );
 }
 
 
@@ -155,10 +174,11 @@ function formatDate(dateString, forFieldInput) {
  * @param {int} selectedID (optional) ID number of category to select
  * @param {boolean} appendZero true if entry with ID 0 (= All) should be prepended
  */
-function createCategoryOptions(domElement, selectedID, appendZero) {
+function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
 
 	selectedID = selectedID || false;
 	appendZero = appendZero || false;
+	allEntries = allEntries || false;
 	var $list = $(domElement);
 
 	// empty dropdown list
@@ -170,7 +190,11 @@ function createCategoryOptions(domElement, selectedID, appendZero) {
 		$('<option>').val(0).text('All')
 	);
 
-	var categories = db.query('category');
+	var catQuery = {disabled: false};
+	if(allEntries)
+		catQuery = null;
+
+	var categories = db.queryAll('category', {query: catQuery, sort: [['order', 'ASC']]});
 
 	for(i = 0; i < categories.length; i++) {
 
@@ -230,11 +254,22 @@ function validateItemForm(price, category, description, date, deleted) {
 
 
 
-function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance) {
+/**
+ * Creates an HTML list of items, based on given parameters for the query
+ *
+ * @param {domSelector/jQueryObject} domList Element to be filled with the result list
+ * @param {object/function} itemQuery Query to select items from database, or null for all
+ * @param {array} itemSort Sorting parameters, or null
+ * @param {object} itemLimit Limit for the result array
+ * @param {domSelector/jQueryObject} domBalance Element to put the list balance in
+ */
+function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete) {
 
 	domBalance = domBalance || false;
+	noDelete = noDelete || false;
 	$list = $('<div />');
-	$balance = $(domBalance);
+	if(domBalance)
+		$balance = $(domBalance);
 
 	// calculate list balance
 	var listBalance = 0;
@@ -261,6 +296,11 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			category = '';
 		}
 
+		// don't add delete button, if param is set
+		var deleteButton = '<a class="swipeout-delete swipeout-overswipe" data-confirm="Are you sure that you want to delete this item?" href="">Delete</a>';
+		if(noDelete)
+			deleteButton = '';
+
 		$list.append(
 			'<li class="swipeout" data-uniqueid="' + row.uniqueid + '">' +
 			'	<div class="swipeout-content item-content">' +
@@ -277,7 +317,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			'	</div>' +
 			'	<div class="swipeout-actions-right">' +
 			'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '">Edit</a>' +
-			'		<a class="swipeout-delete swipeout-overswipe" data-confirm="Are you sure that you want to delete this item?" href="">Delete</a>' +
+					deleteButton +
 			'	</div>' +
 			'</li>'
 		);
@@ -290,7 +330,8 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	$(domList).html( $list.html() );
 
 	// output list balance
-	$balance.html( formatPrice(listBalance) );
+	if(domBalance)
+		$balance.html( formatPrice(listBalance) );
 
 	// handler for editing items - open popup
 	$$('.page-expenses-list .edit-item').on('click', function (e) {
@@ -331,7 +372,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 			if(editID.length > 1) {
 
-				// TODO refactoring: mit validierung von form-add zusammenlegen
 				var newPrice = $('.popup-edit-item #form-edit-price').val();
 				var newCategory = $('.popup-edit-item #form-edit-category').val();
 				var newDescription = $('.popup-edit-item #form-edit-description').val();
@@ -350,6 +390,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							row.timestamp = validItem.date;
 							row.deleted = validItem.deleted;
 							row.lastupdate = Date.now();
+							row.synchronized = false;
 							return row;
 						});
 					db.commit();
@@ -379,6 +420,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			function(row) {
 				row.deleted = true;
 				row.lastupdate = Date.now();
+				row.synchronized = false;
 				return row;
 			});
 		db.commit();
@@ -413,19 +455,11 @@ if(properties.debug)
 
 
 
-// Add views
-var leftView = expApp.addView('.view-left', {
-    // Because we use fixed-through navbar we can enable dynamic navbar
-    dynamicNavbar: true
-});
-var mainView = expApp.addView('.view-main', {
-    // Because we use fixed-through navbar we can enable dynamic navbar
-    dynamicNavbar: true
-});
 
 
-
-/* ===== Menu index left ===== */
+//////////////////////////////////////////////////////////////////
+// index-left menu                                              //
+//////////////////////////////////////////////////////////////////
 pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 	// generate links to expenses in menu
@@ -520,7 +554,9 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 
 
-/* ===== Index overview ===== */
+//////////////////////////////////////////////////////////////////
+// Index                                                        //
+//////////////////////////////////////////////////////////////////
 pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 	// assume main view if page is not defined
@@ -553,6 +589,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 				uniqueid: createUniqueid( Date.now(), addDate+addDescription+addPrice+addCategory ),
 				timestamp: validItem.date,
 				lastupdate: Date.now(),
+				synchronized: false,
 				category: validItem.category,
 				price: validItem.price,
 				description: validItem.description,
@@ -621,11 +658,15 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 });
 
 
-/* ===== expenses-list ===== */
+
+//////////////////////////////////////////////////////////////////
+// expenses-list                                                //
+//////////////////////////////////////////////////////////////////
 expApp.onPageInit('expenses-list', function (page) {
 
 	//TODO
-	console.debug(page.query);
+	window.currentPageQuery = page.query;
+	console.debug(page.query, window.currentPageQuery);
 
 	// add categories to dropdown select
 	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
@@ -641,9 +682,11 @@ expApp.onPageInit('expenses-list', function (page) {
 
 	// evaluate page params to determine what to display
 	// standard values
-	itemQuery = {deleted: false};
-	itemSort = [['timestamp', 'DESC']];
-	itemLimit = null;
+	var itemQuery = {deleted: false};
+	var itemSort = [['timestamp', 'DESC']];
+	var itemLimit = null;
+	var itemDomBalance = $(page.container).find('#expenses-list-balance');
+	var itemNoDelete = false;
 
 	// override standards for special conditions
 	switch(page.query.request) {
@@ -671,6 +714,8 @@ expApp.onPageInit('expenses-list', function (page) {
 			itemQuery = {deleted: true};
 			itemSort = [['lastupdate', 'DESC']];
 			itemLimit = 50;
+			itemDomBalance = false;
+			itemNoDelete = true;
 			page.query.title = 'Last deleted';
 			break;
 
@@ -691,16 +736,21 @@ expApp.onPageInit('expenses-list', function (page) {
 	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
 
 	// add items to list
-	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, $(page.container).find('#expenses-list-balance') );
+	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete );
 
+});
+expApp.onPageReinit('expenses-list', function (page) {
+
+	console.debug('reinit', page.query, window.currentPageQuery);
+	window.currentPageQuery = page.query;
+	console.debug('reinit2', page.query, window.currentPageQuery);
 });
 
 
 
-
-
-
-/* ===== settings ===== */
+//////////////////////////////////////////////////////////////////
+// settings                                                     //
+//////////////////////////////////////////////////////////////////
 expApp.onPageInit('settings', function (page) {
 
 	// load settings
@@ -761,10 +811,9 @@ expApp.onPageInit('settings', function (page) {
 
 
 
-
-
-
-/* ===== Settings Categories ===== */
+//////////////////////////////////////////////////////////////////
+// settings-categories                                          //
+//////////////////////////////////////////////////////////////////
 expApp.onPageInit('settings-categories', function (page) {
 
 	_category = db.queryAll('category', {sort: [['ID', 'DESC']]});
@@ -808,36 +857,11 @@ expApp.onPageInit('settings-categories', function (page) {
 
 
 
-function createContentPage() {
-    mainView.loadContent(
-        '<!-- Top Navbar-->' +
-        '<div class="navbar">' +
-        '  <div class="navbar-inner">' +
-        '    <div class="left"><a href="#" class="back link">Back</a></div>' +
-        '    <div class="center sliding">Dynamic Page ' + (++dynamicPageIndex) + '</div>' +
-        '  </div>' +
-        '</div>' +
-        '<div class="pages">' +
-        '  <!-- Page, data-page contains page name-->' +
-        '  <div data-page="dynamic-content" class="page">' +
-        '    <!-- Scrollable page content-->' +
-        '    <div class="page-content">' +
-        '      <div class="content-block">' +
-        '        <div class="content-block-inner">' +
-        '          <p>Here is a dynamic page created on ' + new Date() + ' !</p>' +
-        '          <p>Go <a href="#" class="back">back</a> or generate <a href="#" class="ks-generate-page">one more page</a>.</p>' +
-        '        </div>' +
-        '      </div>' +
-        '    </div>' +
-        '  </div>' +
-        '</div>'
-    );
-    return;
-}
 
 
-
-// STARTUP //
+//////////////////////////////////////////////////////////////////
+// APPLICATION STARTUP                                          //
+//////////////////////////////////////////////////////////////////
 
 // finally initialize app
 expApp.init();
