@@ -1,3 +1,5 @@
+//expenses-frontend.js
+
 properties = {
 	version: '0.2',
 	name: 'ExpenSync',
@@ -55,43 +57,7 @@ var db = new localStorageDB("expenSync", localStorage);
 // Check if the database was just created. Then create all tables
 if( db.isNew() ) {
 
-	// create 'settings' table
-	var settings_rows = [
-		{key: 'preset_balance', value: 0, description: 'Initial balance'},
-		{key: 'ui_lang', value: 'EN', description: 'Language'},
-		{key: 'ui_money_format', value: 'comma', description: 'Money Format'},
-		{key: 'sync_enabled', value: true, description: 'Sync enabled'},
-		{key: 'sync_startup', value: false, description: 'Sync on startup'},
-		{key: 'sync_continuous', value: true, description: 'Sync continuously or only manually'},
-		{key: 'sync_lastupdate', value: 1, description: 'Timestamp of last sync'}
-	];
-    db.createTableWithData('settings', settings_rows);
-
-    // create 'category' table
-    db.createTable('category', ['uniqueid', 'timestamp', 'lastupdate', 'synchronized', 'description', 'icon', 'order', 'disabled']);
-
-	dateNow = Date.now();
-	_categories = ["Other", "Groceries", "Canteen", "Eating Out", "Fun", "Clothing", "Car", "Transport", "Travel", "Household", "Salary", "Finance", "Medical", "Education", "Rent / Loan", "Communication"];
-	_cat_icons  = ["ion-ios7-more", "ion-ios7-cart", "ion-fork", "ion-ios7-wineglass", "ion-ios7-musical-notes", "ion-ios7-pricetags", "ion-model-s", "ion-plane", "ion-map", "ion-ios7-home", "ion-ios7-briefcase", "ion-cash", "ion-ios7-medkit", "ion-university", "ion-ios7-home", "ion-ios7-telephone"];
-
-	for(i = 0; i < _categories.length; i++) {
-
-		db.insert("category", {
-			uniqueid: createUniqueid( i, i, true ),
-			timestamp: i,
-			lastupdate: i,
-			synchronized: true,
-			description: _categories[i],
-			icon: _cat_icons[i],
-			order: i+1,
-			disabled: false
-		});
-	}
-
-	// create 'item' table
-    db.createTable('item', ['uniqueid', "timestamp", "lastupdate", 'synchronized', "category", "price", "description", "deleted"]);
-
-    db.commit();
+	createLocalDatabase();
 }
 
 
@@ -114,8 +80,13 @@ function createUniqueid(timestamp, salt, noUserAgent) {
 
 /**
  * returns a price, suitable colored and currency format
+ *
+ * @param {float} price number to be displayed as price
+ * @param {string} account (optional) text to be displayed below price
  */
-function formatPrice(price) {
+function formatPrice(price, account) {
+
+	account = account || false;
 
 	colorClass = 'green';
 	if(price < 0)
@@ -128,7 +99,12 @@ function formatPrice(price) {
 	if(money_format[0].value == 'comma')
 		formattedPrice = formattedPrice.replace('.', ',');
 
-	return '<span class="color-' + colorClass + '">' + formattedPrice + '</span>';
+	// subtitle displayed below price
+	var subtext = '';
+	if(account)
+		subtext = '<br><span class="item-subtitle color-gray">' + account + '</span>';
+
+	return '<span class="color-' + colorClass + '">' + formattedPrice + subtext + '</span>';
 }
 
 
@@ -172,7 +148,8 @@ function formatDate(dateString, forFieldInput) {
  *
  * @param {domSelector/jQueryObject} domElement selector or element representing a select dropdown
  * @param {int} selectedID (optional) ID number of category to select
- * @param {boolean} appendZero true if entry with ID 0 (= All) should be prepended
+ * @param {boolean} appendZero (optional) true if entry with ID 0 (= All) should be prepended
+ * @param {boolean} allEntries (optional) true if all entries should be put out, if false only enabled entries are selected
  */
 function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
 
@@ -198,10 +175,10 @@ function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
 
 	for(i = 0; i < categories.length; i++) {
 
-		var $option = $('<option>').val(categories[i].ID).text(categories[i].description)
+		var $option = $('<option>').val(categories[i].uniqueid).text(categories[i].description)
 
 		// select entry if defined
-		if(selectedID && selectedID == categories[i].ID)
+		if(selectedID && selectedID == categories[i].uniqueid)
 			$option.attr('selected', 'selected');
 
 		$list.append( $option );
@@ -215,18 +192,19 @@ function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
  *
  * @return false if invalid, else an object with validated and formatted values
  */
-function validateItemForm(price, category, description, date, deleted) {
+function validateItemForm(price, category, description, date, account, deleted) {
 
-	var validPrice, validCategory, validDescription, validDate, validDeleted;
+	var validPrice, validCategory, validDescription, validDate, validAccount, validDeleted;
 	deleted = deleted || false;
 
 	// check if minimum input (price) is given
 	if(price != 0 && price != null && parseFloat(price) != NaN && price.length != 0) {
 
 		validPrice = parseFloat(price);
-		validCategory = parseInt(category);
-		validDescription = description;
+		validCategory = category;
+		validDescription = description.replace('"',"'");
 		validDeleted = (deleted == 'true');
+		validAccount = account;
 
 		// check if date is given, if yes, try to parse it
 		if(date == undefined || date == null || date.length == 0 || Date.parse(date) == NaN) {
@@ -240,7 +218,8 @@ function validateItemForm(price, category, description, date, deleted) {
 			category: validCategory,
 			description: validDescription,
 			date: validDate,
-			deleted: validDeleted
+			deleted: validDeleted,
+			account: validAccount
 		};
 
 		return returnObj;
@@ -275,7 +254,11 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	var listBalance = 0;
 
 	// get categories
-	var _category = db.queryAll('category', {sort: [['ID', 'ASC']]});
+	var categories = db.queryAll('category', {sort: [['order', 'ASC']]});
+	var _category = {};
+	for(var j = 0; j < categories.length; j++) {
+		_category[ categories[j].uniqueid ] = categories[j];
+	}
 
 	// get items according to request params
 	items = db.queryAll('item', { query: itemQuery,
@@ -287,7 +270,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	for(i = 0; i < items.length; i++) {
 
 		var row = items[i];
-		var rowCategory = _category[row.category-1];
+		var rowCategory = _category[row.category];
 		var description = row.description;
 		var category = ' | ' + rowCategory.description;
 
@@ -310,7 +293,9 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			'		<div class="item-inner">' +
 			'			<div class="item-title-row">' +
 			'				<div class="item-title">' + description + '</div>' +
-			'				<div class="item-after">' + formatPrice(row.price) + '</div>' +
+			'				<div class="item-after">' +
+								formatPrice(row.price, row.account) +
+			'				</div>' +
 			'			</div>' +
 			'			<div class="item-subtitle color-gray">' + formatDate(row.timestamp) + category + '</div>' +
 			'		</div>' +
@@ -377,8 +362,9 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 				var newDescription = $('.popup-edit-item #form-edit-description').val();
 				var newDate = $('.popup-edit-item #form-edit-date').val();
 				var newDeleted = $('.popup-edit-item').attr('data-deleted');
+				var newAccount = '';
 
-				var validItem = validateItemForm(newPrice, newCategory, newDescription, newDate, newDeleted);
+				var validItem = validateItemForm(newPrice, newCategory, newDescription, newDate, newAccount, newDeleted);
 
 				if(validItem) {
 
@@ -386,6 +372,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 						function(row) {
 							row.price = validItem.price;
 							row.category = validItem.category;
+							row.account = validItem.account;
 							row.description = validItem.description;
 							row.timestamp = validItem.date;
 							row.deleted = validItem.deleted;
@@ -394,7 +381,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							return row;
 						});
 					db.commit();
-					console.log( db.query('item',{uniqueid:editID})[0].lastupdate - Date.now() );//TODO
 				}
 
 				expApp.closeModal('.popup-edit-item');
@@ -427,7 +413,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		delItem = db.query('item', {uniqueid: delID});
 
 		// get category description
-		delItemCategory = db.query('category', {ID: delItem[0].category});
+		delItemCategory = db.query('category', {uniqueid: delItem[0].category});
 
 		// set item description if available
 		notificationDescription = '';
@@ -449,10 +435,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	});
 }
 
-// debug output of DB content if debug is enabled
-if(properties.debug)
-	console.debug("DB content: ", JSON.parse(db.serialize()) );
-
 
 
 
@@ -463,32 +445,32 @@ if(properties.debug)
 pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 	// generate links to expenses in menu
-	currentMonth = (new Date()).getMonth();
-	currentYear = (new Date()).getFullYear();
-	startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0); // zero values for hours
-	endDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+	var currentMonth = (new Date()).getMonth();
+	var currentYear = (new Date()).getFullYear();
+	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0); // zero values for hours
+	var endDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 
 	$('#menu-list').empty();
-	entriesAvailable = false;
+	var entriesAvailable = false;
 
-	for(i = 15; i >= 0; i--) {
+	for(var i = 15; i >= 0; i--) {
 
 		startDate.setFullYear(currentYear, currentMonth);
 		endDate.setFullYear(currentYear, currentMonth+1);
 
 		// create menu link label and data object (is given to expenses page)
 		// data object contains information which list to show
-		monthLabel = i18n.month[currentMonth] + ' ' + currentYear;
-		dataObj = {
-			request: 'timerange', // TODO others: lastupdate, latest, deleted
+		var monthLabel = i18n.month[currentMonth] + ' ' + currentYear;
+		var dataObj = {
+			request: 'timerange',
 			start: startDate.getTime(),
 			end: endDate.getTime(),
 			title: monthLabel
 		};
 
 		// get items for current month
-		monthBalance = 0;
-		monthItems = db.query('item',
+		var monthBalance = 0;
+		var monthItems = db.query('item',
 			function(row) {
 				if(!row.deleted && row.timestamp >= startDate.getTime() && row.timestamp < endDate.getTime())
 					return true;
@@ -502,7 +484,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 			entriesAvailable = true;
 
 			// calculate month balance
-			for(j = 0; j < monthItems.length; j++) {
+			for(var j = 0; j < monthItems.length; j++) {
 				monthBalance += monthItems[j].price;
 			}
 
@@ -568,51 +550,61 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function(e) {
 
-		// disable button to prevent multiple entries (by accident)
-		that = $( e.target );
-		that.addClass('disabled');
-		window.setTimeout(function() {
-			that.removeClass('disabled');
-		}, 1000);
+		e.preventDefault();
 
-		addPrice = $(page.container).find('#form-add-price').val();
-		addCategory = $(page.container).find('#form-add-category').val();
-		addDescription = $(page.container).find('#form-add-description').val();
-		addDate = $(page.container).find('#form-add-date').val();
+		// disable multiple inputs in short time
+		if(!window.blockedInput) {
 
-		var validItem = validateItemForm(addPrice, addCategory, addDescription, addDate, false);
+			// disable button to prevent multiple entries (by accident)
+			that = $( e.target );
+			that.addClass('disabled');
+			window.blockedInput = true;
+			window.setTimeout(function() {
+				that.removeClass('disabled');
+				window.blockedInput = false;
+			}, 1000);
 
-		if(validItem) {
+			var addPrice = $(page.container).find('#form-add-price').val();
+			var addCategory = $(page.container).find('#form-add-category').val();
+			var addDescription = $(page.container).find('#form-add-description').val();
+			var addDate = $(page.container).find('#form-add-date').val();
+			var addAccount = '';
 
-			// insert new item in DB
-			addID = db.insert('item', {
-				uniqueid: createUniqueid( Date.now(), addDate+addDescription+addPrice+addCategory ),
-				timestamp: validItem.date,
-				lastupdate: Date.now(),
-				synchronized: false,
-				category: validItem.category,
-				price: validItem.price,
-				description: validItem.description,
-				deleted: false
-			});
-			db.commit();
+			var validItem = validateItemForm(addPrice, addCategory, addDescription, addDate, addAccount, false);
 
-			addCategoryDescription = db.query('category', {ID: addCategory});
+			if(validItem) {
 
-			notificationDescription = '';
-			if(addDescription != null && addDescription.length != 0) {
-				notificationDescription = ': ' + addDescription;
+				// insert new item in DB
+				var addID = db.insert('item', {
+					uniqueid: createUniqueid( Date.now(), addDate+addDescription+addPrice+addCategory+addAccount ),
+					timestamp: validItem.date,
+					lastupdate: Date.now(),
+					synchronized: false,
+					account: validItem.account,
+					category: validItem.category,
+					price: validItem.price,
+					description: validItem.description,
+					deleted: false
+				});
+				db.commit();
+
+				var addCategoryDescription = db.query('category', {uniqueid: addCategory});
+
+				var notificationDescription = '';
+				if(addDescription != null && addDescription.length != 0) {
+					notificationDescription = ': ' + addDescription;
+				}
+
+				expApp.addNotification({
+					title: 'Expense added',
+					message: formatPrice(addPrice) + ' for <span class="color-blue">' + addCategoryDescription[0].description + '</span>' + notificationDescription,
+					hold: 1000
+				});
+
+				//trigger refresh of menu
+				pageIndexLeft.trigger();
+				pageIndex.trigger();
 			}
-
-			expApp.addNotification({
-				title: 'Expense added',
-				message: formatPrice(addPrice) + ' for <span class="color-blue">' + addCategoryDescription[0].description + '</span>' + notificationDescription,
-				hold: 1000
-			});
-
-			//trigger refresh of menu
-			pageIndexLeft.trigger();
-			pageIndex.trigger();
 		}
 	});
 
@@ -622,21 +614,21 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 	// calculate balances
 	// total balance
-	allItems = db.query('item', {deleted: false});
-	presetBalance = db.query('settings', {key: 'preset_balance'});
-	totalBalance = presetBalance[0].value;//TODO get initial value from settings
+	var allItems = db.query('item', {deleted: false});
+	var totalBalance = getSettings('preset_balance');
+	//totalBalance = presetBalance[0].value;//TODO
 	for(i = 0; i < allItems.length; i++) {
 		totalBalance += allItems[i].price;
 	}
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
 
 	// current month's balance
-	currentMonth = (new Date()).getMonth();
-	currentYear = (new Date()).getFullYear();
-	startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
-	endDate = new Date(currentYear, currentMonth+1, 0, 0, 0, 0, 0);
+	var currentMonth = (new Date()).getMonth();
+	var currentYear = (new Date()).getFullYear();
+	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+	var endDate = new Date(currentYear, currentMonth+1, 0, 0, 0, 0, 0);
 
-	currentItems = db.queryAll('item', {
+	var currentItems = db.queryAll('item', {
 			query: function(row) {
 				if(!row.deleted &&
 					row.timestamp >= startDate.getTime() &&
@@ -646,14 +638,14 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 					return false;
 			}
 		});
-	currentBalance = 0;
+	var currentBalance = 0;
 	for(i = 0; i < currentItems.length; i++) {
 		currentBalance += currentItems[i].price;
 	}
 	$(page.container).find('#total-balance-month').html( formatPrice(currentBalance) );
 
 	// last month's total balance
-	lastBalance = totalBalance - currentBalance;
+	var lastBalance = totalBalance - currentBalance;
 	$(page.container).find('#total-balance-lastmonth').html( formatPrice(lastBalance) );
 });
 
@@ -666,12 +658,12 @@ expApp.onPageInit('expenses-list', function (page) {
 
 	//TODO
 	window.currentPageQuery = page.query;
-	console.debug(page.query, window.currentPageQuery);
+	console.debug('init', page.query, window.currentPageQuery);
 
 	// add categories to dropdown select
 	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
 
-	// category select dropdown
+	// category select dropdown TODO
 	/*$(page.container).find('#expenses-list-category').on('change', function(e) {
 
 		var catID = $(e.delegateTarget).val();
@@ -740,7 +732,7 @@ expApp.onPageInit('expenses-list', function (page) {
 
 });
 expApp.onPageReinit('expenses-list', function (page) {
-
+	//TODO not needed? Because it is never used
 	console.debug('reinit', page.query, window.currentPageQuery);
 	window.currentPageQuery = page.query;
 	console.debug('reinit2', page.query, window.currentPageQuery);
@@ -754,13 +746,13 @@ expApp.onPageReinit('expenses-list', function (page) {
 expApp.onPageInit('settings', function (page) {
 
 	// load settings
-	settings_rows = db.query('settings');
-	settings = [];
+	var settings = getSettings();
+	/*settings = [];
 
 	for(i = 0; i < settings_rows.length; i++) {
 
 		settings[ settings_rows[i].key ] = settings_rows[i].value;
-	}
+	}*///TODO
 
 	$('#settings-preset_balance').val( settings['preset_balance'] );
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
@@ -775,31 +767,12 @@ expApp.onPageInit('settings', function (page) {
 	// save settings
 	$('#settings-button-save').on('click', function() {
 
-		db.update('settings',
-			{key: 'preset_balance'},
-			function(row) {
-				row.value = parseFloat( $('#settings-preset_balance').val() );
-				return row;
-			});
-		db.update('settings',
-			{key: 'ui_money_format'},
-			function(row) {
-				row.value = $('#settings-ui_money_format').val();
-				return row;
-			});
-		db.update('settings',
-			{key: 'sync_enabled'},
-			function(row) {
-				row.value = $('#settings-sync_enabled').is(':checked');
-				return row;
-			});
-		db.update('settings',
-			{key: 'sync_startup'},
-			function(row) {
-				row.value = $('#settings-sync_startup').is(':checked');
-				return row;
-			});
-		db.commit();
+		setSettings([
+				{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },
+				{key: 'ui_money_format', value: $('#settings-ui_money_format').val() },
+				{key: 'sync_enabled', value: $('#settings-sync_enabled').is(':checked') },
+				{key: 'sync_startup', value: $('#settings-sync_startup').is(':checked') }
+			]);
 
 		expApp.addNotification({
 			title: 'Settings saved',
@@ -816,18 +789,18 @@ expApp.onPageInit('settings', function (page) {
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('settings-categories', function (page) {
 
-	_category = db.queryAll('category', {sort: [['ID', 'DESC']]});
+	var _category = db.queryAll('category', {sort: [['order', 'DESC']]});
 
 	for(i = 0; i < _category.length; i++) {
 
-		cat = _category[i];
+		var cat = _category[i];
 
-		checked = cat.disabled ? '' : ' checked="checked"';
+		var checked = cat.disabled ? '' : ' checked="checked"';
 
 		$('#settings-categories-list').prepend(
-			'<li class="swipeout" data-uniqueid="' + cat.ID + '">' +
+			'<li class="swipeout" data-uniqueid="' + cat.uniqueid + '">' +
 			'	<label class="label-checkbox swipeout-content item-content">' +
-			'		<input type="checkbox" value="' + cat.ID + '"' + checked + '>' +
+			'		<input type="checkbox" id="cat-' + cat.uniqueid + '"' + checked + '>' +
 			'		<div class="item-media">' +
 			'			<i class="icon icon-form-checkbox"></i>' +
 			'		</div>' +
@@ -846,13 +819,33 @@ expApp.onPageInit('settings-categories', function (page) {
 		);
 	}
 
-    // Sortable toggler
-    $$('.list-block.sortable').on('open', function () {
-        $$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
-    });
-    $$('.list-block.sortable').on('close', function () {
-        $$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
-    });
+	// Sortable toggler
+	$$('.list-block.sortable').on('open', function () {
+		$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+	});
+	$$('.list-block.sortable').on('close', function () {
+		$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+
+		// save list and its order
+		$('#settings-categories-list li').each( function (index) {
+
+			if( $(this).is('[data-uniqueid]') ) {
+
+				var catID = $(this).attr('data-uniqueid');
+				var newDisabled = !( $(this).find('#cat-' + catID).is(':checked') );
+				var newOrder = index+1;
+
+				db.update('category',
+					{uniqueid: catID},
+					function(row) {
+						row.disabled = newDisabled;
+						row.order = newOrder;
+						return row;
+					});
+				db.commit();
+			}
+		});
+	});
 });
 
 
@@ -863,9 +856,16 @@ expApp.onPageInit('settings-categories', function (page) {
 // APPLICATION STARTUP                                          //
 //////////////////////////////////////////////////////////////////
 
+// globals
+window.blockedInput = false;
+
 // finally initialize app
 expApp.init();
 
 // check if dropbox sync on startup is enabled
 if( getSettings('sync_startup') )
 	syncInit();
+
+// debug output of DB content if debug is enabled
+if(properties.debug)
+	console.debug("DB content: ", JSON.parse(db.serialize()) );
