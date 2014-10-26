@@ -90,6 +90,16 @@ div[data-page="index-1"] .list-block {
 body.with-panel-right-reveal .panel-overlay {
   margin-left: 0;
 }
+
+#expenses-list-items .item-after {
+	text-align: right;
+}
+
+
+
+
+
+
 /* iPad Vertical */
 @media (min-width: 569px) {
   .panel.panel-left.panel-cover {

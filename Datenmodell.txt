@@ -1,4 +1,5 @@
 ﻿FEATURES
+- DB for icons
 - refactor methods to update lists on-the-fly
 - monthly list filter by category
 

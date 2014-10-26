@@ -23,7 +23,6 @@ function createLocalDatabase() {
 
 	var dateNow = Date.now();
 	var _categories = ["Other", "Groceries", "Canteen", "Eating Out", "Fun", "Clothing", "Car", "Transport", "Travel", "Household", "Salary", "Finance", "Medical", "Education", "Rent / Loan", "Communication"];
-	var _cat_icons  = ["ion-ios7-more", "ion-ios7-cart", "ion-fork", "ion-ios7-wineglass", "ion-ios7-musical-notes", "ion-ios7-pricetags", "ion-model-s", "ion-plane", "ion-map", "ion-ios7-home", "ion-ios7-briefcase", "ion-cash", "ion-ios7-medkit", "ion-university", "ion-ios7-home", "ion-ios7-telephone"];
 
 	for(var k = 0; k < _categories.length; k++) {
 
@@ -33,7 +32,7 @@ function createLocalDatabase() {
 			lastupdate: k,
 			synchronized: true,
 			description: _categories[k],
-			icon: _cat_icons[k],
+			icon: k,
 			order: k+1,
 			disabled: false
 		});
@@ -49,6 +48,7 @@ function createLocalDatabase() {
 		lastupdate: 0,
 		synchronized: false,
 		description: 'Default',
+		initial_balance: 0,
 		order: 1,
 		disabled: false
 	}]);
@@ -138,6 +138,60 @@ function setSettings(settings, newValue) {
 				);
 		}
 		db.commit();
+	}
+}
+
+
+
+
+/**
+* get icon
+*
+* @param {int} iconID (optional) ID of icon. If not set, all icons are returned
+* @returns icon CSS class or array with all icons
+*/
+function getIcons(iconID) {
+
+	iconID = iconID || false;
+
+	if(iconID) {
+
+		return globals.icons[iconID];
+	} else {
+
+		return globals.icons;
+	}
+}
+
+
+
+/**
+* load accounts from local DB
+*
+* @param {String} accountID (optional) ID of account. If not set, all accounts are returned
+* @returns account object or array with all accounts
+*/
+function getAccounts(accountID) {
+
+	accountID = accountID || false;
+
+	var query = null;
+	if(accountID)
+		query = {key: accountID};
+
+	var accs = db.query('account', query);
+
+	if(query) {
+
+		return accs[0];
+	} else {
+
+		var returnArray = [];
+		for(i = 0; i < accs.length; i++) {
+
+			returnArray.push( accs[i] );
+		}
+		return returnArray;
 	}
 }
 

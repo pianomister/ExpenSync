@@ -22,6 +22,7 @@
   <body class="theme-white">
     <!-- Status bar overlay for homescreen mode-->
     <div class="statusbar-overlay"></div>
+
     <!-- Popup: Edit item -->
     <div class="popup popup-edit-item">
   		<div class="view navbar-fixed">
@@ -97,6 +98,52 @@
   			</div>
   		</div>
   	</div>
+
+    <!-- Popup: Edit item -->
+    <div class="popup popup-edit-category">
+      <div class="view navbar-fixed">
+        <div class="pages">
+          <div class="page">
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a class="link popup-edit-category-save" href="#">Save</a>
+                </div>
+                <div class="center">Edit category</div>
+                <div class="right">
+                  <a class="link close-popup" href="#">Cancel</a>
+                </div>
+              </div>
+            </div>
+            <div class="page-content">
+
+              <div class="content-block-title">Category properties</div>
+              <div class="list-block tablet-inset">
+                <ul>
+                  <li><div class="item-content">
+                    <div class="item-inner">
+                      <div class="item-title label">Description</div>
+                      <div class="item-input">
+                        <input id="form-edit-description" type="text" placeholder="(optional)">
+                      </div>
+                    </div>
+                  </div></li>
+                  <li><div class="item-content">
+                    <div class="item-inner">
+                      <div class="item-title label">Icon</div>
+                      <div class="item-input">
+                        <input id="form-edit-date" type="date" placeholder="(opt. YYYY-MM-DD)">
+                      </div>
+                    </div>
+                  </div></li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Views-->
     <div class="views">

@@ -27,6 +27,28 @@ i18n = {
 
 }
 
+globals = {
+
+	icons: [
+		"ion-ios7-more",
+		"ion-ios7-cart",
+		"ion-fork",
+		"ion-ios7-wineglass",
+		"ion-ios7-musical-notes",
+		"ion-ios7-pricetags",
+		"ion-model-s",
+		"ion-plane",
+		"ion-map",
+		"ion-ios7-home",
+		"ion-ios7-briefcase",
+		"ion-cash",
+		"ion-ios7-medkit",
+		"ion-university",
+		"ion-ios7-home",
+		"ion-ios7-telephone"
+	]
+
+}
 
 
 // create app object
@@ -102,7 +124,7 @@ function formatPrice(price, account) {
 	// subtitle displayed below price
 	var subtext = '';
 	if(account)
-		subtext = '<br><span class="item-subtitle color-gray">' + account + '</span>';
+		subtext = '<br><span class="item-subtitle color-gray">' + getAccounts(account).description + '</span>';
 
 	return '<span class="color-' + colorClass + '">' + formattedPrice + subtext + '</span>';
 }
@@ -347,7 +369,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			'<li class="swipeout" data-uniqueid="' + row.uniqueid + '">' +
 			'	<div class="swipeout-content item-content">' +
 			'		<div class="item-media">' +
-			'			<span class="icon-wrap"><i class="color-black icon ion ' + rowCategory.icon + '"></i></span>' +
+			'			<span class="icon-wrap"><i class="color-black icon ion ' + getIcons(rowCategory.icon) + '"></i></span>' +
 			'		</div>' +
 			'		<div class="item-inner">' +
 			'			<div class="item-title-row">' +
@@ -862,7 +884,7 @@ expApp.onPageInit('settings-categories', function (page) {
 
 		$('#settings-categories-list').prepend(
 			'<li class="swipeout" data-uniqueid="' + cat.uniqueid + '">' +
-			'	<label class="label-checkbox swipeout-content item-content">' +
+			'	<label class="label-checkbox swipeout-content item-content disabled">' +
 			'		<input type="checkbox" id="cat-' + cat.uniqueid + '"' + checked + '>' +
 			'		<div class="item-media">' +
 			'			<i class="icon icon-form-checkbox"></i>' +
@@ -883,31 +905,43 @@ expApp.onPageInit('settings-categories', function (page) {
 	}
 
 	// Sortable toggler
-	$$('.list-block.sortable').on('open', function () {
-		$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+	$$('.list-block.sortable').on('open', function (e) {
+
+		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
+		if( $(e.target).hasClass('sortable') ) {
+
+			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$('#settings-categories-list label.label-checkbox').removeClass('disabled');
+		}
 	});
-	$$('.list-block.sortable').on('close', function () {
-		$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+	$$('.list-block.sortable').on('close', function (e) {
 
-		// save list and its order
-		$('#settings-categories-list li').each( function (index) {
+		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
+		if( $(e.target).hasClass('sortable') ) {
 
-			if( $(this).is('[data-uniqueid]') ) {
+			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$('#settings-categories-list label.label-checkbox').addClass('disabled');
 
-				var catID = $(this).attr('data-uniqueid');
-				var newDisabled = !( $(this).find('#cat-' + catID).is(':checked') );
-				var newOrder = index+1;
+			// save list and its order
+			$('#settings-categories-list li').each( function (index) {
 
-				db.update('category',
-					{uniqueid: catID},
-					function(row) {
-						row.disabled = newDisabled;
-						row.order = newOrder;
-						return row;
-					});
-				db.commit();
-			}
-		});
+				if( $(this).is('[data-uniqueid]') ) {
+
+					var catID = $(this).attr('data-uniqueid');
+					var newDisabled = !( $(this).find('#cat-' + catID).is(':checked') );
+					var newOrder = index+1;
+
+					db.update('category',
+						{uniqueid: catID},
+						function(row) {
+							row.disabled = newDisabled;
+							row.order = newOrder;
+							return row;
+						});
+					db.commit();
+				}
+			});
+		}
 	});
 });
 
@@ -926,7 +960,7 @@ window.blockedInput = false;
 expApp.init();
 
 // check if dropbox sync on startup is enabled
-if( getSettings('sync_startup') )
+if( getSettings('sync_enabled') && getSettings('sync_startup') )
 	syncInit();
 
 // debug output of DB content if debug is enabled
