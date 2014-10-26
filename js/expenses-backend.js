@@ -40,7 +40,7 @@ function createLocalDatabase() {
 	}
 
 	// create 'item' table
-	db.createTable('item', ['uniqueid', "timestamp", "lastupdate", 'synchronized', 'account', "category", "price", "description", "deleted"]);
+	db.createTable('item', ['uniqueid', "timestamp", "lastupdate", 'synchronized', 'account', "category", "price", "description", "deleted", 'version']);
 
 	// create 'account' table
 	db.createTableWithData('account', [{
@@ -48,7 +48,9 @@ function createLocalDatabase() {
 		timestamp: 1,
 		lastupdate: 0,
 		synchronized: false,
-		description: 'Default'
+		description: 'Default',
+		order: 1,
+		disabled: false
 	}]);
 
 	db.commit();

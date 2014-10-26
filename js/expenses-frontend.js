@@ -157,6 +157,7 @@ function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
 	appendZero = appendZero || false;
 	allEntries = allEntries || false;
 	var $list = $(domElement);
+	var $temp = $('<div />');
 
 	// empty dropdown list
 	$list.empty();
@@ -175,14 +176,66 @@ function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
 
 	for(i = 0; i < categories.length; i++) {
 
-		var $option = $('<option>').val(categories[i].uniqueid).text(categories[i].description)
+		var $option = $('<option>').val(categories[i].uniqueid).text(categories[i].description);
 
 		// select entry if defined
 		if(selectedID && selectedID == categories[i].uniqueid)
 			$option.attr('selected', 'selected');
 
-		$list.append( $option );
+		$temp.append( $option );
 	}
+
+	// add to actual list
+	$list.append( $temp.html() );
+}
+
+
+
+/**
+* adds accounts as options to select dropdown
+* and optionally selects one entry
+*
+* @param {domSelector/jQueryObject} domElement selector or element representing a select dropdown
+* @param {int} selectedID (optional) ID number of account to select
+* @param {boolean} appendZero (optional) true if entry with ID 0 (= All) should be prepended
+* @param {boolean} allEntries (optional) true if all entries should be put out, if false only enabled entries are selected
+*/
+function createAccountOptions(domElement, selectedID, appendZero, allEntries) {
+
+	selectedID = selectedID || false;
+	appendZero = appendZero || false;
+	allEntries = allEntries || false;
+	var $list = $(domElement);
+	var $temp = $('<div />');
+
+	// empty dropdown list
+	$list.empty();
+
+	// if zero element should be appended
+	if(appendZero)
+	$list.append(
+		$('<option>').val(0).text('All')
+	);
+
+	var accQuery = {disabled: false};
+	if(allEntries)
+		accQuery = null;
+
+	var accounts = db.queryAll('account', {query: accQuery, sort: [['order', 'ASC']]});
+
+	for(i = 0; i < accounts.length; i++) {
+
+		var $option = $('<option>').val(accounts[i].uniqueid).text(accounts[i].description);
+
+		// select entry if defined
+		if(selectedID && selectedID == accounts[i].uniqueid)
+			$option.attr('selected', 'selected');
+
+		$temp.append( $option );
+	}
+
+	// add to actual list
+	$list.append( $temp.html() );
 }
 
 
@@ -206,23 +259,29 @@ function validateItemForm(price, category, description, date, account, deleted) 
 		validDeleted = (deleted == 'true');
 		validAccount = account;
 
-		// check if date is given, if yes, try to parse it
-		if(date == undefined || date == null || date.length == 0 || Date.parse(date) == NaN) {
-			validDate = Date.now();
+		if(account.length > 1 && category.length > 1) {
+
+			// check if date is given, if yes, try to parse it
+			if(date == undefined || date == null || date.length == 0 || Date.parse(date) == NaN) {
+				validDate = Date.now();
+			} else {
+				validDate = Date.parse(date);
+			}
+
+			var returnObj = {
+				price: validPrice,
+				category: validCategory,
+				description: validDescription,
+				date: validDate,
+				deleted: validDeleted,
+				account: validAccount
+			};
+
+			return returnObj;
+
 		} else {
-			validDate = Date.parse(date);
+			expApp.alert('Please select an account an a category.');
 		}
-
-		var returnObj = {
-			price: validPrice,
-			category: validCategory,
-			description: validDescription,
-			date: validDate,
-			deleted: validDeleted,
-			account: validAccount
-		};
-
-		return returnObj;
 
 	} else {
 		expApp.alert('Please fill in a cost.');
@@ -331,7 +390,8 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		$('.popup-edit-item #form-edit-description').val(editItem.description);
 		$('.popup-edit-item #form-edit-date').val( formatDate(editItem.timestamp, true) );
 		$('.popup-edit-item').attr('data-deleted', editItem.deleted);
-		createCategoryOptions( $('.popup-edit-item #form-edit-category'), editItem.category );
+		createCategoryOptions( $('.popup-edit-item #form-edit-category'), editItem.category, false, true );
+		createAccountOptions( $('.popup-edit-item #form-edit-account'), editItem.account, false, true );
 
 		// if deleted, show restore button and add restore handler
 		if( editItem.deleted ) {
@@ -362,7 +422,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 				var newDescription = $('.popup-edit-item #form-edit-description').val();
 				var newDate = $('.popup-edit-item #form-edit-date').val();
 				var newDeleted = $('.popup-edit-item').attr('data-deleted');
-				var newAccount = '';
+				var newAccount = $('.popup-edit-item #form-edit-account').val();
 
 				var validItem = validateItemForm(newPrice, newCategory, newDescription, newDate, newAccount, newDeleted);
 
@@ -378,6 +438,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							row.deleted = validItem.deleted;
 							row.lastupdate = Date.now();
 							row.synchronized = false;
+							row.version = properties.version;
 							return row;
 						});
 					db.commit();
@@ -544,8 +605,9 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	// assume main view if page is not defined
 	page = page || {container:'.view-main'};
 
-	// add categories to dropdown select
+	// add categories/accounts to dropdown select
 	createCategoryOptions( $(page.container).find('#form-add-category') );
+	createAccountOptions( $(page.container).find('#form-add-account') );
 
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function(e) {
@@ -568,7 +630,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 			var addCategory = $(page.container).find('#form-add-category').val();
 			var addDescription = $(page.container).find('#form-add-description').val();
 			var addDate = $(page.container).find('#form-add-date').val();
-			var addAccount = '';
+			var addAccount = $(page.container).find('#form-add-account').val();
 
 			var validItem = validateItemForm(addPrice, addCategory, addDescription, addDate, addAccount, false);
 
@@ -584,7 +646,8 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 					category: validItem.category,
 					price: validItem.price,
 					description: validItem.description,
-					deleted: false
+					deleted: false,
+					version: properties.version
 				});
 				db.commit();
 
