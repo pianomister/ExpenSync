@@ -152,9 +152,10 @@ function setSettings(settings, newValue) {
 */
 function getIcons(iconID) {
 
-	iconID = iconID || false;
+	if(!(iconID === 0) )
+		iconID = iconID || false;
 
-	if(iconID) {
+	if(iconID || iconID === 0) {
 
 		return globals.icons[iconID];
 	} else {

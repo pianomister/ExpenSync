@@ -322,6 +322,7 @@ function validateItemForm(price, category, description, date, account, deleted) 
  * @param {array} itemSort Sorting parameters, or null
  * @param {object} itemLimit Limit for the result array
  * @param {domSelector/jQueryObject} domBalance Element to put the list balance in
+ * @param {boolean} noDelete (optional) If true, delete button will not be added; default is false
  */
 function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete) {
 
@@ -464,13 +465,13 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							return row;
 						});
 					db.commit();
+
+					expApp.closeModal('.popup-edit-item');
+
+					//TODO re-render list and menu to update everything
+					pageIndexLeft.trigger();
+					pageIndex.trigger();
 				}
-
-				expApp.closeModal('.popup-edit-item');
-
-				//TODO re-render list and menu to update everything
-				pageIndexLeft.trigger();
-				pageIndex.trigger();
 			}
 		});
 
@@ -516,6 +517,134 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		});
 
 	});
+}
+
+
+
+function createCategoryListElements(domSelector) {
+
+	$list = $(domSelector).empty();
+
+	var _category = db.queryAll('category', {sort: [['order', 'ASC']]});
+
+	for(i = 0; i < _category.length; i++) {
+
+		var cat = _category[i];
+
+		var checked = cat.disabled ? '' : ' checked="checked"';
+
+		$list.append(
+			'<li class="swipeout" data-uniqueid="' + cat.uniqueid + '">' +
+			'	<label class="label-checkbox swipeout-content item-content disabled">' +
+			'		<input type="checkbox" id="cat-' + cat.uniqueid + '"' + checked + '>' +
+			'		<div class="item-media">' +
+			'			<i class="icon icon-form-checkbox"></i>' +
+			'		</div>' +
+			'		<div class="item-inner">' +
+			'			<div class="item-title">' + cat.description + '</div>' +
+			'			<div class="item-after">' +
+			'				<i class="icon ion ' + getIcons(cat.icon) + '"></i>' +
+			'			</div>' +
+			'		</div>' +
+			'	</label>' +
+			'	<div class="sortable-handler"></div>' +
+			'	<div class="swipeout-actions-right">' +
+			'		<a href="#" class="edit-category" data-uniqueid="' + cat.uniqueid + '">Edit</a>' +
+			'	</div>' +
+			'</li>'
+		);
+	}
+	$list.append('<li><a class="item-link list-button" id="settings-categories-add">Add category</a></li>');
+
+	// handler for 'add category' button
+	$('#settings-categories-add').on('click', function(e) {
+
+		e.preventDefault();
+
+		var newID = createUniqueid( Date.now(), 'New Category'+Date.now());
+
+		db.insert('category', {
+			uniqueid: newID,
+			timestamp: Date.now(),
+			lastupdate: Date.now(),
+			synchronized: false,
+			description: 'New Category',
+			icon: 0,
+			order: 99,
+			disabled: false
+		});
+
+		openCategoryPopup(newID);
+		createCategoryListElements('#settings-categories-list');
+	});
+}
+
+
+
+/**
+ * Opens 'edit category' popup with given category uniqueid
+ *
+ * @param {String} editID uniqueid of category to be edited
+ */
+function openCategoryPopup(editID) {
+
+	// get item data and fill in the form on popup
+	var editCat = db.query('category', {uniqueid: editID})[0];
+
+	$('.popup-edit-category').attr('data-uniqueid', editID);
+	$('.popup-edit-category #form-category-description').val(editCat.description);
+
+	// create icon options
+	var icons = getIcons();
+	for(var z = 0; z < icons.length; z++) {
+
+		var selected = '';
+		if(z == editCat.icon)
+			selected = ' selected="selected"';
+
+		$('#form-category-icon').append(
+			'<option value="' + z + '"' + selected + '>' + icons[z] + '</option>'
+		);
+	}
+
+	// save handler
+	$('.popup-edit-category-save').on('click', function(e) {
+
+		e.preventDefault();
+		var editID = $('.popup-edit-category').attr('data-uniqueid');
+
+		if(editID.length > 1) {
+
+			var newDescription = $('.popup-edit-category #form-category-description').val();
+			var newIcon = $('.popup-edit-category #form-category-icon').val();
+
+			if(newDescription.length > 0 && newIcon.length > 0) {
+
+				db.update('category', {uniqueid: editID},
+					function(row) {
+						row.description = newDescription;
+						row.icon = newIcon;
+						row.synchronized = false;
+						return row;
+					});
+				db.commit();
+
+				//TODO re-render categories list
+				pageSettingsCategories.trigger();
+
+				expApp.closeModal('.popup-edit-category');
+			} else {
+
+				expApp.alert('Please fill in a description and choose an icon.');
+			}
+
+		} else {
+
+			expApp.alert('Could not save: no ID found. Please cancel and try again.');
+		}
+	});
+
+	expApp.popup('.popup-edit-category');
 }
 
 
@@ -816,12 +945,6 @@ expApp.onPageInit('expenses-list', function (page) {
 	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete );
 
 });
-expApp.onPageReinit('expenses-list', function (page) {
-	//TODO not needed? Because it is never used
-	console.debug('reinit', page.query, window.currentPageQuery);
-	window.currentPageQuery = page.query;
-	console.debug('reinit2', page.query, window.currentPageQuery);
-});
 
 
 
@@ -872,37 +995,9 @@ expApp.onPageInit('settings', function (page) {
 //////////////////////////////////////////////////////////////////
 // settings-categories                                          //
 //////////////////////////////////////////////////////////////////
-expApp.onPageInit('settings-categories', function (page) {
+pageSettingsCategories = expApp.onPageInit('settings-categories', function (page) {
 
-	var _category = db.queryAll('category', {sort: [['order', 'DESC']]});
-
-	for(i = 0; i < _category.length; i++) {
-
-		var cat = _category[i];
-
-		var checked = cat.disabled ? '' : ' checked="checked"';
-
-		$('#settings-categories-list').prepend(
-			'<li class="swipeout" data-uniqueid="' + cat.uniqueid + '">' +
-			'	<label class="label-checkbox swipeout-content item-content disabled">' +
-			'		<input type="checkbox" id="cat-' + cat.uniqueid + '"' + checked + '>' +
-			'		<div class="item-media">' +
-			'			<i class="icon icon-form-checkbox"></i>' +
-			'		</div>' +
-			'		<div class="item-inner">' +
-			'			<div class="item-title">' + cat.description + '</div>' +
-			'			<div class="item-after">' +
-			'				<i class="icon ion ' + cat.icon + '"></i>' +
-			'			</div>' +
-			'		</div>' +
-			'	</label>' +
-			'	<div class="sortable-handler"></div>' +
-			'	<div class="swipeout-actions-right">' +
-			'		<a href="#">Edit</a>' +
-			'	</div>' +
-			'</li>'
-		);
-	}
+	createCategoryListElements('#settings-categories-list');
 
 	// Sortable toggler
 	$$('.list-block.sortable').on('open', function (e) {
@@ -936,12 +1031,22 @@ expApp.onPageInit('settings-categories', function (page) {
 						function(row) {
 							row.disabled = newDisabled;
 							row.order = newOrder;
+							row.synchronized = false;
+							row.lastupdate = Date.now();
 							return row;
 						});
 					db.commit();
 				}
 			});
 		}
+	});
+
+	// handler for editing categories - open popup
+	$$('#settings-categories-list .edit-category').on('click', function (e) {
+
+		var editID = $(e.target).attr('data-uniqueid');
+
+		openCategoryPopup(editID);
 	});
 });
 
