@@ -23,6 +23,16 @@ i18n = {
 		"October",
 		"November",
 		"December"
+	],
+
+	weekday: [
+		"Sunday",
+		"Monday",
+		"Thuesday",
+		"Wendesday",
+		"Thursday",
+		"Friday",
+		"Saturday"
 	]
 
 }
