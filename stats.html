@@ -1,0 +1,71 @@
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="left">
+      <a href="#" class="back link">
+        <i class="icon icon-back"></i>
+        <span>Back</span>
+      </a>
+    </div>
+    <div class="center sliding">Analysis</div>
+    <div class="right">
+      <a href="#" data-panel="left" class="link open-panel icon-only">
+        <i class="icon icon-bars"></i>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="pages">
+  <div data-page="stats" class="page">
+    <div class="page-content">
+      <div class="content-block-title">Selection</div>
+      <div class="list-block">
+        <ul>
+          <li>
+            <div class="item-content disabled">
+              <div class="item-inner">
+                <div class="item-title label">Account</div>
+                <div class="item-input">
+                  <select id="form-stats-account">
+                      <option value="2a626d4707ee38a9e26b171d906434b0">Default</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="item-content">
+              <div class="item-inner">
+                <div class="item-title label">Start date</div>
+                <div class="item-input">
+                  <input type="date" id="form-stats-date-start" placeholder="(opt. YYYY-MM-DD)">
+                </div>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div class="item-content">
+              <div class="item-inner">
+                <div class="item-title label">End date</div>
+                <div class="item-input">
+                  <input type="date" id="form-stats-date-end" placeholder="(opt. YYYY-MM-DD)">
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="content-block-title">Categories</div>
+      <div class="content-block tablet-inset">
+        <div class="content-block-inner">
+          <div class="exp-stats-pie ct-golden-section ct-chart ct-negative-labels"></div>
+        </div>
+      </div>
+      <div class="content-block-title">Per Weekday</div>
+      <div class="content-block tablet-inset">
+        <div class="content-block-inner">
+          <div class="exp-stats-weekday ct-golden-section ct-chart ct-negative-labels"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
