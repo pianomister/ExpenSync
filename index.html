@@ -61,12 +61,11 @@
   										</div>
   									</div>
   								</div></li>
-                  <li><div class="item-content disabled">
+                  <li><div class="item-content">
                     <div class="item-inner">
                       <div class="item-title label">Account</div>
                       <div class="item-input">
                         <select id="form-edit-account">
-                            <option value="2a626d4707ee38a9e26b171d906434b0">Default</option>
                         </select>
                       </div>
                     </div>
@@ -138,6 +137,56 @@
                     </div>
                   </div></li>
                 </ul>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popup: Edit category -->
+    <div class="popup popup-edit-account">
+      <div class="view navbar-fixed">
+        <div class="pages">
+          <div class="page">
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a class="link popup-edit-account-save" href="#">Save</a>
+                </div>
+                <div class="center">Edit account</div>
+                <div class="right">
+                  <a class="link close-popup" href="#">Cancel</a>
+                </div>
+              </div>
+            </div>
+            <div class="page-content">
+
+              <div class="content-block-title">Account properties</div>
+              <div class="list-block tablet-inset">
+                <ul>
+                  <li><div class="item-content">
+                    <div class="item-inner">
+                      <div class="item-title label">Description</div>
+                      <div class="item-input">
+                        <input id="form-account-description" type="text">
+                      </div>
+                    </div>
+                  </div></li>
+                  <li><div class="item-content">
+                    <div class="item-inner">
+                      <div class="item-title label">Balance</div>
+                      <div class="item-input">
+                        <input id="form-account-balance" type="number">
+                      </div>
+                    </div>
+                  </div></li>
+                </ul>
+              </div>
+              <div class="list-block-label">
+                Provide the initial balance on this account (before you started tracking it here).
+                So the balance here represents the actual balance in reality.
               </div>
 
             </div>
@@ -241,12 +290,11 @@
     											</div>
     										</div>
     									</div></li>
-                      <li><div class="item-content disabled">
+                      <li><div class="item-content">
                         <div class="item-inner">
                           <div class="item-title label">Account</div>
                           <div class="item-input">
                             <select id="form-add-account">
-                                <option value="2a626d4707ee38a9e26b171d906434b0">Default</option>
                             </select>
                           </div>
                         </div>

@@ -712,11 +712,11 @@ function openCategoryPopup(editID) {
 						row.description = newDescription;
 						row.icon = newIcon;
 						row.synchronized = false;
+						row.lastupdate = Date.now();
 						return row;
 					});
 				db.commit();
 
-				//TODO re-render categories list
 				createCategoryListElements('#settings-categories-list');
 
 				expApp.closeModal('.popup-edit-category');
@@ -732,6 +732,65 @@ function openCategoryPopup(editID) {
 	});
 
 	expApp.popup('.popup-edit-category');
+}
+
+
+
+/**
+* Opens 'edit account' popup with given account uniqueid
+*
+* @param {String} editID uniqueid of account to be edited
+*/
+function openAccountPopup(editID) {
+
+	// get item data and fill in the form on popup
+	var editObj = db.query('account', {uniqueid: editID})[0];
+
+	$('.popup-edit-account').attr('data-uniqueid', editID);
+	$('.popup-edit-account #form-account-description').val(editObj.description);
+	$('.popup-edit-account #form-account-balance').val(editObj.initial_balance);
+
+
+	// save handler
+	$('.popup-edit-account-save').on('click', function(e) {
+
+		e.preventDefault();
+		var editID = $('.popup-edit-account').attr('data-uniqueid');
+
+		if(editID.length > 1) {
+
+			var newDescription = $('.popup-edit-account #form-account-description').val();
+			var newBalance = parseFloat( $('.popup-edit-account #form-account-balance').val() );
+
+			if(newDescription.length > 0 && (''+newBalance).length > 0 && newBalance != NaN) {//TODO validation of numbers
+
+				db.update('account', {uniqueid: editID},
+					function(row) {
+						row.description = newDescription;
+						row.initial_balance = newBalance;
+						row.synchronized = false;
+						row.lastupdate = Date.now();
+						return row;
+					});
+				db.commit();
+
+				createAccountListElements('#settings-accounts-list');
+				// recalculate the total balance on index page
+				pageIndex.trigger();
+
+				expApp.closeModal('.popup-edit-account');
+			} else {
+
+				expApp.alert('Please fill in a description and an initial balance.');
+			}
+
+		} else {
+
+			expApp.alert('Could not save: no ID found. Please cancel and try again.');
+		}
+	});
+
+	expApp.popup('.popup-edit-account');
 }
 
 
@@ -913,14 +972,20 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	if( !getSettings('sync_enabled') )
 		$('.index-sync').html('<p>You can synchronize all expenses with your Dropbox. Enable Synchronization in <a href="settings.html" data-view=".view-left" class="open-panel">settings</a>.</p>');
 
+	////////////////
 	// calculate balances
 	// total balance
+	var totalBalance = 0;
 	var allItems = db.query('item', {deleted: false});
-	var totalBalance = getSettings('preset_balance');
-	//totalBalance = presetBalance[0].value;//TODO
-	for(i = 0; i < allItems.length; i++) {
+	for(var i = 0; i < allItems.length; i++) {
 		totalBalance += allItems[i].price;
 	}
+
+	var allAccounts = db.query('account', {disabled: false});
+	for(var i = 0; i < allAccounts.length; i++) {
+		totalBalance += allAccounts[i].initial_balance;
+	}
+
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
 
 	// current month's balance
@@ -940,7 +1005,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 			}
 		});
 	var currentBalance = 0;
-	for(i = 0; i < currentItems.length; i++) {
+	for(var i = 0; i < currentItems.length; i++) {
 		currentBalance += currentItems[i].price;
 	}
 	$(page.container).find('#total-balance-month').html( formatPrice(currentBalance) );
@@ -1049,7 +1114,7 @@ expApp.onPageInit('settings', function (page) {
 		settings[ settings_rows[i].key ] = settings_rows[i].value;
 	}*///TODO
 
-	$('#settings-preset_balance').val( settings['preset_balance'] );
+	//$('#settings-preset_balance').val( settings['preset_balance'] );//TODO
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
 
 	if(settings['sync_enabled'])
@@ -1063,7 +1128,7 @@ expApp.onPageInit('settings', function (page) {
 	$('#settings-button-save').on('click', function() {
 
 		setSettings([
-				{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },
+				//{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },//TODO
 				{key: 'ui_money_format', value: $('#settings-ui_money_format').val() },
 				{key: 'sync_enabled', value: $('#settings-sync_enabled').is(':checked') },
 				{key: 'sync_startup', value: $('#settings-sync_startup').is(':checked') }
@@ -1177,6 +1242,10 @@ expApp.onPageInit('settings-accounts', function (page) {
 					db.commit();
 				}
 			});
+
+			// recalculate the total balance on index page
+			// because disabling/enabling accounts influences the total balance
+			pageIndex.trigger();
 		}
 	});
 });
