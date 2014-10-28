@@ -128,16 +128,26 @@ function sync() {
 
 			var merge_input = getItemsNewerThan(syncJSON, lastSync);
 
-			console.log(merge_input);//TODO
+			console.log('Merge input: ' + merge_input);//TODO
 
 			for(i = 0; i < merge_input.length; i++) {
 
-				// TODO separate function?
-				var t = db.insertOrUpdate('item',
+				db.insertOrUpdate('item',
 						{uniqueid: merge_input[i].uniqueid},
 						merge_input[i]
 					);
 			}
+
+			// update timestamp on entries with 'synchronized = false'
+			// so these entries are definitely synchronized to other clients
+			db.update('item',
+				{synchronized: false},
+				function(row) {
+					row.lastupdate
+					row.synchronized = true;
+					return row;
+				}
+			);
 
 			db.commit();
 

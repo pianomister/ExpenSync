@@ -521,13 +521,18 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 
 
+/**
+ * Creates an HTML list of categories in given DOM element
+ *
+ * @param {domSelector/jQueryObject} domSelector DOM element to be filled with resulting list
+ */
 function createCategoryListElements(domSelector) {
 
 	$list = $(domSelector).empty();
 
 	var _category = db.queryAll('category', {sort: [['order', 'ASC']]});
 
-	for(i = 0; i < _category.length; i++) {
+	for(var i = 0; i < _category.length; i++) {
 
 		var cat = _category[i];
 
@@ -556,6 +561,15 @@ function createCategoryListElements(domSelector) {
 	}
 	$list.append('<li><a class="item-link list-button" id="settings-categories-add">Add category</a></li>');
 
+
+	// handler for editing categories - open popup
+	$(domSelector).find('.edit-category').on('click', function (e) {
+
+		var editID = $(e.target).attr('data-uniqueid');
+
+		openCategoryPopup(editID);
+	});
+
 	// handler for 'add category' button
 	$('#settings-categories-add').on('click', function(e) {
 
@@ -575,7 +589,80 @@ function createCategoryListElements(domSelector) {
 		});
 
 		openCategoryPopup(newID);
-		createCategoryListElements('#settings-categories-list');
+		createCategoryListElements(domSelector);
+	});
+}
+
+
+
+/**
+* Creates an HTML list of accounts in given DOM element
+*
+* @param {domSelector/jQueryObject} domSelector DOM element to be filled with resulting list
+*/
+function createAccountListElements(domSelector) {
+
+	$list = $(domSelector).empty();
+
+	var accounts = db.queryAll('account', {sort: [['order', 'ASC']]});
+
+	for(var i = 0; i < accounts.length; i++) {
+
+		var acc = accounts[i];
+
+		var checked = acc.disabled ? '' : ' checked="checked"';
+
+		$list.append(
+			'<li class="swipeout" data-uniqueid="' + acc.uniqueid + '">' +
+			'	<label class="label-checkbox swipeout-content item-content disabled">' +
+			'		<input type="checkbox" id="cat-' + acc.uniqueid + '"' + checked + '>' +
+			'		<div class="item-media">' +
+			'			<i class="icon icon-form-checkbox"></i>' +
+			'		</div>' +
+			'		<div class="item-inner">' +
+			'			<div class="item-title">' + acc.description + '</div>' +
+			'			<div class="item-after">' +
+			 				formatPrice(acc.initial_balance) +
+			'			</div>' +
+			'		</div>' +
+			'	</label>' +
+			'	<div class="sortable-handler"></div>' +
+			'	<div class="swipeout-actions-right">' +
+			'		<a href="#" class="edit-category" data-uniqueid="' + acc.uniqueid + '">Edit</a>' +
+			'	</div>' +
+			'</li>'
+		);
+	}
+	$list.append('<li><a class="item-link list-button" id="settings-accounts-add">Add account</a></li>');
+
+	// handler for editing categories - open popup
+	$(domSelector).find('.edit-category').on('click', function (e) {
+
+		var editID = $(e.target).attr('data-uniqueid');
+
+		openAccountPopup(editID);
+	});
+
+	// handler for 'add category' button
+	$('#settings-accounts-add').on('click', function(e) {
+
+		e.preventDefault();
+
+		var newID = createUniqueid( Date.now(), 'New Account'+Date.now());
+
+		db.insert('account', {
+			uniqueid: newID,
+			timestamp: Date.now(),
+			lastupdate: Date.now(),
+			synchronized: false,
+			description: 'New Account',
+			initial_balance: 0,
+			order: 99,
+			disabled: false
+		});
+
+		openAccountPopup(newID);
+		createAccountListElements(domSelector);
 	});
 }
 
@@ -630,7 +717,7 @@ function openCategoryPopup(editID) {
 				db.commit();
 
 				//TODO re-render categories list
-				pageSettingsCategories.trigger();
+				createCategoryListElements('#settings-categories-list');
 
 				expApp.closeModal('.popup-edit-category');
 			} else {
@@ -995,7 +1082,7 @@ expApp.onPageInit('settings', function (page) {
 //////////////////////////////////////////////////////////////////
 // settings-categories                                          //
 //////////////////////////////////////////////////////////////////
-pageSettingsCategories = expApp.onPageInit('settings-categories', function (page) {
+expApp.onPageInit('settings-categories', function (page) {
 
 	createCategoryListElements('#settings-categories-list');
 
@@ -1040,13 +1127,57 @@ pageSettingsCategories = expApp.onPageInit('settings-categories', function (page
 			});
 		}
 	});
+});
 
-	// handler for editing categories - open popup
-	$$('#settings-categories-list .edit-category').on('click', function (e) {
 
-		var editID = $(e.target).attr('data-uniqueid');
 
-		openCategoryPopup(editID);
+//////////////////////////////////////////////////////////////////
+// settings-accounts                                            //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('settings-accounts', function (page) {
+
+	createAccountListElements('#settings-accounts-list');
+
+	// Sortable toggler
+	$$('.list-block.sortable').on('open', function (e) {
+
+		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
+		if( $(e.target).hasClass('sortable') ) {
+
+			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$('#settings-accounts-list label.label-checkbox').removeClass('disabled');
+		}
+	});
+	$$('.list-block.sortable').on('close', function (e) {
+
+		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
+		if( $(e.target).hasClass('sortable') ) {
+
+			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$('#settings-accounts-list label.label-checkbox').addClass('disabled');
+
+			// save list and its order
+			$('#settings-accounts-list li').each( function (index) {
+
+				if( $(this).is('[data-uniqueid]') ) {
+
+					var catID = $(this).attr('data-uniqueid');
+					var newDisabled = !( $(this).find('#cat-' + catID).is(':checked') );
+					var newOrder = index+1;
+
+					db.update('account',
+						{uniqueid: catID},
+						function(row) {
+							row.disabled = newDisabled;
+							row.order = newOrder;
+							row.synchronized = false;
+							row.lastupdate = Date.now();
+							return row;
+						});
+					db.commit();
+				}
+			});
+		}
 	});
 });
 
