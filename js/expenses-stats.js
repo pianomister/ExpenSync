@@ -85,7 +85,7 @@ var Charts = {
     // set option for labels with name and value
     var _options = {
       labelInterpolationFnc: function(value,index) {
-        return value + ": " + _data.series[index];
+        return value + ": " + _data.series[index].toFixed(2);
       }
     };
 
