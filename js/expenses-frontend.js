@@ -531,13 +531,18 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 
 
+/**
+ * Creates an HTML list of categories in given DOM element
+ *
+ * @param {domSelector/jQueryObject} domSelector DOM element to be filled with resulting list
+ */
 function createCategoryListElements(domSelector) {
 
 	$list = $(domSelector).empty();
 
 	var _category = db.queryAll('category', {sort: [['order', 'ASC']]});
 
-	for(i = 0; i < _category.length; i++) {
+	for(var i = 0; i < _category.length; i++) {
 
 		var cat = _category[i];
 
@@ -566,6 +571,15 @@ function createCategoryListElements(domSelector) {
 	}
 	$list.append('<li><a class="item-link list-button" id="settings-categories-add">Add category</a></li>');
 
+
+	// handler for editing categories - open popup
+	$(domSelector).find('.edit-category').on('click', function (e) {
+
+		var editID = $(e.target).attr('data-uniqueid');
+
+		openCategoryPopup(editID);
+	});
+
 	// handler for 'add category' button
 	$('#settings-categories-add').on('click', function(e) {
 
@@ -585,7 +599,80 @@ function createCategoryListElements(domSelector) {
 		});
 
 		openCategoryPopup(newID);
-		createCategoryListElements('#settings-categories-list');
+		createCategoryListElements(domSelector);
+	});
+}
+
+
+
+/**
+* Creates an HTML list of accounts in given DOM element
+*
+* @param {domSelector/jQueryObject} domSelector DOM element to be filled with resulting list
+*/
+function createAccountListElements(domSelector) {
+
+	$list = $(domSelector).empty();
+
+	var accounts = db.queryAll('account', {sort: [['order', 'ASC']]});
+
+	for(var i = 0; i < accounts.length; i++) {
+
+		var acc = accounts[i];
+
+		var checked = acc.disabled ? '' : ' checked="checked"';
+
+		$list.append(
+			'<li class="swipeout" data-uniqueid="' + acc.uniqueid + '">' +
+			'	<label class="label-checkbox swipeout-content item-content disabled">' +
+			'		<input type="checkbox" id="cat-' + acc.uniqueid + '"' + checked + '>' +
+			'		<div class="item-media">' +
+			'			<i class="icon icon-form-checkbox"></i>' +
+			'		</div>' +
+			'		<div class="item-inner">' +
+			'			<div class="item-title">' + acc.description + '</div>' +
+			'			<div class="item-after">' +
+			 				formatPrice(acc.initial_balance) +
+			'			</div>' +
+			'		</div>' +
+			'	</label>' +
+			'	<div class="sortable-handler"></div>' +
+			'	<div class="swipeout-actions-right">' +
+			'		<a href="#" class="edit-category" data-uniqueid="' + acc.uniqueid + '">Edit</a>' +
+			'	</div>' +
+			'</li>'
+		);
+	}
+	$list.append('<li><a class="item-link list-button" id="settings-accounts-add">Add account</a></li>');
+
+	// handler for editing categories - open popup
+	$(domSelector).find('.edit-category').on('click', function (e) {
+
+		var editID = $(e.target).attr('data-uniqueid');
+
+		openAccountPopup(editID);
+	});
+
+	// handler for 'add category' button
+	$('#settings-accounts-add').on('click', function(e) {
+
+		e.preventDefault();
+
+		var newID = createUniqueid( Date.now(), 'New Account'+Date.now());
+
+		db.insert('account', {
+			uniqueid: newID,
+			timestamp: Date.now(),
+			lastupdate: Date.now(),
+			synchronized: false,
+			description: 'New Account',
+			initial_balance: 0,
+			order: 99,
+			disabled: false
+		});
+
+		openAccountPopup(newID);
+		createAccountListElements(domSelector);
 	});
 }
 
@@ -635,12 +722,12 @@ function openCategoryPopup(editID) {
 						row.description = newDescription;
 						row.icon = newIcon;
 						row.synchronized = false;
+						row.lastupdate = Date.now();
 						return row;
 					});
 				db.commit();
 
-				//TODO re-render categories list
-				pageSettingsCategories.trigger();
+				createCategoryListElements('#settings-categories-list');
 
 				expApp.closeModal('.popup-edit-category');
 			} else {
@@ -655,6 +742,65 @@ function openCategoryPopup(editID) {
 	});
 
 	expApp.popup('.popup-edit-category');
+}
+
+
+
+/**
+* Opens 'edit account' popup with given account uniqueid
+*
+* @param {String} editID uniqueid of account to be edited
+*/
+function openAccountPopup(editID) {
+
+	// get item data and fill in the form on popup
+	var editObj = db.query('account', {uniqueid: editID})[0];
+
+	$('.popup-edit-account').attr('data-uniqueid', editID);
+	$('.popup-edit-account #form-account-description').val(editObj.description);
+	$('.popup-edit-account #form-account-balance').val(editObj.initial_balance);
+
+
+	// save handler
+	$('.popup-edit-account-save').on('click', function(e) {
+
+		e.preventDefault();
+		var editID = $('.popup-edit-account').attr('data-uniqueid');
+
+		if(editID.length > 1) {
+
+			var newDescription = $('.popup-edit-account #form-account-description').val();
+			var newBalance = parseFloat( $('.popup-edit-account #form-account-balance').val() );
+
+			if(newDescription.length > 0 && (''+newBalance).length > 0 && newBalance != NaN) {//TODO validation of numbers
+
+				db.update('account', {uniqueid: editID},
+					function(row) {
+						row.description = newDescription;
+						row.initial_balance = newBalance;
+						row.synchronized = false;
+						row.lastupdate = Date.now();
+						return row;
+					});
+				db.commit();
+
+				createAccountListElements('#settings-accounts-list');
+				// recalculate the total balance on index page
+				pageIndex.trigger();
+
+				expApp.closeModal('.popup-edit-account');
+			} else {
+
+				expApp.alert('Please fill in a description and an initial balance.');
+			}
+
+		} else {
+
+			expApp.alert('Could not save: no ID found. Please cancel and try again.');
+		}
+	});
+
+	expApp.popup('.popup-edit-account');
 }
 
 
@@ -836,14 +982,20 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	if( !getSettings('sync_enabled') )
 		$('.index-sync').html('<p>You can synchronize all expenses with your Dropbox. Enable Synchronization in <a href="settings.html" data-view=".view-left" class="open-panel">settings</a>.</p>');
 
+	////////////////
 	// calculate balances
 	// total balance
+	var totalBalance = 0;
 	var allItems = db.query('item', {deleted: false});
-	var totalBalance = getSettings('preset_balance');
-	//totalBalance = presetBalance[0].value;//TODO
-	for(i = 0; i < allItems.length; i++) {
+	for(var i = 0; i < allItems.length; i++) {
 		totalBalance += allItems[i].price;
 	}
+
+	var allAccounts = db.query('account', {disabled: false});
+	for(var i = 0; i < allAccounts.length; i++) {
+		totalBalance += allAccounts[i].initial_balance;
+	}
+
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
 
 	// current month's balance
@@ -863,7 +1015,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 			}
 		});
 	var currentBalance = 0;
-	for(i = 0; i < currentItems.length; i++) {
+	for(var i = 0; i < currentItems.length; i++) {
 		currentBalance += currentItems[i].price;
 	}
 	$(page.container).find('#total-balance-month').html( formatPrice(currentBalance) );
@@ -972,7 +1124,7 @@ expApp.onPageInit('settings', function (page) {
 		settings[ settings_rows[i].key ] = settings_rows[i].value;
 	}*///TODO
 
-	$('#settings-preset_balance').val( settings['preset_balance'] );
+	//$('#settings-preset_balance').val( settings['preset_balance'] );//TODO
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
 
 	if(settings['sync_enabled'])
@@ -986,7 +1138,7 @@ expApp.onPageInit('settings', function (page) {
 	$('#settings-button-save').on('click', function() {
 
 		setSettings([
-				{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },
+				//{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },//TODO
 				{key: 'ui_money_format', value: $('#settings-ui_money_format').val() },
 				{key: 'sync_enabled', value: $('#settings-sync_enabled').is(':checked') },
 				{key: 'sync_startup', value: $('#settings-sync_startup').is(':checked') }
@@ -1005,7 +1157,7 @@ expApp.onPageInit('settings', function (page) {
 //////////////////////////////////////////////////////////////////
 // settings-categories                                          //
 //////////////////////////////////////////////////////////////////
-pageSettingsCategories = expApp.onPageInit('settings-categories', function (page) {
+expApp.onPageInit('settings-categories', function (page) {
 
 	createCategoryListElements('#settings-categories-list');
 
@@ -1050,13 +1202,61 @@ pageSettingsCategories = expApp.onPageInit('settings-categories', function (page
 			});
 		}
 	});
+});
 
-	// handler for editing categories - open popup
-	$$('#settings-categories-list .edit-category').on('click', function (e) {
 
-		var editID = $(e.target).attr('data-uniqueid');
 
-		openCategoryPopup(editID);
+//////////////////////////////////////////////////////////////////
+// settings-accounts                                            //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('settings-accounts', function (page) {
+
+	createAccountListElements('#settings-accounts-list');
+
+	// Sortable toggler
+	$$('.list-block.sortable').on('open', function (e) {
+
+		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
+		if( $(e.target).hasClass('sortable') ) {
+
+			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$('#settings-accounts-list label.label-checkbox').removeClass('disabled');
+		}
+	});
+	$$('.list-block.sortable').on('close', function (e) {
+
+		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
+		if( $(e.target).hasClass('sortable') ) {
+
+			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$('#settings-accounts-list label.label-checkbox').addClass('disabled');
+
+			// save list and its order
+			$('#settings-accounts-list li').each( function (index) {
+
+				if( $(this).is('[data-uniqueid]') ) {
+
+					var catID = $(this).attr('data-uniqueid');
+					var newDisabled = !( $(this).find('#cat-' + catID).is(':checked') );
+					var newOrder = index+1;
+
+					db.update('account',
+						{uniqueid: catID},
+						function(row) {
+							row.disabled = newDisabled;
+							row.order = newOrder;
+							row.synchronized = false;
+							row.lastupdate = Date.now();
+							return row;
+						});
+					db.commit();
+				}
+			});
+
+			// recalculate the total balance on index page
+			// because disabling/enabling accounts influences the total balance
+			pageIndex.trigger();
+		}
 	});
 });
 

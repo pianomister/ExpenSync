@@ -8,7 +8,7 @@ function createLocalDatabase() {
 
 	// create 'settings' table
 	var settings_rows = [
-		{key: 'preset_balance', value: 0, description: 'Initial balance'},
+		//{key: 'preset_balance', value: 0, description: 'Initial balance'},//TODO
 		{key: 'ui_lang', value: 'EN', description: 'Language'},
 		{key: 'ui_money_format', value: 'comma', description: 'Money Format'},
 		{key: 'sync_enabled', value: true, description: 'Sync enabled'},

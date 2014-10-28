@@ -1,14 +1,13 @@
-﻿FEATURES
-- DB for icons
+﻿FEATURES / TODO
 - refactor methods to update lists on-the-fly
 - monthly list filter by category
+- infinite scroll for lists to enhance loading time
+- icon select verbessern in categories
 
-TODO
-- Kategorien bearbeitbar machen
 - Neue Icons hinzufügen
-- Synchronisation von Einstellungen (Startwert), Kategorien, Accounts
+- Synchronisation von Kategorien, Accounts
 - Möglichkeit fixe Ausgaben anzugeben (Anfang des Monats automatisch als Einträge anlegen)
-- Account-Anzeige: Description auslesen und ausgeben statt ID
+
 
 
 DATENSTRUKTUR REFACTORING
