@@ -28,8 +28,8 @@ i18n = {
 	weekday: [
 		"Sunday",
 		"Monday",
-		"Thuesday",
-		"Wendesday",
+		"Tuesday",
+		"Wednesday",
 		"Thursday",
 		"Friday",
 		"Saturday"
