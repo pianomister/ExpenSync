@@ -1,6 +1,5 @@
 ﻿FEATURES / TODO
-- refactor methods to update lists on-the-fly
-- monthly list filter by category
+- updateItemList: page parameter streichen? Über tempID abrufbar
 - infinite scroll for lists to enhance loading time
 - icon select verbessern in categories
 

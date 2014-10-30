@@ -7,6 +7,7 @@ var ds = null; // dropbox datastore
 var dsTable = null; // dropbox main table
 
 
+
 // init dropbox client if sync is activated
 function syncInit() {
 
@@ -32,9 +33,14 @@ function syncInit() {
 	}
 }
 
+
+
 // after-authentication actions for sync setup
 function syncSetup() {
-console.log('syncSetup');//TODO
+
+	if(properties.debug)
+		console.log('syncSetup');
+
 	if(window.client && window.client.isAuthenticated()) {
 
 		// setup datastore
@@ -69,14 +75,7 @@ console.log('syncSetup');//TODO
 	}
 }
 
-// close datastore manager and stop sync TODO not needed?
-function syncClose() {
 
-	//client.getDatastoreManager().close();
-	//ds.close();
-	//ds = null;
-	//dsTable = null;
-}
 
 function syncSignOut() {
 
@@ -95,6 +94,8 @@ function syncSignOut() {
 		});
 }
 
+
+
 function getSyncTime() {
 
 	return ds ? ds.getModifiedTime() : false;
@@ -108,9 +109,19 @@ function getSyncTime() {
 		sync();
 }*/
 
+
+
 function sync() {
 
-	console.log('sync');//TODO
+	if(properties.debug)
+		console.log('sync');
+
+	var lastSync = getSettings('sync_lastupdate');
+
+
+	////////////////////
+	// item           //
+	////////////////////
 
 	// get data
 	var syncTable = dsTable.getOrInsert('sync', {name:'items',json:'[]'});
@@ -119,16 +130,13 @@ function sync() {
 	// if data available in datastore, merge it and save it back
 	if(syncJSON.length > 0) {
 
-		var lastSync = getSettings('sync_lastupdate');
-
-		console.log('getSyncTime(): ', getSyncTime().getTime(), lastSync, lastSync < getSyncTime() );//TODO
-
 		// server has newer data, merge server data to local DB and update server
 		if(lastSync < getSyncTime().getTime() ) {
 
-			var merge_input = getItemsNewerThan(syncJSON, lastSync);
+			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'item');
 
-			console.log('Merge input: ' + merge_input);//TODO
+			if(properties.debug)
+				console.log('Merge input: ' + merge_input);
 
 			for(i = 0; i < merge_input.length; i++) {
 
@@ -143,7 +151,7 @@ function sync() {
 			db.update('item',
 				{synchronized: false},
 				function(row) {
-					row.lastupdate
+					row.lastupdate = Date.now();
 					row.synchronized = true;
 					return row;
 				}
@@ -153,9 +161,8 @@ function sync() {
 
 		} else {
 
-			//expApp.hidePreloader();
-			//expApp.alert('Everything is up to date.');//TODO does never show up
-			console.log('Everything is up to date.');//TODO
+			if(properties.debug)
+				console.log('Everything is up to date.');
 		}
 
 	// if no data in datastore yet, insert local data
@@ -170,19 +177,131 @@ function sync() {
 			json: JSON.stringify( db.query('item') )
 		});
 
-	// close connection
-	syncClose(); //TODO
+
+	////////////////////
+	// category       //
+	////////////////////
+
+	// get data
+	var syncTable = dsTable.getOrInsert('category', {name:'category',json:'[]'});
+	var syncJSON = JSON.parse( syncTable.get('json') );
+
+	// if data available in datastore, merge it and save it back
+	if(syncJSON.length > 0) {
+
+		// server has newer data, merge server data to local DB and update server
+		if(lastSync < getSyncTime().getTime() ) {
+
+			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'category');
+
+			if(properties.debug)
+				console.log('Merge input: ' + merge_input);
+
+			for(i = 0; i < merge_input.length; i++) {
+
+				db.insertOrUpdate('category',
+						{uniqueid: merge_input[i].uniqueid},
+						merge_input[i]
+					);
+			}
+
+			// update timestamp on entries with 'synchronized = false'
+			// so these entries are definitely synchronized to other clients
+			db.update('category',
+				{synchronized: false},
+				function(row) {
+					row.lastupdate = Date.now();
+					row.synchronized = true;
+					return row;
+				}
+			);
+
+			db.commit();
+
+		} else {
+
+			if(properties.debug)
+				console.log('Everything is up to date.');
+		}
+
+	// if no data in datastore yet, insert local data
+	} else {
+
+		// see below
+	}
+
+	// update with local data
+	dsTable.query({name:'category'})[0]
+		.update({
+			json: JSON.stringify( db.query('category') )
+		});
+
+
+	////////////////////
+	// account        //
+	////////////////////
+
+	// get data
+	var syncTable = dsTable.getOrInsert('account', {name:'account',json:'[]'});
+	var syncJSON = JSON.parse( syncTable.get('json') );
+
+	// if data available in datastore, merge it and save it back
+	if(syncJSON.length > 0) {
+
+		// server has newer data, merge server data to local DB and update server
+		if(lastSync < getSyncTime().getTime() ) {
+
+			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'account');
+
+			if(properties.debug)
+				console.log('Merge input: ' + merge_input);
+
+			for(i = 0; i < merge_input.length; i++) {
+
+				db.insertOrUpdate('account',
+						{uniqueid: merge_input[i].uniqueid},
+						merge_input[i]
+					);
+			}
+
+			// update timestamp on entries with 'synchronized = false'
+			// so these entries are definitely synchronized to other clients
+			db.update('account',
+				{synchronized: false},
+				function(row) {
+					row.lastupdate = Date.now();
+					row.synchronized = true;
+					return row;
+				}
+			);
+
+			db.commit();
+
+		} else {
+
+			if(properties.debug)
+				console.log('Everything is up to date.');
+		}
+
+	// if no data in datastore yet, insert local data
+	} else {
+
+		// see below
+	}
+
+	// update with local data
+	dsTable.query({name:'account'})[0]
+		.update({
+			json: JSON.stringify( db.query('account') )
+		});
+
+
 
 	// update local sync timestamp
 	setSettings('sync_lastupdate', Date.now() );
 
-	//trigger refresh of menu and main page
-	if(merge_input && merge_input.length > 0) {
-
-		pageIndexLeft.trigger();
-		pageIndex.trigger();
-		//mainView.loadPage('index.html');
-	}
-
+	// refresh views
+	pageIndexLeft.trigger();
+	pageIndex.trigger();
 	expApp.hidePreloader();
 }

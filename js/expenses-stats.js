@@ -8,6 +8,31 @@ $$(document).on('pageInit', '.page[data-page="stats"]', function (e) {
 
   // draw charts
   Charts.draw();
+
+  //TODO remove debug output
+  if(properties.debug) {
+    // fill item list
+    var items = db.query('item');
+    for(var i = 0; i < items.length; i++) {
+
+      row = items[i];
+
+      $('#stats-item-list').append(
+        '<tr>' +
+        '  <td>' + row.uniqueid + '</td>' +
+        '  <td>' + row.timestamp + '</td>' +
+        '  <td>' + row.lastupdate + '</td>' +
+        '  <td>' + row.synchronized + '</td>' +
+        '  <td>' + row.account + '</td>' +
+        '  <td>' + row.category + '</td>' +
+        '  <td>' + row.price + '</td>' +
+        '  <td>' + row.description + '</td>' +
+        '  <td>' + row.deleted + '</td>' +
+        '  <td>' + row.version + '</td>' +
+        '</tr>'
+      );
+    }
+  }
 });
 
 // handler for date changes in selection

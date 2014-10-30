@@ -199,21 +199,21 @@ function getAccounts(accountID) {
 
 
 /**
- * get all items with lastupdate timestamp newer than given timestamp in params
+ * get all entries with lastupdate timestamp newer than given timestamp in params
  *
  * @param {Array<Object>} items array of items with "lastupdate" property
  * @param {timestamp/int} timestamp time limit, all newer entries will be returned
  *
  * @returns {Array<Object>} array of all items with "lastupdate" newer than given timestamp
  */
-function getItemsNewerThan(items, timestamp) {
+function getEntriesNewerThan(items, timestamp, table) {
 
 	var result = [];
 
 	for(var i = 0; i < items.length; i++) {
 
 		// for check if local is not newer
-		var local =	db.query('item', {uniqueid: items[i].uniqueid});
+		var local =	db.query(table, {uniqueid: items[i].uniqueid});
 
 		if(items[i].lastupdate >= timestamp && (local.length == 0 || local[0].lastupdate <= timestamp) ) {
 

@@ -1,7 +1,7 @@
 //expenses-frontend.js
 
 properties = {
-	version: '0.2',
+	version: '0.2.1',
 	name: 'ExpenSync',
 	developer: 'Stephan Giesau',
 	website: 'http://www.stephan-giesau.de/',
