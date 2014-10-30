@@ -335,8 +335,9 @@ function validateItemForm(price, category, description, date, account, deleted) 
  * @param {object} itemLimit Limit for the result array
  * @param {domSelector/jQueryObject} domBalance Element to put the list balance in
  * @param {boolean} noDelete (optional) If true, delete button will not be added; default is false
+ * @param {String} tempID (optional) tempID for page query object (in window.globals)
  */
-function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete) {
+function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete, tempID) {
 
 	domBalance = domBalance || false;
 	noDelete = noDelete || false;
@@ -379,7 +380,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			deleteButton = '';
 
 		$list.append(
-			'<li class="swipeout" data-uniqueid="' + row.uniqueid + '">' +
+			'<li class="swipeout" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">' +
 			'	<div class="swipeout-content item-content">' +
 			'		<div class="item-media">' +
 			'			<span class="icon-wrap"><i class="color-black icon ion ' + getIcons(rowCategory.icon) + '"></i></span>' +
@@ -395,7 +396,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 			'		</div>' +
 			'	</div>' +
 			'	<div class="swipeout-actions-right">' +
-			'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '">Edit</a>' +
+			'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">Edit</a>' +
 					deleteButton +
 			'	</div>' +
 			'</li>'
@@ -416,11 +417,14 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	$$('.page-expenses-list .edit-item').on('click', function (e) {
 
 		var editID = $(e.target).attr('data-uniqueid');
+		var tempID = $(e.target).attr('data-tempid');
 
 		// get item data and fill in the form on popup
 		var editItem = db.query('item', {uniqueid: editID})[0];
 
 		$('.popup-edit-item').attr('data-uniqueid', editID);
+		$('.popup-edit-item').attr('data-tempid', tempID);
+
 		$('.popup-edit-item #form-edit-price').val(editItem.price);
 		$('.popup-edit-item #form-edit-description').val(editItem.description);
 		$('.popup-edit-item #form-edit-date').val( formatDate(editItem.timestamp, true) );
@@ -449,6 +453,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 			e.preventDefault();
 			var editID = $('.popup-edit-item').attr('data-uniqueid');
+			var tempID = $('.popup-edit-item').attr('data-tempid');
 
 			if(editID.length > 1) {
 
@@ -480,7 +485,10 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 					expApp.closeModal('.popup-edit-item');
 
-					//TODO re-render list and menu to update everything
+					//re-render list to represent changes
+					var page = window.globals.temp[tempID];
+					updateItemList( page, $(page.container).find('#expenses-list-category').val(), tempID );
+
 					pageIndexLeft.trigger();
 					pageIndex.trigger();
 				}
@@ -676,6 +684,83 @@ function createAccountListElements(domSelector) {
 		openAccountPopup(newID);
 		createAccountListElements(domSelector);
 	});
+}
+
+
+
+/**
+* get items based on expenses-list page query and optional category
+*
+* @param {object} page
+* @param {String} filterCategory
+* @param {String} tempID
+*/
+function updateItemList(page, filterCategory, tempID) {
+
+	filterCategory = filterCategory || 0;
+
+	// evaluate page params to determine what to display
+	// standard values
+	var itemQuery = {deleted: false};
+	var itemSort = [['timestamp', 'DESC']];
+	var itemLimit = null;
+	var itemDomBalance = $(page.container).find('#expenses-list-balance');
+	var itemNoDelete = false;
+
+	// add filter for category
+	if(filterCategory != 0)
+		itemQuery.category = filterCategory;
+
+	// override standards for special conditions
+	switch(page.query.request) {
+
+		case 'timerange':
+
+			// if no range is defined, get latest
+			if(page.query.start == null || page.query.end == null) {
+				itemLimit = 50;
+				page.query.title = 'Latest by date (error)';
+				break;
+			}
+
+			itemQuery = function(row) {
+					if(!row.deleted &&
+						row.timestamp >= page.query.start &&
+						row.timestamp < page.query.end &&
+						(filterCategory == 0 || row.category == filterCategory) )
+						return true;
+					else
+						return false;
+				};
+			break;
+
+		case 'deleted':
+			itemQuery.deleted = true;
+			itemSort = [['lastupdate', 'DESC']];
+			itemLimit = 50;
+			itemDomBalance = false;
+			itemNoDelete = true;
+			page.query.title = 'Last deleted';
+			break;
+
+		case 'lastupdate':
+			itemSort = [['lastupdate', 'DESC']];
+			itemLimit = 50;
+			page.query.title = 'Last updated';
+			break;
+
+		case 'latest':
+		default:
+			itemLimit = 50;
+			page.query.title = 'Latest by date';
+			break;
+	}
+
+	// add page title
+	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
+
+	// add items to list
+	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID );
 }
 
 
@@ -1029,86 +1114,12 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 
 
-/**
- * get items based on expenses-list page query and optional category
- *
- *
- */
-function updateItemList(page, filterCategory) {
-
-	filterCategory = filterCategory || 0;
-
-	// evaluate page params to determine what to display
-	// standard values
-	var itemQuery = {deleted: false};
-	var itemSort = [['timestamp', 'DESC']];
-	var itemLimit = null;
-	var itemDomBalance = $(page.container).find('#expenses-list-balance');
-	var itemNoDelete = false;
-
-	// add filter for category
-	if(filterCategory != 0)
-		itemQuery.category = filterCategory;
-
-	// override standards for special conditions
-	switch(page.query.request) {
-
-		case 'timerange':
-
-			// if no range is defined, get latest
-			if(page.query.start == null || page.query.end == null) {
-				itemLimit = 50;
-				page.query.title = 'Latest by date (error)';
-				break;
-			}
-
-			itemQuery = function(row) {
-					if(!row.deleted &&
-						row.timestamp >= page.query.start &&
-						row.timestamp < page.query.end &&
-						(filterCategory == 0 || row.category == filterCategory) )
-						return true;
-					else
-						return false;
-				};
-			break;
-
-		case 'deleted':
-			itemQuery.deleted = true;
-			itemSort = [['lastupdate', 'DESC']];
-			itemLimit = 50;
-			itemDomBalance = false;
-			itemNoDelete = true;
-			page.query.title = 'Last deleted';
-			break;
-
-		case 'lastupdate':
-			itemSort = [['lastupdate', 'DESC']];
-			itemLimit = 50;
-			page.query.title = 'Last updated';
-			break;
-
-		case 'latest':
-		default:
-			itemLimit = 50;
-			page.query.title = 'Latest by date';
-			break;
-	}
-
-	// add page title
-	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
-
-	// add items to list
-	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete );
-}
-
-
 //////////////////////////////////////////////////////////////////
 // expenses-list                                                //
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('expenses-list', function (page) {
 
-	// save page query for later usage
+	// save page query for later usage in globals.temp
 	var tempID = createUniqueid(Date.now(), page.query.request);
 	window.globals.temp[tempID] = page;
 	$(page.container).find('#expenses-list-category').attr('data-temppage', tempID);
@@ -1123,10 +1134,10 @@ expApp.onPageInit('expenses-list', function (page) {
 		var tempID = $(e.delegateTarget).attr('data-temppage');
 		var tempPage = window.globals.temp[tempID];
 
-		updateItemList(tempPage, catID);
+		updateItemList(tempPage, catID, tempID);
 	});
 
-	updateItemList(page, 0);
+	updateItemList(page, 0, tempID);
 });
 
 
