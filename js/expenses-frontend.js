@@ -56,7 +56,8 @@ globals = {
 		"ion-university",
 		"ion-ios7-home",
 		"ion-ios7-telephone"
-	]
+	],
+	temp: {} // to save objects used temporarily
 
 }
 
@@ -119,12 +120,13 @@ function createUniqueid(timestamp, salt, noUserAgent) {
 function formatPrice(price, account) {
 
 	account = account || false;
+	price = parseFloat(price);
 
-	colorClass = 'green';
-	if(price < 0)
-		colorClass = 'red';
+	colorClass = 'red';
+	if(price >= 0)
+		colorClass = 'green';
 
-	formattedPrice = parseFloat(price).toFixed(2);
+	formattedPrice = price.toFixed(2);
 
 	// get number format from settings
 	money_format = db.query('settings', {key: 'ui_money_format'});
@@ -1027,26 +1029,14 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 
 
-//////////////////////////////////////////////////////////////////
-// expenses-list                                                //
-//////////////////////////////////////////////////////////////////
-expApp.onPageInit('expenses-list', function (page) {
+/**
+ * get items based on expenses-list page query and optional category
+ *
+ *
+ */
+function updateItemList(page, filterCategory) {
 
-	//TODO
-	window.currentPageQuery = page.query;
-	console.debug('init', page.query, window.currentPageQuery);
-
-	// add categories to dropdown select
-	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
-
-	// category select dropdown TODO
-	/*$(page.container).find('#expenses-list-category').on('change', function(e) {
-
-		var catID = $(e.delegateTarget).val();
-
-		page.query.category = catID;
-		mainView.loadPage('expenses-list.html?' + $.param(page.query));
-	});*/
+	filterCategory = filterCategory || 0;
 
 	// evaluate page params to determine what to display
 	// standard values
@@ -1055,6 +1045,10 @@ expApp.onPageInit('expenses-list', function (page) {
 	var itemLimit = null;
 	var itemDomBalance = $(page.container).find('#expenses-list-balance');
 	var itemNoDelete = false;
+
+	// add filter for category
+	if(filterCategory != 0)
+		itemQuery.category = filterCategory;
 
 	// override standards for special conditions
 	switch(page.query.request) {
@@ -1071,7 +1065,8 @@ expApp.onPageInit('expenses-list', function (page) {
 			itemQuery = function(row) {
 					if(!row.deleted &&
 						row.timestamp >= page.query.start &&
-						row.timestamp < page.query.end)
+						row.timestamp < page.query.end &&
+						(filterCategory == 0 || row.category == filterCategory) )
 						return true;
 					else
 						return false;
@@ -1079,7 +1074,7 @@ expApp.onPageInit('expenses-list', function (page) {
 			break;
 
 		case 'deleted':
-			itemQuery = {deleted: true};
+			itemQuery.deleted = true;
 			itemSort = [['lastupdate', 'DESC']];
 			itemLimit = 50;
 			itemDomBalance = false;
@@ -1105,7 +1100,33 @@ expApp.onPageInit('expenses-list', function (page) {
 
 	// add items to list
 	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete );
+}
 
+
+//////////////////////////////////////////////////////////////////
+// expenses-list                                                //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('expenses-list', function (page) {
+
+	// save page query for later usage
+	var tempID = createUniqueid(Date.now(), page.query.request);
+	window.globals.temp[tempID] = page;
+	$(page.container).find('#expenses-list-category').attr('data-temppage', tempID);
+
+	// add categories to dropdown select
+	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
+
+	// category select dropdown
+	$(page.container).find('#expenses-list-category').on('change', function(e) {
+
+		var catID = $(e.delegateTarget).val();
+		var tempID = $(e.delegateTarget).attr('data-temppage');
+		var tempPage = window.globals.temp[tempID];
+
+		updateItemList(tempPage, catID);
+	});
+
+	updateItemList(page, 0);
 });
 
 
