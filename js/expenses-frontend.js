@@ -47,7 +47,7 @@ window.globals = {
 		appname: 'ExpenSync',
 		developer: 'Stephan Giesau',
 		website: 'http://www.stephan-giesau.de/',
-		debug: true
+		debug: false
 	},
 	icons: [
 		"ion-ios7-more",
