@@ -1,14 +1,17 @@
-//expenses-frontend.js
+/***********************************
+ * ExpenSync                       *
+ *                                 *
+ * EXPENSES-FRONTEND.JS            *
+ * Frontend functions related to   *
+ * UI logic and support            *
+ *                                 *
+ * CONTRIBUTORS                    *
+ * Stephan Giesau                  *
+ ***********************************/
 
-properties = {
-	version: '0.2.1',
-	name: 'ExpenSync',
-	developer: 'Stephan Giesau',
-	website: 'http://www.stephan-giesau.de/',
-	debug: true
-}
 
-i18n = {
+
+window.i18n = {
 
 	month: [
 		"January",
@@ -37,8 +40,15 @@ i18n = {
 
 }
 
-globals = {
+window.globals = {
 
+	properties: {
+		version: '0.2.2',
+		appname: 'ExpenSync',
+		developer: 'Stephan Giesau',
+		website: 'http://www.stephan-giesau.de/',
+		debug: true
+	},
 	icons: [
 		"ion-ios7-more",
 		"ion-ios7-cart",
@@ -57,6 +67,9 @@ globals = {
 		"ion-ios7-home",
 		"ion-ios7-telephone"
 	],
+	state: { // to save globally accessible application state variables
+		blockedInput: false
+	},
 	temp: {} // to save objects used temporarily
 
 }
@@ -89,7 +102,6 @@ var db = new localStorageDB("expenSync", localStorage);
 
 // Check if the database was just created. Then create all tables
 if( db.isNew() ) {
-
 	createLocalDatabase();
 }
 
@@ -115,7 +127,9 @@ function createUniqueid(timestamp, salt, noUserAgent) {
  * returns a price, suitable colored and currency format
  *
  * @param {float} price number to be displayed as price
- * @param {string} account (optional) text to be displayed below price
+ * @param {string} account (optional) text to be displayed below price; false
+ * @param {boolean} noColor (optional) if true, color will be set as gray; false
+ * @returns {string} HTML with formatted price
  */
 function formatPrice(price, account) {
 
@@ -129,14 +143,23 @@ function formatPrice(price, account) {
 	formattedPrice = price.toFixed(2);
 
 	// get number format from settings
-	money_format = db.query('settings', {key: 'ui_money_format'});
-	if(money_format[0].value == 'comma')
+	money_format = getSettings('ui_money_format');
+	if(money_format == 'comma')
 		formattedPrice = formattedPrice.replace('.', ',');
 
-	// subtitle displayed below price
+	// account displayed below price
+	// only if more than one account available
 	var subtext = '';
-	if(account)
-		subtext = '<br><span class="item-subtitle color-gray">' + getAccounts(account).description + '</span>';
+	if(account) {
+
+		account = getAccounts(account);
+
+		if(account.disabled)
+			colorClass = 'gray';
+
+		if(db.rowCount('account') > 1)
+			subtext = '<br><span class="item-subtitle color-gray">' + account.description + '</span>';
+	}
 
 	return '<span class="color-' + colorClass + '">' + formattedPrice + subtext + '</span>';
 }
@@ -273,7 +296,7 @@ function createAccountOptions(domElement, selectedID, appendZero, allEntries) {
 }
 
 
-
+//TODO define params
 /**
  * Validates and formats fields from add/edit item forms
  *
@@ -356,7 +379,8 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	}
 
 	// get items according to request params
-	items = db.queryAll('item', { query: itemQuery,
+	items = db.queryAll('item', {
+									query: itemQuery,
 								  sort: itemSort,
 								  limit: itemLimit
 								});
@@ -478,7 +502,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							row.deleted = validItem.deleted;
 							row.lastupdate = Date.now();
 							row.synchronized = false;
-							row.version = properties.version;
+							row.version = window.globals.properties.version;
 							return row;
 						});
 					db.commit();
@@ -486,8 +510,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 					expApp.closeModal('.popup-edit-item');
 
 					//re-render list to represent changes
-					var page = window.globals.temp[tempID];
-					updateItemList( page, $(page.container).find('#expenses-list-category').val(), tempID );
+					updateItemList( $(page.container).find('#expenses-list-category').val(), tempID );
 
 					pageIndexLeft.trigger();
 					pageIndex.trigger();
@@ -691,13 +714,13 @@ function createAccountListElements(domSelector) {
 /**
 * get items based on expenses-list page query and optional category
 *
-* @param {object} page
-* @param {String} filterCategory
-* @param {String} tempID
+* @param {String} filterCategory ID of category by which the list is filtered
+* @param {String} tempID ID of page object in globals.temp
 */
-function updateItemList(page, filterCategory, tempID) {
+function updateItemList(filterCategory, tempID) {
 
 	filterCategory = filterCategory || 0;
+	page = window.globals.temp[tempID];
 
 	// evaluate page params to determine what to display
 	// standard values
@@ -746,12 +769,14 @@ function updateItemList(page, filterCategory, tempID) {
 		case 'lastupdate':
 			itemSort = [['lastupdate', 'DESC']];
 			itemLimit = 50;
+			itemDomBalance = false;
 			page.query.title = 'Last updated';
 			break;
 
 		case 'latest':
 		default:
 			itemLimit = 50;
+			itemDomBalance = false;
 			page.query.title = 'Latest by date';
 			break;
 	}
@@ -902,7 +927,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 	// generate links to expenses in menu
 	var currentMonth = (new Date()).getMonth();
 	var currentYear = (new Date()).getFullYear();
-	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0); // zero values for hours
+	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 	var endDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 
 	$('#menu-list').empty();
@@ -915,7 +940,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 		// create menu link label and data object (is given to expenses page)
 		// data object contains information which list to show
-		var monthLabel = i18n.month[currentMonth] + ' ' + currentYear;
+		var monthLabel = window.i18n.month[currentMonth] + ' ' + currentYear;
 		var dataObj = {
 			request: 'timerange',
 			start: startDate.getTime(),
@@ -925,13 +950,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 		// get items for current month
 		var monthBalance = 0;
-		var monthItems = db.query('item',
-			function(row) {
-				if(!row.deleted && row.timestamp >= startDate.getTime() && row.timestamp < endDate.getTime())
-					return true;
-				else
-					return false;
-			});
+		var monthItems = getItemsFromTimerange(startDate.getTime(), endDate.getTime());
 
 		// only generate link if month has items
 		if(monthItems.length > 0) {
@@ -1009,15 +1028,15 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 		e.preventDefault();
 
 		// disable multiple inputs in short time
-		if(!window.blockedInput) {
+		if(!window.globals.state.blockedInput) {
 
 			// disable button to prevent multiple entries (by accident)
 			that = $( e.target );
 			that.addClass('disabled');
-			window.blockedInput = true;
+			window.globals.state.blockedInput = true;
 			window.setTimeout(function() {
 				that.removeClass('disabled');
-				window.blockedInput = false;
+				window.globals.state.blockedInput = false;
 			}, 1000);
 
 			var addPrice = $(page.container).find('#form-add-price').val();
@@ -1030,6 +1049,9 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 			if(validItem) {
 
+				// empty price input to prevent mistaken new entries
+				$(page.container).find('#form-add-price').val('');
+
 				// insert new item in DB
 				var addID = db.insert('item', {
 					uniqueid: createUniqueid( Date.now(), addDate+addDescription+addPrice+addCategory+addAccount ),
@@ -1041,7 +1063,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 					price: validItem.price,
 					description: validItem.description,
 					deleted: false,
-					version: properties.version
+					version: window.globals.properties.version
 				});
 				db.commit();
 
@@ -1069,42 +1091,18 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	if( !getSettings('sync_enabled') )
 		$('.index-sync').html('<p>You can synchronize all expenses with your Dropbox. Enable Synchronization in <a href="settings.html" data-view=".view-left" class="open-panel">settings</a>.</p>');
 
-	////////////////
-	// calculate balances
+	// insert balances
 	// total balance
-	var totalBalance = 0;
-	var allItems = db.query('item', {deleted: false});
-	for(var i = 0; i < allItems.length; i++) {
-		totalBalance += allItems[i].price;
-	}
-
-	var allAccounts = db.query('account', {disabled: false});
-	for(var i = 0; i < allAccounts.length; i++) {
-		totalBalance += allAccounts[i].initial_balance;
-	}
-
+	var totalBalance = getTotalBalance();
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
 
 	// current month's balance
 	var currentMonth = (new Date()).getMonth();
 	var currentYear = (new Date()).getFullYear();
 	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
-	var endDate = new Date(currentYear, currentMonth+1, 0, 0, 0, 0, 0);
+	var endDate = new Date(currentYear, currentMonth+1, 1, 0, 0, 0, 0);
 
-	var currentItems = db.queryAll('item', {
-			query: function(row) {
-				if(!row.deleted &&
-					row.timestamp >= startDate.getTime() &&
-					row.timestamp < endDate.getTime())
-					return true;
-				else
-					return false;
-			}
-		});
-	var currentBalance = 0;
-	for(var i = 0; i < currentItems.length; i++) {
-		currentBalance += currentItems[i].price;
-	}
+	var currentBalance = getBalanceFromTimerange(startDate, endDate);
 	$(page.container).find('#total-balance-month').html( formatPrice(currentBalance) );
 
 	// last month's total balance
@@ -1127,17 +1125,16 @@ expApp.onPageInit('expenses-list', function (page) {
 	// add categories to dropdown select
 	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
 
-	// category select dropdown
+	// category dropdown: onchange handler
 	$(page.container).find('#expenses-list-category').on('change', function(e) {
 
 		var catID = $(e.delegateTarget).val();
 		var tempID = $(e.delegateTarget).attr('data-temppage');
-		var tempPage = window.globals.temp[tempID];
 
-		updateItemList(tempPage, catID, tempID);
+		updateItemList(catID, tempID);
 	});
 
-	updateItemList(page, 0, tempID);
+	updateItemList(0, tempID);
 });
 
 
@@ -1294,22 +1291,65 @@ expApp.onPageInit('settings-accounts', function (page) {
 
 
 
+//////////////////////////////////////////////////////////////////
+// stats                                                        //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('stats', function (page) {
+
+	// handler for selection
+	$("#form-stats-date-start").on('change', onStatsDateChange);
+	$("#form-stats-date-end").on('change', onStatsDateChange);
+
+	// draw charts
+	Charts.draw();
+
+	//TODO remove debug output
+	if(window.globals.properties.debug) {
+		// fill item list
+		var items = db.query('item');
+		for(var i = 0; i < items.length; i++) {
+
+			row = items[i];
+
+			$('#stats-item-list').append(
+				'<tr>' +
+				'  <td>' + row.uniqueid + '</td>' +
+				'  <td>' + row.timestamp + '</td>' +
+				'  <td>' + row.lastupdate + '</td>' +
+				'  <td>' + row.synchronized + '</td>' +
+				'  <td>' + row.account + '</td>' +
+				'  <td>' + row.category + '</td>' +
+				'  <td>' + row.price + '</td>' +
+				'  <td>' + row.description + '</td>' +
+				'  <td>' + row.deleted + '</td>' +
+				'  <td>' + row.version + '</td>' +
+				'</tr>'
+			);
+		}
+	}
+});
+
 
 
 //////////////////////////////////////////////////////////////////
 // APPLICATION STARTUP                                          //
 //////////////////////////////////////////////////////////////////
 
-// globals
-window.blockedInput = false;
-
 // finally initialize app
 expApp.init();
+
+// check if database is from current app version, and ask for update
+if( getSettings('sync_enabled') && (db.query('settings', {key: 'db_version'}).length == 0 || window.globals.properties.version != getSettings('db_version')) )
+	expApp.alert(
+		'The version of ExpenSync is newer than your local database. You must update your local database in order to prevent errors and enable new features.<br>' +
+		'For this, go to settings menu and click "drop local database". Synchronize your data with Dropbox before doing this, or your data will be lost!',
+		'New version available'
+	);
 
 // check if dropbox sync on startup is enabled
 if( getSettings('sync_enabled') && getSettings('sync_startup') )
 	syncInit();
 
 // debug output of DB content if debug is enabled
-if(properties.debug)
+if(window.globals.properties.debug)
 	console.debug("DB content: ", JSON.parse(db.serialize()) );

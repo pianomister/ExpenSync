@@ -1,39 +1,72 @@
-// expenses-stats.js
+/***********************************
+ * ExpenSync                       *
+ *                                 *
+ * EXPENSES-STATS.JS               *
+ * Statistical functions and       *
+ * charting functionality          *
+ *                                 *
+ * CONTRIBUTORS                    *
+ * Nicolas Marin                   *
+ * Stephan Giesau                  *
+ ***********************************/
 
-// create charts for analysis on stats.html
-$$(document).on('pageInit', '.page[data-page="stats"]', function (e) {
-  // handler for selection
-  $("#form-stats-date-start").on('change', onStatsDateChange);
-  $("#form-stats-date-end").on('change', onStatsDateChange);
 
-  // draw charts
-  Charts.draw();
 
-  //TODO remove debug output
-  if(properties.debug) {
-    // fill item list
-    var items = db.query('item');
-    for(var i = 0; i < items.length; i++) {
+/**
+* returns balance difference calculated from active items in given time range
+*
+* @param {int/timestamp/Date} startDate start point for selection
+* @param {int/timestamp/Date} startDate (exclusive) end point for selection
+* @returns {float} balance in given time range
+*/
+function getBalanceFromTimerange(startDate, endDate) {
 
-      row = items[i];
+  return getItemsFromTimerange(startDate, endDate, true);
+}
 
-      $('#stats-item-list').append(
-        '<tr>' +
-        '  <td>' + row.uniqueid + '</td>' +
-        '  <td>' + row.timestamp + '</td>' +
-        '  <td>' + row.lastupdate + '</td>' +
-        '  <td>' + row.synchronized + '</td>' +
-        '  <td>' + row.account + '</td>' +
-        '  <td>' + row.category + '</td>' +
-        '  <td>' + row.price + '</td>' +
-        '  <td>' + row.description + '</td>' +
-        '  <td>' + row.deleted + '</td>' +
-        '  <td>' + row.version + '</td>' +
-        '</tr>'
-      );
-    }
+
+
+/**
+* returns total balance from active items and accounts
+*
+* @returns {float} total balance of all active accounts and items
+*/
+function getTotalBalance() {
+
+  var totalBalance = 0;
+  var disabledAccounts = [];
+
+  var allAccounts = getAccounts();
+  for(var i = 0; i < allAccounts.length; i++) {
+    if(allAccounts[i].disabled)
+      disabledAccounts.push(allAccounts[i].uniqueid);
+    else
+      totalBalance += allAccounts[i].initial_balance;
   }
-});
+
+  var activeItems = db.queryAll('item', {
+      query: function(row) {
+        if(!row.deleted && disabledAccounts.indexOf(row.account) === -1)
+          return true;
+        else
+          return false;
+      }
+    });
+  for(var i = 0; i < activeItems.length; i++) {
+    totalBalance += activeItems[i].price;
+  }
+
+  return totalBalance;
+}
+
+
+
+
+
+
+
+
+
 
 // handler for date changes in selection
 function onStatsDateChange(e) {

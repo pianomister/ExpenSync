@@ -1,4 +1,15 @@
-// expenses-sync.js
+/***********************************
+ * ExpenSync                       *
+ *                                 *
+ * EXPENSES-SYNC.JS                *
+ * All functionality necessary     *
+ * for Dropbox synchronization     *
+ *                                 *
+ * CONTRIBUTORS                    *
+ * Stephan Giesau                  *
+ ***********************************/
+
+
 
 var DROPBOX_APP_KEY = 'sf6zic5mzuzi7k4';
 
@@ -38,7 +49,7 @@ function syncInit() {
 // after-authentication actions for sync setup
 function syncSetup() {
 
-	if(properties.debug)
+	if(window.globals.properties.debug)
 		console.log('syncSetup');
 
 	if(window.client && window.client.isAuthenticated()) {
@@ -113,7 +124,7 @@ function getSyncTime() {
 
 function sync() {
 
-	if(properties.debug)
+	if(window.globals.properties.debug)
 		console.log('sync');
 
 	var lastSync = getSettings('sync_lastupdate');
@@ -135,7 +146,7 @@ function sync() {
 
 			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'item');
 
-			if(properties.debug)
+			if(window.globals.properties.debug)
 				console.log('Merge input: ' + merge_input);
 
 			for(i = 0; i < merge_input.length; i++) {
@@ -161,7 +172,7 @@ function sync() {
 
 		} else {
 
-			if(properties.debug)
+			if(window.globals.properties.debug)
 				console.log('Everything is up to date.');
 		}
 
@@ -194,7 +205,7 @@ function sync() {
 
 			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'category');
 
-			if(properties.debug)
+			if(window.globals.properties.debug)
 				console.log('Merge input: ' + merge_input);
 
 			for(i = 0; i < merge_input.length; i++) {
@@ -220,7 +231,7 @@ function sync() {
 
 		} else {
 
-			if(properties.debug)
+			if(window.globals.properties.debug)
 				console.log('Everything is up to date.');
 		}
 
@@ -253,7 +264,7 @@ function sync() {
 
 			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'account');
 
-			if(properties.debug)
+			if(window.globals.properties.debug)
 				console.log('Merge input: ' + merge_input);
 
 			for(i = 0; i < merge_input.length; i++) {
@@ -279,7 +290,7 @@ function sync() {
 
 		} else {
 
-			if(properties.debug)
+			if(window.globals.properties.debug)
 				console.log('Everything is up to date.');
 		}
 

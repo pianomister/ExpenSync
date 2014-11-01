@@ -1,4 +1,14 @@
-//expenses-backend.js
+/***********************************
+ * ExpenSync                       *
+ *                                 *
+ * EXPENSES-BACKEND.JS             *
+ * Backend functions working with  *
+ * data and database only          *
+ *                                 *
+ * CONTRIBUTORS                    *
+ * Stephan Giesau                  *
+ ***********************************/
+
 
 
 /**
@@ -8,13 +18,13 @@ function createLocalDatabase() {
 
 	// create 'settings' table
 	var settings_rows = [
-		//{key: 'preset_balance', value: 0, description: 'Initial balance'},//TODO
+		{key: 'db_version', value: window.globals.properties.version, description: 'Version of created database'},
 		{key: 'ui_lang', value: 'EN', description: 'Language'},
 		{key: 'ui_money_format', value: 'comma', description: 'Money Format'},
 		{key: 'sync_enabled', value: true, description: 'Sync enabled'},
 		{key: 'sync_startup', value: false, description: 'Sync on startup'},
 		{key: 'sync_continuous', value: true, description: 'Sync continuously or only manually'},
-		{key: 'sync_lastupdate', value: 1, description: 'Timestamp of last sync'}
+		{key: 'sync_lastupdate', value: 1, description: 'Timestamp of last sync'},
 	];
 	db.createTableWithData('settings', settings_rows);
 
@@ -39,7 +49,7 @@ function createLocalDatabase() {
 	}
 
 	// create 'item' table
-	db.createTable('item', ['uniqueid', "timestamp", "lastupdate", 'synchronized', 'account', "category", "price", "description", "deleted", 'version']);
+	db.createTable('item', ['uniqueid', 'timestamp', 'lastupdate', 'synchronized', 'account', 'category', 'price', 'description', 'deleted', 'version']);
 
 	// create 'account' table
 	db.createTableWithData('account', [{
@@ -157,10 +167,10 @@ function getIcons(iconID) {
 
 	if(iconID || iconID === 0) {
 
-		return globals.icons[iconID];
+		return window.globals.icons[iconID];
 	} else {
 
-		return globals.icons;
+		return window.globals.icons;
 	}
 }
 
@@ -178,7 +188,7 @@ function getAccounts(accountID) {
 
 	var query = null;
 	if(accountID)
-		query = {key: accountID};
+		query = {uniqueid: accountID};
 
 	var accs = db.query('account', query);
 
@@ -194,6 +204,55 @@ function getAccounts(accountID) {
 		}
 		return returnArray;
 	}
+}
+
+
+
+/**
+* returns all (active) items from a given time range
+*
+* @param {int/timestamp/Date} startDate start point for selection
+* @param {int/timestamp/Date} startDate (exclusive) end point for selection
+* @param {boolean} returnBalance (optional) true if balance for items in that timerange should be returned; default false
+* @returns items matching this time range OR balance in this time range
+*/
+function getItemsFromTimerange(startDate, endDate, returnBalance) {
+
+	startDate = (new Date(startDate)).getTime();
+	endDate = (new Date(endDate)).getTime();
+	returnBalance = returnBalance || false;
+	var disabledAccounts = [];
+
+	// get all disabled accounts for item filtering
+	var allAccounts = db.query('account', {disabled: true});
+	for(var i = 0; i < allAccounts.length; i++) {
+		disabledAccounts.push(allAccounts[i].uniqueid);
+	}
+
+	// get not-deleted items from enabled accounts
+	var returnItems = db.queryAll('item', {
+			query: function(row) {
+				if(!row.deleted &&
+					row.timestamp >= startDate &&
+					row.timestamp < endDate &&
+					disabledAccounts.indexOf(row.account) === -1)
+					return true;
+				else
+					return false;
+			}
+		});
+
+	// if only balance was requested
+	if(returnBalance) {
+
+		var returnPrice = 0;
+		for(var i = 0; i < returnItems.length; i++) {
+			returnPrice += returnItems[i].price;
+		}
+		return returnPrice;
+	}
+
+	return returnItems;
 }
 
 

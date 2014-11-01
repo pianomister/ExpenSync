@@ -1,3 +1,83 @@
+/***********************************
+ * ExpenSync                       *
+ *                                 *
+ * EXPENSES.CSS                    *
+ * Main stylesheet for custom      *
+ * layout modifications            *
+ *                                 *
+ * CONTRIBUTORS                    *
+ * Stephan Giesau                  *
+ ***********************************/
+
+
+
+/**
+* @section app layout
+*/
+
+/* color adjustments for blue app theme */
+.theme-white a, .theme-white .item-link.list-button {
+	color: #39c;
+}
+.color-white.button:not(.button-fill), .color-white.buttons-row .button, .theme-white .button:not(.button-fill) {
+	border-color: #39c;
+}
+.theme-white label.label-checkbox input[type="checkbox"]:checked + .item-media i.icon-form-checkbox, .theme-white label.label-checkbox input[type="radio"]:checked + .item-media i.icon-form-checkbox {
+	background: #39c;
+}
+.label-switch input[type="checkbox"]:checked + .checkbox {
+	background-color: #39c !important;
+}
+label.label-checkbox i.icon-form-checkbox {
+	border-color: #39c;
+}
+.navbar a.link {
+	color: #fff;
+}
+.navbar {
+	color: #fff;
+	background: #39c;
+	border-color: transparent !important;
+}
+
+/* adapt statusbar color/layout to navbars */
+.statusbar-overlay {
+	background: #39c;
+	-webkit-transition: 400ms;
+	transition: 400ms;
+}
+/* Change Status bar background when panel opened */
+body.with-panel-left-cover .statusbar-overlay {
+		background: #131313;
+}
+html.with-statusbar-overlay body .panel-left {
+	padding-top: 0;
+}
+
+/* This will fix flicker navbar in left panel view */
+.panel-left .page-content {
+	padding: 0;
+}
+.panel-left .page {
+	margin-top: 44px;
+	padding-bottom: 44px;
+}
+.panel-left .navbar {
+	position: relative;
+	margin-bottom: -44px;
+}
+/* Because we have panels-overlay inside of .views we need to fix its open position for right panel */
+body.with-panel-right-reveal .panel-overlay {
+	margin-left: 0 !important;
+}
+
+
+
+/**
+* @section custom adjustments
+*/
+
+/* adjust size of icons */
 .ion {
 	font-size: 1.6em;
 }
@@ -10,98 +90,35 @@ li .ion {
 	text-align: center;
 }
 
-/*list balance*/
-.font-bigger {
-	font-size: 17px;
+/* icon on sync button */
+.index-sync a.button i.ion {
+	position: relative;
+	top: 2px;
 }
 
-
-.statusbar-overlay {
-    background: #39c;
-	-webkit-transition: 400ms;
-	transition: 400ms;
-}
-/* Change Status bar background when panel opened */
-body.with-panel-left-cover .statusbar-overlay {
-    background: #131313;
-}
-
-html.with-statusbar-overlay body .panel-left {
-	padding-top: 0;
-}
-
-.theme-white a, .theme-white .item-link.list-button {
-	color: #39c;
-}
-.color-white.button:not(.button-fill), .color-white.buttons-row .button, .theme-white .button:not(.button-fill) {
-	border-color: #39c;
-}
-
-.theme-white label.label-checkbox input[type="checkbox"]:checked + .item-media i.icon-form-checkbox, .theme-white label.label-checkbox input[type="radio"]:checked + .item-media i.icon-form-checkbox {
-	background: #39c;
-}
-
-.label-switch input[type="checkbox"]:checked + .checkbox {
-	background-color: #39c !important;
-}
-
-label.label-checkbox i.icon-form-checkbox {
-	border-color: #39c;
-}
-
-.navbar a.link {
-	color: #fff;
-}
-
-.navbar {
-	color: #fff;
-	background: #39c;
-	border-color: transparent !important;
-}
-
-
-
+/* remove margin below blocks on overview page */
 div[data-page="index-1"] .list-block {
 	margin-bottom: 0;
 }
 
-
-.view-left .navbar-inner {
-	margin-right: -1px;
-}
-
-/* Your app custom files in this file */
-/*.view-left {
-  border-right: 1px solid #b2b2b2;
-}*/
-/* This will fix flicker navbar in left panel view */
-.panel-left .page-content {
-  padding: 0;
-}
-.panel-left .page {
-  margin-top: 44px;
-  padding-bottom: 44px;
-}
-.panel-left .navbar {
-  position: relative;
-  margin-bottom: -44px;
-}
-/* Because we have panels-overlay inside of .views we need to fix its open position for right panel */
-body.with-panel-right-reveal .panel-overlay {
-  margin-left: 0;
-}
-
+/* right-align price and account in item lists */
 #expenses-list-items .item-after {
 	text-align: right;
 }
 
+/*.view-left .navbar-inner {
+	margin-right: -1px;
+}*/
 
 
 
-
+/**
+ * @section media queries
+ */
 
 /* iPad Vertical */
 @media (min-width: 569px) {
+
   .panel.panel-left.panel-cover {
     width: 320px;
     left: -320px;
@@ -112,8 +129,11 @@ body.with-panel-right-reveal .panel-overlay {
     transform: translate3d(320px, 0, 0);
   }
 }
+
+
 /* iPad Horizontal */
-@media (min-width: 769px) {
+@media (min-width: 900px) {/*769px*/
+
   body .panel.panel-left.panel-cover {
     left: 0;
     width: 320px;
@@ -131,7 +151,7 @@ body.with-panel-right-reveal .panel-overlay {
     width: -ms-calc(100% - 320px);
     width: calc(100% - 320px);
   }
-  /* Let's hide panel-opener when left panel is visible */
+  /* hide panel-opener when left panel is visible */
   .view-main .navbar .open-panel {
     display: none;
   }
