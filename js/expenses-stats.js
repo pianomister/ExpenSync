@@ -122,12 +122,13 @@ var Charts = {
   // category chart
   categoryPie: function() {
     var _data = {labels:[],series:[]};
+    var total = 0;
 
     // query data: categories and for each sum price and leave out categories with no items
     var _cats = db.queryAll('category',{sort: [['order', 'ASC']]});
     $.each(_cats, function(i,cat) {
         var _items = db.query('item',function(item) {
-          return item.category === cat.uniqueid && Charts.filterFunc.all(item);
+          return item.deleted == false && item.price < 0 && item.category === cat.uniqueid && Charts.filterFunc.all(item);
         });
 
         if(_items.length > 0) {
@@ -137,14 +138,17 @@ var Charts = {
           $.each(_items, function(j,item){
             _data.series[index] += item.price;
           });
+          total += _data.series[index];
         }
     });
 
     // set option for labels with name and value
     var _options = {
       labelInterpolationFnc: function(value,index) {
-        return value + ": " + _data.series[index].toFixed(2);
-      }
+        //return value + ": " + _data.series[index].toFixed(2);
+        return value + ': ' + Math.round(_data.series[index] / total * 100) + '%';
+      },
+      labelOffset: 40
     };
 
     // draw Pie chart (in .exp-stats-pie)

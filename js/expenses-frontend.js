@@ -43,7 +43,7 @@ window.i18n = {
 window.globals = {
 
 	properties: {
-		version: '0.2.2',
+		version: '0.2.3',
 		appname: 'ExpenSync',
 		developer: 'Stephan Giesau',
 		website: 'http://www.stephan-giesau.de/',
@@ -67,10 +67,14 @@ window.globals = {
 		"ion-ios7-home",
 		"ion-ios7-telephone"
 	],
-	state: { // to save globally accessible application state variables
-		blockedInput: false
+	static: {
+		infiniteScrollItemsPerLoad: 20
 	},
-	temp: {} // to save objects used temporarily
+	state: { // to save globally accessible application state variables
+		blockedInput: false,
+		infiniteScrollLoading: false
+	},
+	temp: {} // to save objects used temporarily, e.g. from expenses lists
 
 }
 
@@ -296,10 +300,16 @@ function createAccountOptions(domElement, selectedID, appendZero, allEntries) {
 }
 
 
-//TODO define params
+
 /**
- * Validates and formats fields from add/edit item forms
+ * Validates fields from add/edit item forms and formats in appropriate data type
  *
+ * @param {float/string} price field 'price' from item table
+ * @param {string} category field 'category' from item table
+ * @param {string} description field 'description' from item table
+ * @param {string/int} field 'date' from item table
+ * @param {string} account field 'account' from item table
+ * @param {boolean/string} deleted field 'deleted' from item table
  * @return false if invalid, else an object with validated and formatted values
  */
 function validateItemForm(price, category, description, date, account, deleted) {
@@ -359,17 +369,19 @@ function validateItemForm(price, category, description, date, account, deleted) 
  * @param {domSelector/jQueryObject} domBalance Element to put the list balance in
  * @param {boolean} noDelete (optional) If true, delete button will not be added; default is false
  * @param {String} tempID (optional) tempID for page query object (in window.globals)
+ * @param {boolean} infiniteScrollReset if true, list will be emptied before appending items
  */
-function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete, tempID) {
+function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete, tempID, infiniteScrollReset) {
 
 	domBalance = domBalance || false;
 	noDelete = noDelete || false;
-	$list = $('<div />');
+	infiniteScrollReset = infiniteScrollReset || false;
+	$list = $('<ul />');
 	if(domBalance)
 		$balance = $(domBalance);
 
-	// calculate list balance
 	var listBalance = 0;
+	var page = window.globals.temp[tempID];
 
 	// get categories
 	var categories = db.queryAll('category', {sort: [['order', 'ASC']]});
@@ -385,53 +397,77 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 								  limit: itemLimit
 								});
 
+	// set up variables for infinite scroll loading
+	if(infiniteScrollReset) {
+		page.infiniteScroll = {
+			endReached: false,
+			lastIndex: 0
+		}
+		// remove loader if list is shorter than load limit
+		if(items.length <= window.globals.static.infiniteScrollItemsPerLoad) {
+			expApp.detachInfiniteScroll('.infinite-scroll-' + tempID);
+			$(page.container).find('.infinite-scroll-preloader').remove();
+		}
+	}
+
 	// add items to expenses list
 	for(i = 0; i < items.length; i++) {
 
 		var row = items[i];
-		var rowCategory = _category[row.category];
-		var description = row.description;
-		var category = ' | ' + rowCategory.description;
-
-		if(description == null || description.length == 0) {
-			description = '<span class="color-gray">' + rowCategory.description + '</span>';
-			category = '';
-		}
-
-		// don't add delete button, if param is set
-		var deleteButton = '<a class="swipeout-delete swipeout-overswipe" data-confirm="Are you sure that you want to delete this item?" href="">Delete</a>';
-		if(noDelete)
-			deleteButton = '';
-
-		$list.append(
-			'<li class="swipeout" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">' +
-			'	<div class="swipeout-content item-content">' +
-			'		<div class="item-media">' +
-			'			<span class="icon-wrap"><i class="color-black icon ion ' + getIcons(rowCategory.icon) + '"></i></span>' +
-			'		</div>' +
-			'		<div class="item-inner">' +
-			'			<div class="item-title-row">' +
-			'				<div class="item-title">' + description + '</div>' +
-			'				<div class="item-after">' +
-								formatPrice(row.price, row.account) +
-			'				</div>' +
-			'			</div>' +
-			'			<div class="item-subtitle color-gray">' + formatDate(row.timestamp) + category + '</div>' +
-			'		</div>' +
-			'	</div>' +
-			'	<div class="swipeout-actions-right">' +
-			'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">Edit</a>' +
-					deleteButton +
-			'	</div>' +
-			'</li>'
-		);
-
-		// add cost to list balance
 		listBalance += row.price;
+
+		// render items if in current load range
+		if(i >= page.infiniteScroll.lastIndex
+				&& i < page.infiniteScroll.lastIndex + window.globals.static.infiniteScrollItemsPerLoad) {
+
+				var rowCategory = _category[row.category];
+				var description = row.description;
+				var category = ' | ' + rowCategory.description;
+
+				if(description == null || description.length == 0) {
+					description = '<span class="color-gray">' + rowCategory.description + '</span>';
+					category = '';
+				}
+
+				// don't add delete button, if param is set
+				var deleteButton = '<a class="swipeout-delete swipeout-overswipe" data-confirm="Are you sure that you want to delete this item?" href="">Delete</a>';
+				if(noDelete)
+					deleteButton = '';
+
+				$list.append(
+					'<li class="swipeout" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">' +
+					'	<div class="swipeout-content item-content">' +
+					'		<div class="item-media">' +
+					'			<span class="icon-wrap"><i class="color-black icon ion ' + getIcons(rowCategory.icon) + '"></i></span>' +
+					'		</div>' +
+					'		<div class="item-inner">' +
+					'			<div class="item-title-row">' +
+					'				<div class="item-title">' + description + '</div>' +
+					'				<div class="item-after">' +
+										formatPrice(row.price, row.account) +
+					'				</div>' +
+					'			</div>' +
+					'			<div class="item-subtitle color-gray">' + formatDate(row.timestamp) + category + '</div>' +
+					'		</div>' +
+					'	</div>' +
+					'	<div class="swipeout-actions-right">' +
+					'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">Edit</a>' +
+							deleteButton +
+					'	</div>' +
+					'</li>'
+				);
+		}
 	}
 
+	// update infiniteScroll variables
+	page.infiniteScroll.lastIndex = page.infiniteScroll.lastIndex + window.globals.static.infiniteScrollItemsPerLoad;
+	if( page.infiniteScroll.lastIndex > items.length )
+		page.infiniteScroll.endReached = true;
+
 	//flush list to DOM element
-	$(domList).html( $list.html() );
+	if(infiniteScrollReset)
+		$(domList).empty();
+	$(domList).append( $list.html() );
 
 	// output list balance
 	if(domBalance)
@@ -510,7 +546,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 					expApp.closeModal('.popup-edit-item');
 
 					//re-render list to represent changes
-					updateItemList( $(page.container).find('#expenses-list-category').val(), tempID );
+					updateItemList( $(page.container).find('#expenses-list-category').val(), tempID, true );
 
 					pageIndexLeft.trigger();
 					pageIndex.trigger();
@@ -716,10 +752,12 @@ function createAccountListElements(domSelector) {
 *
 * @param {String} filterCategory ID of category by which the list is filtered
 * @param {String} tempID ID of page object in globals.temp
+* @param {boolean} infiniteScrollReset if true, list will be emptied before appending items
 */
-function updateItemList(filterCategory, tempID) {
+function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 
 	filterCategory = filterCategory || 0;
+	infiniteScrollReset = infiniteScrollReset || false;
 	page = window.globals.temp[tempID];
 
 	// evaluate page params to determine what to display
@@ -785,7 +823,7 @@ function updateItemList(filterCategory, tempID) {
 	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
 
 	// add items to list
-	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID );
+	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID, infiniteScrollReset );
 }
 
 
@@ -1131,10 +1169,42 @@ expApp.onPageInit('expenses-list', function (page) {
 		var catID = $(e.delegateTarget).val();
 		var tempID = $(e.delegateTarget).attr('data-temppage');
 
-		updateItemList(catID, tempID);
+		updateItemList(catID, tempID, true);
 	});
 
-	updateItemList(0, tempID);
+	// add tempID to page-content container and attach infinite scroll
+	$(page.container).find('.page-content').addClass('infinite-scroll-' + tempID);
+	expApp.attachInfiniteScroll('.infinite-scroll-' + tempID);
+
+	// Attach 'infinite' event handler
+	$('.infinite-scroll-' + tempID).on('infinite', function () {
+
+	  // Exit, if loading in progress
+	  if (window.globals.state.infiniteScrollLoading) return;
+
+	  // Set loading flag
+	  window.globals.state.infiniteScrollLoading = true;
+
+	  // Emulate 1s loading
+	  setTimeout(function () {
+	    // Reset loading flag
+	    window.globals.state.infiniteScrollLoading = false;
+			var page = window.globals.temp[tempID];
+
+			if( page.infiniteScroll.endReached ) {
+				// Nothing more to load, detach infinite scroll events to prevent unnecessary loadings
+				expApp.detachInfiniteScroll('.infinite-scroll-' + tempID);
+				// Remove preloader
+				$('.infinite-scroll-' + tempID + ' .infinite-scroll-preloader').remove();
+				return;
+			}
+
+			updateItemList( $(page.container).find('#expenses-list-category').val(), tempID, false);
+
+	  }, 100);
+	});
+
+	updateItemList(0, tempID, true);
 });
 
 

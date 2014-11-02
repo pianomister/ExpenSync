@@ -77,6 +77,17 @@ body.with-panel-right-reveal .panel-overlay {
 * @section custom adjustments
 */
 
+/* loading indicator for infinite scroll lists */
+.infinite-scroll-preloader {
+	margin-top:-20px;
+	margin-bottom: 10px;
+	text-align: center;
+}
+.infinite-scroll-preloader .preloader {
+	width:34px;
+	height:34px;
+}
+
 /* adjust size of icons */
 .ion {
 	font-size: 1.6em;
@@ -110,6 +121,86 @@ div[data-page="index-1"] .list-block {
 	margin-right: -1px;
 }*/
 
+/* colors for charts */
+.ct-series.ct-series-a .ct-slice {
+	fill: #39c !important;
+}
+.ct-series.ct-series-b .ct-slice {
+	fill: #2886B5 !important;
+}
+.ct-series.ct-series-c .ct-slice {
+	fill: #1E749F !important;
+}
+.ct-series.ct-series-d .ct-slice {
+	fill: #146188 !important;
+}
+.ct-series.ct-series-e .ct-slice {
+	fill: #0A4F72 !important;
+}
+.ct-series.ct-series-f .ct-slice {
+	fill: #003D5C !important;
+}
+.ct-series.ct-series-g .ct-slice {
+	fill: #0A4F72 !important;
+}
+.ct-series.ct-series-h .ct-slice {
+	fill: #146188 !important;
+}
+.ct-series.ct-series-i .ct-slice {
+	fill: #1E749F !important;
+}
+.ct-series.ct-series-j .ct-slice {
+	fill: #2886B5 !important;
+}
+.ct-series.ct-series-k .ct-slice {
+	fill: #39c !important;
+}
+.ct-series.ct-series-l .ct-slice {
+	fill: #2886B5 !important;
+}
+.ct-series.ct-series-m .ct-slice {
+	fill: #1E749F !important;
+}
+
+.ct-series.ct-series-a .ct-bar {
+	stroke: #39c !important;
+}
+.ct-series.ct-series-b .ct-bar {
+	stroke: #2886B5 !important;
+}
+.ct-series.ct-series-c .ct-bar {
+	stroke: #1E749F !important;
+}
+.ct-series.ct-series-d .ct-bar {
+	stroke: #146188 !important;
+}
+.ct-series.ct-series-e .ct-bar {
+	stroke: #0A4F72 !important;
+}
+.ct-series.ct-series-f .ct-bar {
+	stroke: #003D5C !important;
+}
+.ct-series.ct-series-g .ct-bar {
+	stroke: #0A4F72 !important;
+}
+.ct-series.ct-series-h .ct-bar {
+	stroke: #146188 !important;
+}
+.ct-series.ct-series-i .ct-bar {
+	stroke: #1E749F !important;
+}
+.ct-series.ct-series-j .ct-bar {
+	stroke: #2886B5 !important;
+}
+.ct-series.ct-series-k .ct-bar {
+	stroke: #39c !important;
+}
+.ct-series.ct-series-l .ct-bar {
+	stroke: #2886B5 !important;
+}
+.ct-series.ct-series-m .ct-bar {
+	stroke: #1E749F !important;
+}
 
 
 /**
