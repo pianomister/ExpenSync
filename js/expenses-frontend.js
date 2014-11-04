@@ -347,7 +347,7 @@ function validateItemForm(price, category, description, date, account, deleted) 
 			return returnObj;
 
 		} else {
-			expApp.alert('Please select an account an a category.');
+			expApp.alert('Please select an account and a category.');
 		}
 
 	} else {
@@ -840,6 +840,7 @@ function openCategoryPopup(editID) {
 
 	$('.popup-edit-category').attr('data-uniqueid', editID);
 	$('.popup-edit-category #form-category-description').val(editCat.description);
+	$('#form-category-icon').empty();
 
 	// create icon options
 	var icons = getIcons();
