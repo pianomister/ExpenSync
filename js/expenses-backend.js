@@ -38,8 +38,8 @@ function createLocalDatabase() {
 
 		db.insert('category', {
 			uniqueid: createUniqueid( k, k, true ),
-			timestamp: k,
-			lastupdate: k,
+			timestamp: 1,
+			lastupdate: 1,
 			synchronized: true,
 			description: _categories[k],
 			icon: k,

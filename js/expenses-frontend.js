@@ -942,20 +942,6 @@ function openCategoryPopup(editID) {
 
 	$('.popup-edit-category').attr('data-uniqueid', editID);
 	$('.popup-edit-category #form-category-description').val(editCat.description);
-	/*$('#form-category-icon').empty();
-
-	// create icon options
-	var icons = getIcons();
-	for(var z = 0; z < icons.length; z++) {
-
-		var selected = '';
-		if(z == editCat.icon)
-			selected = ' selected="selected"';
-
-		$('#form-category-icon').append(
-			'<option value="' + z + '"' + selected + '>' + icons[z] + '</option>'
-		);
-	}*/
 
 	// create icon selector
 	$('.popup-edit-category #form-category-icon').empty();

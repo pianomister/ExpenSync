@@ -72,12 +72,13 @@ function syncSetup() {
 						ds.recordsChanged.addListener(syncRequest);
 					}*/
 
-					sync();
+					window.setTimeout(function(){ sync(); }, 1000);
 				}
 			});
 		} else {
-			console.log('syncSetup/else');
-			sync();
+			if(window.globals.properties.debug)
+				console.log('syncSetup/else');
+			window.setTimeout(function(){ sync(); }, 1000);
 		}
 
 	} else {
