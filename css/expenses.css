@@ -107,6 +107,39 @@ li .ion {
 	top: 2px;
 }
 
+/* icon selector */
+ul.icon-selector {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+ul.icon-selector li {
+ 	display: inline-block;
+	width: 1.4em;
+	margin: .3em;
+	padding: .7em;
+	border-radius: .2em;
+	text-align: center;
+	cursor: pointer;
+	background-color: #fff;
+	transition: background-color .4s ease 0s;
+}
+ul.icon-selector li:hover {
+	background-color: #eee;
+}
+ul.icon-selector i {
+	color: #000;
+	font-size: 1.6em;
+}
+ul.icon-selector li.icon-selected {
+	background-color: #000;
+}
+ul.icon-selector li.icon-selected i {
+	color: #fff;
+}
+
+
+
 /* remove margin below blocks on overview page */
 div[data-page="index-1"] .list-block {
 	margin-bottom: 0;

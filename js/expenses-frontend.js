@@ -50,22 +50,124 @@ window.globals = {
 		debug: false
 	},
 	icons: [
-		"ion-ios7-more",
-		"ion-ios7-cart",
-		"ion-fork",
-		"ion-ios7-wineglass",
-		"ion-ios7-musical-notes",
-		"ion-ios7-pricetags",
-		"ion-model-s",
-		"ion-plane",
-		"ion-map",
-		"ion-ios7-home",
-		"ion-ios7-briefcase",
-		"ion-cash",
-		"ion-ios7-medkit",
-		"ion-university",
-		"ion-ios7-home",
-		"ion-ios7-telephone"
+		'icon-ion-ios7-more',
+		'icon-ion-ios7-cart',
+		'icon-ion-fork',
+		'icon-ion-ios7-wineglass',
+		'icon-ion-ios7-musical-notes',
+		'icon-ion-ios7-pricetags',
+		'icon-ion-model-s',
+		'icon-ion-plane',
+		'icon-ion-map',
+		'icon-ion-ios7-home',
+		'icon-ion-ios7-briefcase',
+		'icon-ion-cash',
+		'icon-ion-ios7-medkit',
+		'icon-ion-university',
+		'icon-ion-ios7-home',
+		'icon-ion-ios7-telephone',
+		'icon-smile-o',
+		'icon-frown-o',
+		'icon-meh-o',
+		'icon-code',
+		'icon-question',
+		'icon-info',
+		'icon-anchor',
+		'icon-euro',
+		'icon-gbp',
+		'icon-dollar',
+		'icon-child',
+		'icon-ion-bag',
+		'icon-ion-beer',
+		'icon-ion-card',
+		'icon-ion-document-text',
+		'icon-ion-earth',
+		'icon-ion-female',
+		'icon-ion-game-controller-b',
+		'icon-ion-hammer',
+		'icon-ion-icecream',
+		'icon-ion-ios7-alarm',
+		'icon-ion-ios7-albums',
+		'icon-ion-ios7-americanfootball',
+		'icon-ion-ios7-baseball',
+		'icon-ion-ios7-bell',
+		'icon-ion-ios7-bolt',
+		'icon-ion-ios7-bookmarks',
+		'icon-ion-ios7-box',
+		'icon-ion-ios7-calendar',
+		'icon-ion-ios7-camera',
+		'icon-ion-ios7-chatboxes',
+		'icon-ion-ios7-chatbubble',
+		'icon-ion-ios7-checkmark-outline',
+		'icon-ion-ios7-cloud',
+		'icon-ion-ios7-cloudy-night',
+		'icon-ion-ios7-contact-outline',
+		'icon-ion-ios7-copy',
+		'icon-ion-ios7-drag',
+		'icon-ion-ios7-email',
+		'icon-ion-ios7-filing',
+		'icon-ion-ios7-flag',
+		'icon-ion-ios7-folder',
+		'icon-ion-ios7-football-outline',
+		'icon-ion-ios7-gear-outline',
+		'icon-ion-ios7-glasses',
+		'icon-ion-ios7-heart',
+		'icon-ion-ios7-lightbulb',
+		'icon-ion-ios7-location',
+		'icon-ion-ios7-locked',
+		'icon-ion-ios7-mic',
+		'icon-ion-ios7-monitor',
+		'icon-ion-ios7-paper',
+		'icon-ion-ios7-paperplane',
+		'icon-ion-ios7-partlysunny',
+		'icon-ion-ios7-paw',
+		'icon-ion-ios7-people',
+		'icon-ion-ios7-person',
+		'icon-ion-ios7-pie',
+		'icon-ion-ios7-printer',
+		'icon-ion-ios7-pulse-strong',
+		'icon-ion-ios7-rainy',
+		'icon-ion-ios7-search-strong',
+		'icon-ion-ios7-snowy',
+		'icon-ion-ios7-star',
+		'icon-ion-ios7-sunny',
+		'icon-ion-ios7-time',
+		'icon-ion-ios7-trash',
+		'icon-ion-ios7-unlocked',
+		'icon-ion-ios7-videocam',
+		'icon-ion-ipad',
+		'icon-ion-iphone',
+		'icon-ion-ipod',
+		'icon-ion-jet',
+		'icon-ion-key',
+		'icon-ion-knife',
+		'icon-ion-laptop',
+		'icon-ion-leaf',
+		'icon-ion-mouse',
+		'icon-ion-music-note',
+		'icon-ion-no-smoking',
+		'icon-ion-pizza',
+		'icon-ion-playstation',
+		'icon-ion-social-dropbox',
+		'icon-ion-social-usd',
+		'icon-ion-stats-bars',
+		'icon-ion-wifi',
+		'icon-ion-woman',
+		'icon-ion-wrench',
+		'icon-directions',
+		'icon-feather',
+		'icon-flashlight',
+		'icon-tools',
+		'icon-droplet',
+		'icon-hourglass',
+		'icon-cup',
+		'icon-rocket',
+		'icon-brush',
+		'icon-keyboard',
+		'icon-database',
+		'icon-clipboard',
+		'icon-graph',
+		'icon-archive'
 	],
 	static: {
 		infiniteScrollItemsPerLoad: 20
@@ -840,7 +942,7 @@ function openCategoryPopup(editID) {
 
 	$('.popup-edit-category').attr('data-uniqueid', editID);
 	$('.popup-edit-category #form-category-description').val(editCat.description);
-	$('#form-category-icon').empty();
+	/*$('#form-category-icon').empty();
 
 	// create icon options
 	var icons = getIcons();
@@ -853,7 +955,26 @@ function openCategoryPopup(editID) {
 		$('#form-category-icon').append(
 			'<option value="' + z + '"' + selected + '>' + icons[z] + '</option>'
 		);
+	}*/
+
+	// create icon selector
+	$('.popup-edit-category #form-category-icon').empty();
+	var icons = getIcons();
+	for(var z = 0; z < icons.length; z++) {
+
+		var selected = '';
+		if(z == editCat.icon)
+			selected = ' class="icon-selected"';
+
+		$('.popup-edit-category #form-category-icon').append(
+			'<li data-id="' + z + '"' + selected + '><i class="' + icons[z] + '"></i></li>'
+		);
 	}
+	$('.popup-edit-category #form-category-icon li').on('click', function(e) {
+		$(e.delegateTarget).addClass('icon-selected');
+		$(e.delegateTarget).siblings().removeClass('icon-selected');
+	});
+
 
 	// save handler
 	$('.popup-edit-category-save').on('click', function(e) {
@@ -864,7 +985,7 @@ function openCategoryPopup(editID) {
 		if(editID.length > 1) {
 
 			var newDescription = $('.popup-edit-category #form-category-description').val();
-			var newIcon = $('.popup-edit-category #form-category-icon').val();
+			var newIcon = $('.popup-edit-category #form-category-icon li.icon-selected').attr('data-id');
 
 			if(newDescription.length > 0 && newIcon.length > 0) {
 
@@ -1267,7 +1388,7 @@ expApp.onPageInit('settings-categories', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-checkmark-outline').removeClass('icon-ion-ios7-drag');
 			$('#settings-categories-list label.label-checkbox').removeClass('disabled');
 		}
 	});
@@ -1276,7 +1397,7 @@ expApp.onPageInit('settings-categories', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-drag').removeClass('icon-ion-ios7-checkmark-outline');
 			$('#settings-categories-list label.label-checkbox').addClass('disabled');
 
 			// save list and its order
@@ -1319,7 +1440,7 @@ expApp.onPageInit('settings-accounts', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-checkmark-outline').removeClass('icon-ion-ios7-drag');
 			$('#settings-accounts-list label.label-checkbox').removeClass('disabled');
 		}
 	});
@@ -1328,7 +1449,7 @@ expApp.onPageInit('settings-accounts', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-drag').removeClass('icon-ion-ios7-checkmark-outline');
 			$('#settings-accounts-list label.label-checkbox').addClass('disabled');
 
 			// save list and its order

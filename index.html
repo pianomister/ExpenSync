@@ -16,7 +16,7 @@
     <!--link rel="apple-touch-startup-image" sizes="320x460" href="ausgaben_startup460.png" /-->
     <link rel="stylesheet" href="css/framework7.min.css">
     <link rel="stylesheet" href="css/framework7.themes.min.css">
-    <link rel="stylesheet" href="css/ionicons.min.css">
+    <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/chartist.min.css">
     <link rel="stylesheet" href="css/expenses.css">
   </head>
@@ -128,16 +128,15 @@
                       </div>
                     </div>
                   </div></li>
-                  <li><div class="item-content">
-                    <div class="item-inner">
-                      <div class="item-title label">Icon</div>
-                      <div class="item-input">
-                        <select id="form-category-icon">
-                        </select>
-                      </div>
-                    </div>
-                  </div></li>
                 </ul>
+              </div>
+
+              <div class="content-block-title">Select icon</div>
+              <div class="content-block tablet-inset">
+                <div class="content-block-inner">
+                  <ul class="icon-selector" id="form-category-icon">
+                  </ul>
+                </div>
               </div>
 
             </div>
@@ -209,7 +208,7 @@
             <div class="navbar-inner">
               <div class="left">
                 <a href="settings.html" class="link icon-only">
-                  <i class="icon ion ion-ios7-gear-outline"></i>
+                  <i class="icon ion icon-ion-ios7-gear-outline"></i>
                 </a>
               </div>
               <div class="center sliding">Menu</div>
@@ -358,9 +357,10 @@
 
     							<div class="content-block-title">Backup &amp; Sync</div>
     							<div class="content-block index-sync">
-    								<p><a class="button" onclick="syncInit();"><i class="ion ion-social-dropbox"></i> Sync now with Dropbox</a></p>
+    								<p><a class="button" onclick="syncInit();"><i class="ion icon-ion-social-dropbox"></i> Sync now with Dropbox</a></p>
     								<p>You might be asked to login with Dropbox first before you can use synchronization.</p>
     							</div>
+
     						</div>
     					</div>
     				</div>
