@@ -128,9 +128,7 @@ function getSettings(settingName) {
  */
 function setSettings(settings, newValue) {
 
-	newValue = newValue || null;
-
-	if(newValue) {
+	if(newValue !== undefined) {
 
 		settings = [{ key: settings, value: newValue }];
 	}

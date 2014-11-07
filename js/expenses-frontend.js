@@ -1324,14 +1324,9 @@ expApp.onPageInit('settings', function (page) {
 
 	// load settings
 	var settings = getSettings();
-	/*settings = [];
 
-	for(i = 0; i < settings_rows.length; i++) {
+	console.log(settings);
 
-		settings[ settings_rows[i].key ] = settings_rows[i].value;
-	}*///TODO
-
-	//$('#settings-preset_balance').val( settings['preset_balance'] );//TODO
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
 
 	if(settings['sync_enabled'])
@@ -1340,22 +1335,21 @@ expApp.onPageInit('settings', function (page) {
 	if(settings['sync_startup'])
 		$('#settings-sync_startup').prop('checked', 'checked');
 
-
-	// save settings
-	$('#settings-button-save').on('click', function() {
-
-		setSettings([
-				//{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },//TODO
-				{key: 'ui_money_format', value: $('#settings-ui_money_format').val() },
-				{key: 'sync_enabled', value: $('#settings-sync_enabled').is(':checked') },
-				{key: 'sync_startup', value: $('#settings-sync_startup').is(':checked') }
-			]);
-
-		expApp.addNotification({
-			title: 'Settings saved',
-			message: 'Some settings require a reload.',
-			hold: 1000
-		});
+	// SAVE HANDLERS
+	// change handler: ui_money_format
+	$('#settings-ui_money_format').on('change', function() {
+		setSettings('ui_money_format', $('#settings-ui_money_format').val() );
+		console.log(getSettings('ui_money_format'));
+	});
+	// change handler: sync_enabled
+	$('#settings-sync_enabled').on('change', function() {
+		setSettings('sync_enabled', $('#settings-sync_enabled').is(':checked') );
+		console.log(getSettings('sync_enabled'));
+	});
+	// change handler: sync_startup
+	$('#settings-sync_startup').on('change', function() {
+		setSettings('sync_startup', $('#settings-sync_startup').is(':checked') );
+		console.log(getSettings('sync_startup'));
 	});
 });
 

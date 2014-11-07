@@ -2,12 +2,12 @@ CACHE MANIFEST
 css/expenses.css
 css/framework7.min.css
 css/framework7.themes.min.css
-css/ionicons.min.css
+css/icomoon.css
 css/chartist.min.css
-fonts/ionicons.eot
-fonts/ionicons.svg
-fonts/ionicons.ttf
-fonts/ionicons.woff
+fonts/icomoon.eot
+fonts/icomoon.svg
+fonts/icomoon.ttf
+fonts/icomoon.woff
 js/md5.js
 js/expenses-backend.js
 js/expenses-frontend.js
@@ -29,4 +29,4 @@ stats.html
 NETWORK:
 *
 
-#05.11.2014 15:06
+#07.11.2014 10:49
