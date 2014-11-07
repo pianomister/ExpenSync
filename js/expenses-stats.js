@@ -6,8 +6,8 @@
  * charting functionality          *
  *                                 *
  * CONTRIBUTORS                    *
- * Nicolas Marin                   *
  * Stephan Giesau                  *
+ * Nicolas Marin                   *
  ***********************************/
 
 
@@ -57,6 +57,28 @@ function getTotalBalance() {
   }
 
   return totalBalance;
+}
+
+
+
+/**
+* returns current total balance for a specific account
+*
+* @param {String} uniqueid
+* @returns {float} total balance an accounts and items
+*/
+function getAccountBalance(accountID) {
+
+  var accItems = db.query('item', {account: accountID, deleted: false});
+  var accInitBalance = getAccounts(accountID).initial_balance;
+  var accBalance = 0;
+
+  for(var i = 0; i < accItems.length; i++) {
+
+    accBalance += accItems[i].price;
+  }
+
+  return accBalance + accInitBalance;
 }
 
 

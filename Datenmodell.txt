@@ -1,8 +1,4 @@
 ﻿FEATURES / TODO
-- infinite scroll for lists to enhance loading time
-- icon select verbessern in categories
-
-- Neue Icons hinzufügen
 - Möglichkeit fixe Ausgaben anzugeben (Anfang des Monats automatisch als Einträge anlegen)
 
 IDEEN

@@ -1166,7 +1166,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 	// add categories/accounts to dropdown select
 	createCategoryOptions( $(page.container).find('#form-add-category') );
-	createAccountOptions( $(page.container).find('#form-add-account') );
+	createAccountOptions( $(page.container).find('#form-add-account'), false, false, true );
 
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function(e) {
@@ -1254,6 +1254,24 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	// last month's total balance
 	var lastBalance = totalBalance - currentBalance;
 	$(page.container).find('#total-balance-lastmonth').html( formatPrice(lastBalance) );
+
+	// account balances
+	var accounts = getAccounts();
+	$(page.container).find('#index-account-balance').empty();
+
+	for(var a = 0; a < accounts.length; a++) {
+
+		var balance = getAccountBalance(accounts[a].uniqueid);
+
+		$(page.container).find('#index-account-balance').append(
+			'<li><div class="item-content">' +
+			'	<div class="item-inner">' +
+			'		<div class="item-title">' + accounts[a].description + '</div>' +
+			'		<div class="item-after">' + formatPrice(balance) + '</div>' +
+			'	</div>' +
+			'</div></li>'
+		);
+	}
 });
 
 
