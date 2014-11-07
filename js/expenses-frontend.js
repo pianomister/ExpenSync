@@ -43,7 +43,7 @@ window.i18n = {
 window.globals = {
 
 	properties: {
-		version: '0.2.3',
+		version: '0.2.4',
 		appname: 'ExpenSync',
 		developer: 'Stephan Giesau',
 		website: 'http://www.stephan-giesau.de/',
@@ -1511,12 +1511,12 @@ expApp.onPageInit('stats', function (page) {
 expApp.init();
 
 // check if database is from current app version, and ask for update
-if( getSettings('sync_enabled') && (db.query('settings', {key: 'db_version'}).length == 0 || window.globals.properties.version != getSettings('db_version')) )
+/*if( getSettings('sync_enabled') && (db.query('settings', {key: 'db_version'}).length == 0 || window.globals.properties.version != getSettings('db_version')) )
 	expApp.alert(
 		'The version of ExpenSync is newer than your local database. You must update your local database in order to prevent errors and enable new features.<br>' +
 		'For this, go to settings menu and click "drop local database". Synchronize your data with Dropbox before doing this, or your data will be lost!',
 		'New version available'
-	);
+	);*/
 
 // check if dropbox sync on startup is enabled
 if( getSettings('sync_enabled') && getSettings('sync_startup') )
