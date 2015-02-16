@@ -137,7 +137,9 @@ function sync() {
 
 	// get data
 	var syncTable = dsTable.getOrInsert('sync', {name:'items',json:'[]'});
-	var syncJSON = JSON.parse( syncTable.get('json') );
+	var syncTable2 = dsTable.getOrInsert('sync2', {name:'items2',json:''});
+	var syncTable3 = dsTable.getOrInsert('sync3', {name:'items3',json:''});
+	var syncJSON = JSON.parse( syncTable.get('json') + syncTable2.get('json') + syncTable3.get('json') );
 
 	// if data available in datastore, merge it and save it back
 	if(syncJSON.length > 0) {
@@ -184,9 +186,21 @@ function sync() {
 	}
 
 	// update with local data
+	// 3 chunks
+	syncItems = JSON.stringify( db.query('item') );
+	itemChunks = chunkString(syncItems, Math.ceil(syncItems.length/3));
+
 	dsTable.query({name:'items'})[0]
 		.update({
-			json: JSON.stringify( db.query('item') )
+			json: '[]'//itemChunks[0]
+		});
+	dsTable.query({name:'items2'})[0]
+		.update({
+			json: ''//itemChunks[1]
+		});
+	dsTable.query({name:'items3'})[0]
+		.update({
+			json: ''//itemChunks[2]
 		});
 
 

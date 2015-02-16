@@ -1195,8 +1195,10 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 			if(validItem) {
 
-				// empty price input to prevent mistaken new entries
+				// empty input fields to prevent mistaken new entries
 				$(page.container).find('#form-add-price').val('');
+				$(page.container).find('#form-add-description').val('');
+				$(page.container).find('#form-add-date').val('');
 
 				// insert new item in DB
 				var addID = db.insert('item', {
