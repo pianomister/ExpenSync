@@ -9,6 +9,12 @@
  * Stephan Giesau                  *
  ***********************************/
 
+/* quick fixes of platform bugs */
+/* FF: right alignment of item-after elements */
+.list-block .item-after {
+	margin-left: auto;
+}
+
 
 
 /**
