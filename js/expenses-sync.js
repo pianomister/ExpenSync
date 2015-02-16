@@ -192,15 +192,15 @@ function sync() {
 
 	dsTable.query({name:'items'})[0]
 		.update({
-			json: '[]'//itemChunks[0]
+			json: itemChunks[0]
 		});
 	dsTable.query({name:'items2'})[0]
 		.update({
-			json: ''//itemChunks[1]
+			json: itemChunks[1]
 		});
 	dsTable.query({name:'items3'})[0]
 		.update({
-			json: ''//itemChunks[2]
+			json: itemChunks[2]
 		});
 
 

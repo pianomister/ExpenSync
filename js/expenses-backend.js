@@ -284,7 +284,7 @@ function getEntriesNewerThan(items, timestamp, table) {
 
 
 /**
- * separate a string into chunks of given length
+ * separate a string str into chunks of given length len
  */
 function chunkString(str, len) {
 	var _size = Math.ceil(str.length/len),

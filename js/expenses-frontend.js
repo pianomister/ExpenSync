@@ -279,7 +279,7 @@ function formatPrice(price, account) {
  * @param {boolean} forFieldInput (optional) true if output is for input field
  */
 function formatDate(dateString, forFieldInput) {
-
+ 
 	forFieldInput = forFieldInput || false;
 
 	date = new Date(dateString);
