@@ -11,176 +11,6 @@
 
 
 
-window.i18n = {
-
-	month: [
-		"January",
-		"February",
-		"March",
-		"April",
-		"May",
-		"June",
-		"July",
-		"August",
-		"September",
-		"October",
-		"November",
-		"December"
-	],
-
-	weekday: [
-		"Sunday",
-		"Monday",
-		"Tuesday",
-		"Wednesday",
-		"Thursday",
-		"Friday",
-		"Saturday"
-	]
-
-}
-
-window.globals = {
-
-	properties: {
-		version: '0.2.4',
-		appname: 'ExpenSync',
-		developer: 'Stephan Giesau',
-		website: 'http://www.stephan-giesau.de/',
-		debug: false
-	},
-	icons: [
-		'icon-ion-ios7-more',
-		'icon-ion-ios7-cart',
-		'icon-ion-fork',
-		'icon-ion-ios7-wineglass',
-		'icon-ion-ios7-musical-notes',
-		'icon-ion-ios7-pricetags',
-		'icon-ion-model-s',
-		'icon-ion-plane',
-		'icon-ion-map',
-		'icon-ion-ios7-home',
-		'icon-ion-ios7-briefcase',
-		'icon-ion-cash',
-		'icon-ion-ios7-medkit',
-		'icon-ion-university',
-		'icon-ion-ios7-home',
-		'icon-ion-ios7-telephone',
-		'icon-smile-o',
-		'icon-frown-o',
-		'icon-meh-o',
-		'icon-code',
-		'icon-question',
-		'icon-info',
-		'icon-anchor',
-		'icon-euro',
-		'icon-gbp',
-		'icon-dollar',
-		'icon-child',
-		'icon-ion-bag',
-		'icon-ion-beer',
-		'icon-ion-card',
-		'icon-ion-document-text',
-		'icon-ion-earth',
-		'icon-ion-female',
-		'icon-ion-game-controller-b',
-		'icon-ion-hammer',
-		'icon-ion-icecream',
-		'icon-ion-ios7-alarm',
-		'icon-ion-ios7-albums',
-		'icon-ion-ios7-americanfootball',
-		'icon-ion-ios7-baseball',
-		'icon-ion-ios7-bell',
-		'icon-ion-ios7-bolt',
-		'icon-ion-ios7-bookmarks',
-		'icon-ion-ios7-box',
-		'icon-ion-ios7-calendar',
-		'icon-ion-ios7-camera',
-		'icon-ion-ios7-chatboxes',
-		'icon-ion-ios7-chatbubble',
-		'icon-ion-ios7-checkmark-outline',
-		'icon-ion-ios7-cloud',
-		'icon-ion-ios7-cloudy-night',
-		'icon-ion-ios7-contact-outline',
-		'icon-ion-ios7-copy',
-		'icon-ion-ios7-drag',
-		'icon-ion-ios7-email',
-		'icon-ion-ios7-filing',
-		'icon-ion-ios7-flag',
-		'icon-ion-ios7-folder',
-		'icon-ion-ios7-football-outline',
-		'icon-ion-ios7-gear-outline',
-		'icon-ion-ios7-glasses',
-		'icon-ion-ios7-heart',
-		'icon-ion-ios7-lightbulb',
-		'icon-ion-ios7-location',
-		'icon-ion-ios7-locked',
-		'icon-ion-ios7-mic',
-		'icon-ion-ios7-monitor',
-		'icon-ion-ios7-paper',
-		'icon-ion-ios7-paperplane',
-		'icon-ion-ios7-partlysunny',
-		'icon-ion-ios7-paw',
-		'icon-ion-ios7-people',
-		'icon-ion-ios7-person',
-		'icon-ion-ios7-pie',
-		'icon-ion-ios7-printer',
-		'icon-ion-ios7-pulse-strong',
-		'icon-ion-ios7-rainy',
-		'icon-ion-ios7-search-strong',
-		'icon-ion-ios7-snowy',
-		'icon-ion-ios7-star',
-		'icon-ion-ios7-sunny',
-		'icon-ion-ios7-time',
-		'icon-ion-ios7-trash',
-		'icon-ion-ios7-unlocked',
-		'icon-ion-ios7-videocam',
-		'icon-ion-ipad',
-		'icon-ion-iphone',
-		'icon-ion-ipod',
-		'icon-ion-jet',
-		'icon-ion-key',
-		'icon-ion-knife',
-		'icon-ion-laptop',
-		'icon-ion-leaf',
-		'icon-ion-mouse',
-		'icon-ion-music-note',
-		'icon-ion-no-smoking',
-		'icon-ion-pizza',
-		'icon-ion-playstation',
-		'icon-ion-social-dropbox',
-		'icon-ion-social-usd',
-		'icon-ion-stats-bars',
-		'icon-ion-wifi',
-		'icon-ion-woman',
-		'icon-ion-wrench',
-		'icon-directions',
-		'icon-feather',
-		'icon-flashlight',
-		'icon-tools',
-		'icon-droplet',
-		'icon-hourglass',
-		'icon-cup',
-		'icon-rocket',
-		'icon-brush',
-		'icon-keyboard',
-		'icon-database',
-		'icon-clipboard',
-		'icon-graph',
-		'icon-archive'
-	],
-	static: {
-		infiniteScrollItemsPerLoad: 20
-	},
-	state: { // to save globally accessible application state variables
-		blockedInput: false,
-		infiniteScrollLoading: false
-	},
-	temp: {} // to save objects used temporarily, e.g. from expenses lists
-
-}
-
-
 // create app object
 var expApp = new Framework7({
 	init: false, // disabled so page callbacks for initial pages work
@@ -279,7 +109,7 @@ function formatPrice(price, account) {
  * @param {boolean} forFieldInput (optional) true if output is for input field
  */
 function formatDate(dateString, forFieldInput) {
- 
+
 	forFieldInput = forFieldInput || false;
 
 	date = new Date(dateString);
@@ -1478,6 +1308,75 @@ expApp.onPageInit('settings-accounts', function (page) {
 			// because disabling/enabling accounts influences the total balance
 			pageIndex.trigger();
 		}
+	});
+});
+
+
+
+//////////////////////////////////////////////////////////////////
+// backup                                                       //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('backup', function (page) {
+
+	// assume main view if page is not defined
+	page = page || {container:'.view-main'};
+
+	// csv export button
+	$(page.container).find('a#export-csv').on('click', function() {
+		var encodedUri = createCSVDataLink(db.query('item'), "ExpenSync CSV Export " + Date.now());
+
+		if(encodedUri) {
+			var link = document.createElement("a");
+			link.setAttribute("href", encodedUri);
+			link.setAttribute("download", "expensync_export_" + Date.now() + ".csv");
+			link.setAttribute("class", "external");
+			document.body.appendChild(link);
+			link.click();
+		} else {
+			expApp.alert('No data was found for export.');
+		}
+	});
+
+	// text csv export button
+	$(page.container).find('a#export-text-csv').on('click', function() {
+		$('.popup-general .popup-title').html('CSV Export');
+		$('.popup-general .page-content').html(
+			'<div class="content-block-title">Text content</div>' +
+			'<div class="list-block">' +
+				'<ul>' +
+					'<li class="align-top">' +
+						'<div class="item-content">' +
+							'<div class="item-inner">' +
+								'<div class="item-input">' +
+									'<textarea style="height: 300px">' + createCSVDataLink(db.query('item'), "ExpenSync CSV Export " + Date.now(), true) + '</textarea>' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</li>' +
+				'</ul>' +
+			'</div>');
+		expApp.popup('.popup-general');
+	});
+
+	// text json export button
+	$(page.container).find('a#export-text-json').on('click', function() {
+		$('.popup-general .popup-title').html('JSON Export');
+		$('.popup-general .page-content').html(
+			'<div class="content-block-title">Text content</div>' +
+			'<div class="list-block">' +
+				'<ul>' +
+					'<li class="align-top">' +
+						'<div class="item-content">' +
+							'<div class="item-inner">' +
+								'<div class="item-input">' +
+									'<textarea style="height: 300px">' + JSON.stringify(db.query('item')) + '</textarea>' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</li>' +
+				'</ul>' +
+			'</div>');
+		expApp.popup('.popup-general');
 	});
 });
 
