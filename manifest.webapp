@@ -1,14 +1,14 @@
 {
   "name": "ExpenSync",
   "description": "Track your expenses anywhere, on any device, and synchronize using Dropbox.",
-  "launch_path": "/index.html",
+  "launch_path": "/ExpenSync/index.html",
   "icons": {
-    "16": "/img/icon16.png",
-    "32": "/img/icon32.png",
-    "48": "/img/icon48.png",
-    "64": "/img/icon64.png",
-    "128": "/img/icon128.png",
-    "256": "/img/icon256.png"
+    "16": "/ExpenSync/img/icon16.png",
+    "32": "/ExpenSync/img/icon32.png",
+    "48": "/ExpenSync/img/icon48.png",
+    "64": "/ExpenSync/img/icon64.png",
+    "128": "/ExpenSync/img/icon128.png",
+    "256": "/ExpenSync/img/icon256.png"
   },
   "developer": {
     "name": "Stephan Giesau",
