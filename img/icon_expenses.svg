@@ -87,14 +87,17 @@
        width="144"
        id="rect3768"
        style="fill:#3399cc;fill-opacity:1;stroke:none"
-       inkscape:export-filename="C:\xampp\htdocs\expenses\apple-touch-icon.png"
-       inkscape:export-xdpi="95"
-       inkscape:export-ydpi="95" />
+       inkscape:export-filename="C:\xampp\htdocs\expenses\img\icon32.png"
+       inkscape:export-xdpi="20"
+       inkscape:export-ydpi="20" />
     <path
        style="font-size:226.21817017px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Set Pro;-inkscape-font-specification:Myriad Set Pro"
        d="M 175.78125 -44.5 C 172.11567 -34.507997 170.8749 -22.325252 172.125 -7.9375 L 158.375 -4.25 L 158.59375 6.21875 L 173.46875 2.21875 C 173.8295 4.1519686 174.23435 6.1404745 174.6875 8.125 C 175.14066 10.109688 175.64074 12.115798 176.1875 14.15625 C 176.46028 15.174366 176.72662 16.198558 177 17.21875 C 177.27338 18.239085 177.63495 19.312133 178.09375 20.4375 L 165.4375 23.8125 L 165.65625 34.3125 L 181.40625 30.09375 C 195.91469 66.173186 217.9591 80.236332 247.53125 72.3125 C 260.20556 68.916426 268.92979 63.691481 273.75 56.625 L 267.1875 45.28125 C 261.15509 51.895894 253.9918 56.306132 245.6875 58.53125 C 225.58446 63.917855 209.7648 52.915693 198.21875 25.5625 L 242.59375 13.6875 L 241.46875 3.4375 L 194.71875 15.96875 C 194.25993 14.843387 193.89836 13.77034 193.625 12.75 C 193.3516 11.729813 193.05402 10.70562 192.78125 9.6875 C 192.23447 7.6470525 191.73439 5.640942 191.28125 3.65625 C 190.82808 1.671729 190.42323 -0.28552696 190.0625 -2.21875 L 241 -15.84375 L 240.75 -26.34375 L 188.96875 -12.46875 C 188.01517 -25.727133 189.43589 -36.399086 193.21875 -44.5 L 175.78125 -44.5 z "
        transform="translate(244.11356,68.719322)"
-       id="text3770" />
+       id="text3770"
+       inkscape:export-filename="C:\xampp\htdocs\expenses\img\icon32.png"
+       inkscape:export-xdpi="20"
+       inkscape:export-ydpi="20" />
     <rect
        y="-791.7807"
        x="719.90179"

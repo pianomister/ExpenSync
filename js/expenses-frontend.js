@@ -10,7 +10,6 @@
  ***********************************/
 
 
-
 // create app object
 var expApp = new Framework7({
 	init: false, // disabled so page callbacks for initial pages work
