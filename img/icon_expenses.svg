@@ -24,9 +24,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.5"
-     inkscape:cx="862.06315"
-     inkscape:cy="333.46045"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="1666.6126"
+     inkscape:cy="212.80939"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -163,6 +163,62 @@
            x="885.91541"
            id="tspan2999"
            sodipodi:role="line">ExpenSync</tspan></text>
+    </g>
+    <rect
+       y="-331.7807"
+       x="1595.3"
+       height="500"
+       width="1000"
+       id="rect2999"
+       style="fill:#3399cc;fill-opacity:1;stroke:none;opacity:0.75"
+       inkscape:export-filename="C:\xampp\htdocs\expenses\img\promo1000x500.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <g
+       id="g3789"
+       transform="translate(-88.348608,0)">
+      <g
+         id="g3003"
+         transform="matrix(0.76752654,0,0,0.76752654,1652.7958,-155.63158)">
+        <rect
+           y="24.219322"
+           x="397.38919"
+           height="144"
+           width="144"
+           id="rect3005"
+           style="fill:#3399cc;fill-opacity:1;stroke:none"
+           inkscape:export-filename="C:\xampp\htdocs\expenses\apple-touch-icon.png"
+           inkscape:export-xdpi="95"
+           inkscape:export-ydpi="95" />
+        <path
+           style="font-size:226.21817017px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Set Pro;-inkscape-font-specification:Myriad Set Pro"
+           d="m 175.78125,-44.5 c -3.66558,9.992003 -4.90635,22.174748 -3.65625,36.5625 l -13.75,3.6875 0.21875,10.46875 14.875,-4 c 0.36075,1.9332186 0.7656,3.9217245 1.21875,5.90625 0.45316,1.984688 0.95324,3.990798 1.5,6.03125 0.27278,1.018116 0.53912,2.042308 0.8125,3.0625 0.27338,1.020335 0.63495,2.093383 1.09375,3.21875 l -12.65625,3.375 0.21875,10.5 15.75,-4.21875 c 14.50844,36.079436 36.55285,50.142582 66.125,42.21875 12.67431,-3.396074 21.39854,-8.621019 26.21875,-15.6875 l -6.5625,-11.34375 c -6.03241,6.614644 -13.1957,11.024882 -21.5,13.25 -20.10304,5.386605 -35.9227,-5.615557 -47.46875,-32.96875 l 44.375,-11.875 -1.125,-10.25 -46.75,12.53125 c -0.45882,-1.125363 -0.82039,-2.19841 -1.09375,-3.21875 -0.2734,-1.020187 -0.57098,-2.04438 -0.84375,-3.0625 -0.54678,-2.0404475 -1.04686,-4.046558 -1.5,-6.03125 -0.45317,-1.984521 -0.85802,-3.94177696 -1.21875,-5.875 l 50.9375,-13.625 -0.25,-10.5 -51.78125,13.875 c -0.95358,-13.258383 0.46714,-23.930336 4.25,-32.03125 l -17.4375,0 z"
+           transform="translate(244.11356,68.719322)"
+           id="path3007"
+           inkscape:connector-curvature="0" />
+        <rect
+           inkscape:export-ydpi="95"
+           inkscape:export-xdpi="95"
+           inkscape:export-filename="C:\xampp\htdocs\expenses\apple-touch-icon.png"
+           style="fill:none;stroke:#ffffff;stroke-width:2.60577321;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+           id="rect3009"
+           width="144"
+           height="144"
+           x="397.38919"
+           y="24.219322" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:67.05774689px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Myriad Pro;-inkscape-font-specification:Myriad Pro"
+         x="2107.5513"
+         y="-66.189972"
+         id="text3011"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan3013"
+           x="2107.5513"
+           y="-66.189972"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;fill-opacity:1;font-family:Myriad Pro;-inkscape-font-specification:Myriad Pro">ExpenSync</tspan></text>
     </g>
   </g>
 </svg>

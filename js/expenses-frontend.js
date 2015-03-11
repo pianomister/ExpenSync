@@ -1443,3 +1443,38 @@ if( getSettings('sync_enabled') && getSettings('sync_startup') )
 // debug output of DB content if debug is enabled
 if(window.globals.properties.debug)
 	console.debug("DB content: ", JSON.parse(db.serialize()) );
+
+
+// Firefox install button
+if(navigator && navigator.mozApps) {
+	var manifest_url = location.href + 'manifest.webapp';
+
+	function install(ev) {
+	  ev.preventDefault();
+		//Manifest URL Definieren
+		// App Installieren
+	  var installLocFind = navigator.mozApps.install(manifest_url);
+	  installLocFind.onsuccess = function(data) {
+	    // Wenn die App Installiert ist
+			expApp.alert('ExpenSync was successfully installed!');
+	  };
+	  installLocFind.onerror = function() {
+	    // App ist nicht Installiert
+	    // installapp.error.name
+	    expApp.alert(installLocFind.error.name);
+	  };
+	};
+
+	// Eine Verweis auf die Schaltfläche und rufen Sie install() auf Klick wenn die App nicht Installiert ist. Wenn sie installiert ist ist die Schaltfläche ausgeblendet.
+	var button = document.getElementById('button-install-firefox');
+
+	var installCheck = navigator.mozApps.checkInstalled(manifest_url);
+
+	installCheck.onsuccess = function() {
+	  if(installCheck.result) {
+	    button.style.display = "none";
+	  } else {
+	    button.addEventListener('click', install, false);
+	  };
+	};
+}

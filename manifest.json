@@ -1,5 +1,5 @@
 {
-  "name": "ExpenSync",
+  "name": "ExpenSync for Chrome",
   "description": "Track your expenses anywhere, on any device, and synchronize using Dropbox.",
   "version": "0.1",
   "manifest_version": 2,
@@ -19,7 +19,7 @@
 				"name": "app",
 				"accessible_resources": ["*.html", "*.js", "*.css", "*.png"]
 			}
-		]	
+		]
 	},
   "icons": { "16": "img/icon16.png", "64": "img/icon64.png", "128": "img/icon128.png", "256": "img/icon256.png" }
 }
