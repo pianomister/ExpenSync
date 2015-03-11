@@ -1,33 +1,35 @@
 CACHE MANIFEST
+css/chartist.min.css
 css/expenses.css
 css/framework7.min.css
 css/framework7.themes.min.css
 css/icomoon.css
-css/chartist.min.css
 fonts/icomoon.eot
 fonts/icomoon.svg
 fonts/icomoon.ttf
 fonts/icomoon.woff
-js/md5.js
+img/startup640x920.png
+js/chartist.min.js
+js/dropbox-datastores-1.2.0.js
 js/expenses-backend.js
 js/expenses-frontend.js
-js/expenses-sync.js
 js/expenses-stats.js
-js/jquery.min.js
+js/expenses-sync.js
 js/framework7.min.js
+js/jquery.min.js
 js/localstoragedb.min.js
-js/dropbox-datastores-1.2.0.js
-js/chartist.min.js
-img/startup640x920.png
-index.html
+js/md5.js
 about.html
-settings.html
-settings-categories.html
-settings-accounts.html
-stats.html
+apple-touch-icon.png
 backup.html
+expenses-list.html
+index.html
+settings-accounts.html
+settings-categories.html
+settings.html
+stats.html
 
 NETWORK:
 *
 
-#23.02.2015 12:01
+#11.03.2015 18:53
