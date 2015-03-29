@@ -911,7 +911,7 @@ function createDatetimePicker(dateObj, cssSelector) {
 	var picker = expApp.picker({
 			input: cssSelector,
 			toolbar: false,
-			inputReadOnly: false,
+			inputReadOnly: true,
 			rotateEffect: true,
 
 			value: [dateObj.getMonth(), dateObj.getDate(), dateObj.getFullYear(), dateObj.getHours(), (dateObj.getMinutes() < 10 ? '0' + dateObj.getMinutes() : dateObj.getMinutes())],
