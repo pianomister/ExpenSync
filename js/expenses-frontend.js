@@ -423,6 +423,9 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		createCategoryOptions( $('.popup-edit-item #form-edit-category'), editItem.category, false, true );
 		createAccountOptions( $('.popup-edit-item #form-edit-account'), editItem.account, false, true );
 
+		// datepicker
+		createDatetimePicker(new Date(editItem.timestamp), '#form-edit-date');
+
 		// if deleted, show restore button and add restore handler
 		if( editItem.deleted ) {
 
@@ -892,6 +895,88 @@ function openAccountPopup(editID) {
 
 
 
+/**
+ * Creates a date picker for given element with given start point
+ *
+ * @param {Date} dateObj date as reference for field start value, or false for current time
+ * @param {String} cssSelector selector for target input field
+ */
+function createDatetimePicker(dateObj, cssSelector) {
+
+	var today = new Date();
+
+	if(!dateObj)
+		dateObj = today;
+
+	var picker = expApp.picker({
+			input: cssSelector,
+			toolbar: false,
+			inputReadOnly: false,
+			rotateEffect: true,
+
+			value: [dateObj.getMonth(), dateObj.getDate(), dateObj.getFullYear(), dateObj.getHours(), (dateObj.getMinutes() < 10 ? '0' + dateObj.getMinutes() : dateObj.getMinutes())],
+
+			onChange: function (picker, values, displayValues) {
+					var daysInMonth = new Date(picker.value[2], picker.value[0]*1 + 1, 0).getDate();
+					if (values[1] > daysInMonth) {
+							picker.cols[1].setValue(daysInMonth);
+					}
+			},
+
+			formatValue: function (p, values, displayValues) {
+
+					var month = parseInt(values[0])+1;
+					return values[2] + '-' + (month < 10 ? '0'+month : month) + '-' + values[1] + 'T' + values[3] + ':' + values[4];
+			},
+
+			cols: [
+					// Months
+					{
+							values: [0,1,2,3,4,5,6,7,8,9,10,11],
+							displayValues: ('January February March April May June July August September October November December').split(' '),
+							textAlign: 'left'
+					},
+					// Days
+					{
+							values: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+					},
+					// Years
+					{
+							values: (function () {
+									var arr = [];
+									for (var i = ((dateObj.getFullYear() < today.getFullYear()) ? dateObj.getFullYear() : today.getFullYear())-5; i <= ((dateObj.getFullYear() > today.getFullYear()) ? dateObj.getFullYear() : today.getFullYear())+5; i++) { arr.push(i); }
+									return arr;
+							})()
+					},
+					// Space divider
+					{
+							divider: true,
+							content: '  '
+					},
+					// Hours
+					{
+							values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
+					},
+					// Divider
+					{
+							divider: true,
+							content: ':'
+					},
+					// Minutes
+					{
+							values: (function () {
+									var arr = [];
+									for (var i = 0; i <= 59; i++) { arr.push(i < 10 ? '0' + i : i); }
+									return arr;
+							})()
+					}
+			]
+	});
+	return picker;
+}
+
+
+
 
 
 //////////////////////////////////////////////////////////////////
@@ -997,6 +1082,10 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	createCategoryOptions( $(page.container).find('#form-add-category') );
 	createAccountOptions( $(page.container).find('#form-add-account'), false, false, true );
 
+	// datepicker
+	var today = new Date();
+	createDatetimePicker(today, '#form-add-date');
+
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function(e) {
 
@@ -1074,8 +1163,8 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
 
 	// current month's balance
-	var currentMonth = (new Date()).getMonth();
-	var currentYear = (new Date()).getFullYear();
+	var currentMonth = today.getMonth();
+	var currentYear = today.getFullYear();
 	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 	var endDate = new Date(currentYear, currentMonth+1, 1, 0, 0, 0, 0);
 
@@ -1446,6 +1535,8 @@ if(window.globals.properties.debug)
 
 
 // Firefox install button
+var button = document.getElementById('button-install-firefox');
+
 if(navigator && navigator.mozApps) {
 	var manifest_url = location.href + 'manifest.webapp';
 
@@ -1465,9 +1556,6 @@ if(navigator && navigator.mozApps) {
 	  };
 	};
 
-	// Eine Verweis auf die Schaltfläche und rufen Sie install() auf Klick wenn die App nicht Installiert ist. Wenn sie installiert ist ist die Schaltfläche ausgeblendet.
-	var button = document.getElementById('button-install-firefox');
-
 	var installCheck = navigator.mozApps.checkInstalled(manifest_url);
 
 	installCheck.onsuccess = function() {
@@ -1477,4 +1565,6 @@ if(navigator && navigator.mozApps) {
 	    button.addEventListener('click', install, false);
 	  };
 	};
+} else {
+	button.style.display = "none";
 }
