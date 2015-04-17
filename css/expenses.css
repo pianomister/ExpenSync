@@ -83,6 +83,11 @@ body.with-panel-right-reveal .panel-overlay {
 * @section custom adjustments
 */
 
+/* font */
+.smaller {
+	font-size: .9em;
+}
+
 /* loading indicator for infinite scroll lists */
 .infinite-scroll-preloader {
 	margin-top:-20px;

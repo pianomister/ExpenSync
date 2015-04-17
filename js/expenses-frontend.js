@@ -912,7 +912,7 @@ function createDatetimePicker(dateObj, cssSelector) {
 			input: cssSelector,
 			toolbar: false,
 			inputReadOnly: true,
-			rotateEffect: true,
+			rotateEffect: false,
 
 			value: [dateObj.getMonth(), dateObj.getDate(), dateObj.getFullYear(), dateObj.getHours(), (dateObj.getMinutes() < 10 ? '0' + dateObj.getMinutes() : dateObj.getMinutes())],
 
@@ -925,20 +925,35 @@ function createDatetimePicker(dateObj, cssSelector) {
 
 			formatValue: function (p, values, displayValues) {
 
-					var month = parseInt(values[0])+1;
-					return values[2] + '-' + (month < 10 ? '0'+month : month) + '-' + values[1] + 'T' + values[3] + ':' + values[4];
+					var month = parseInt(values[1])+1;
+					return values[2] + '-' + (month < 10 ? '0'+month : month) + '-' + (values[0] < 10 ? '0'+values[0] : values[0]) + 'T' + values[3] + ':' + values[4];
 			},
 
 			cols: [
+					// Days
+					{
+							values: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31],
+							textAlign: 'right',
+							cssClass: 'smaller'
+					},
+					// Divider
+					{
+							divider: true,
+							content: '.',
+							cssClass: 'smaller'
+					},
 					// Months
 					{
 							values: [0,1,2,3,4,5,6,7,8,9,10,11],
-							displayValues: ('January February March April May June July August September October November December').split(' '),
-							textAlign: 'left'
+							displayValues: [1,2,3,4,5,6,7,8,9,10,11,12],//TODO('January February March April May June July August September October November December').split(' '),
+							textAlign: 'right',
+							cssClass: 'smaller'
 					},
-					// Days
+					// Divider
 					{
-							values: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+							divider: true,
+							content: '.',
+							cssClass: 'smaller'
 					},
 					// Years
 					{
@@ -946,21 +961,25 @@ function createDatetimePicker(dateObj, cssSelector) {
 									var arr = [];
 									for (var i = ((dateObj.getFullYear() < today.getFullYear()) ? dateObj.getFullYear() : today.getFullYear())-5; i <= ((dateObj.getFullYear() > today.getFullYear()) ? dateObj.getFullYear() : today.getFullYear())+5; i++) { arr.push(i); }
 									return arr;
-							})()
+							})(),
+							cssClass: 'smaller'
 					},
 					// Space divider
 					{
 							divider: true,
-							content: '  '
+							content: ' ',
+							cssClass: 'smaller'
 					},
 					// Hours
 					{
-							values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
+							values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+							cssClass: 'smaller'
 					},
 					// Divider
 					{
 							divider: true,
-							content: ':'
+							content: ':',
+							cssClass: 'smaller'
 					},
 					// Minutes
 					{
@@ -968,7 +987,8 @@ function createDatetimePicker(dateObj, cssSelector) {
 									var arr = [];
 									for (var i = 0; i <= 59; i++) { arr.push(i < 10 ? '0' + i : i); }
 									return arr;
-							})()
+							})(),
+							cssClass: 'smaller'
 					}
 			]
 	});
