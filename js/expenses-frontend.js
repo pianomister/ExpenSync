@@ -424,7 +424,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		createAccountOptions( $('.popup-edit-item #form-edit-account'), editItem.account, false, true );
 
 		// datepicker
-		createDatetimePicker(new Date(editItem.timestamp), '#form-edit-date');
+		//createDatetimePicker(new Date(editItem.timestamp), '#form-edit-date');
 
 		// if deleted, show restore button and add restore handler
 		if( editItem.deleted ) {
@@ -1104,7 +1104,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 	// datepicker
 	var today = new Date();
-	createDatetimePicker(today, '#form-add-date');
+	//createDatetimePicker(today, '#form-add-date');
 
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function(e) {
