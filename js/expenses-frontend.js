@@ -1627,8 +1627,8 @@ expApp.onPageInit('stats', function (page) {
 		return accounts[d.key] + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100) + ' (' + (Math.round(d.value / sum.value() * 1000) / 10) + ' %)';
 	};
 	var updateTotals = function() {
-		$('#dc-category-total-minus-sum').text(getFormattedPrice(categoryTotalMinusSum.value()));
-		$('#dc-category-total-plus-sum').text(getFormattedPrice(categoryTotalPlusSum.value()));
+		$('.dc-category-total-minus-sum').text(getFormattedPrice(categoryTotalMinusSum.value()));
+		$('.dc-category-total-plus-sum').text(getFormattedPrice(categoryTotalPlusSum.value()));
 		$('#dc-account-total-minus-sum').text(getFormattedPrice(accountTotalMinusSum.value()));
 		$('#dc-account-total-plus-sum').text(getFormattedPrice(accountTotalPlusSum.value()));
 	};
