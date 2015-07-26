@@ -246,6 +246,13 @@ div[data-page="index-1"] .list-block {
 	stroke: #1E749F !important;
 }
 
+div.dc-chart, .dc-data-count {
+	float: none;
+}
+.dc-chart svg text {
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 
 /**
  * @section media queries

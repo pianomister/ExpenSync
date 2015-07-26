@@ -18,83 +18,64 @@
 <div class="pages">
   <div data-page="stats" class="page">
     <div class="page-content">
-      <div class="content-block-title">Selection</div>
-      <div class="list-block tablet-inset">
-        <ul>
-          <li>
-            <div class="item-content disabled">
-              <div class="item-inner">
-                <div class="item-title label">Account</div>
-                <div class="item-input">
-                  <select id="form-stats-account">
-                      <option value="2a626d4707ee38a9e26b171d906434b0">Default</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="item-content">
-              <div class="item-inner">
-                <div class="item-title label">Start date</div>
-                <div class="item-input">
-                  <input type="date" id="form-stats-date-start" placeholder="(opt. YYYY-MM-DD)">
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="item-content">
-              <div class="item-inner">
-                <div class="item-title label">End date</div>
-                <div class="item-input">
-                  <input type="date" id="form-stats-date-end" placeholder="(opt. YYYY-MM-DD)">
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
-
+      
+			<div class="content-block tablet-inset">
+				<div class="content-block-inner dc-data-count">
+					<span>
+						<span class="filter-count"></span>
+						 selected out of 
+						<span class="total-count"></span>
+						 records | 
+						<a class="external" href="javascript: dc.filterAll();dc.renderAll();">Reset All</a>
+					</span>
+					<br>
+				</div>
+			</div>
+			
+			<div class="content-block-title">Balance per month</div>
+			<div class="content-block tablet-inset">
+				<div class="content-block-inner">
+					<div id="dc-month-chart"></div>
+				</div>
+			</div>
+			
       <div class="row">
         <div class="col-100 tablet-50">
-          <div class="content-block-title">Categories</div>
+          <div class="content-block-title">Expenses by category (total: <span id="dc-category-total-minus-sum"></span>)</div>
           <div class="content-block tablet-inset">
             <div class="content-block-inner">
-              <div class="exp-stats-pie ct-golden-section ct-chart ct-negative-labels"></div>
+              <div id="dc-category-minus-chart"></div>
+							<div id="dc-category-minus-pie-chart"></div>
             </div>
           </div>
         </div>
         <div class="col-100 tablet-50">
-          <div class="content-block-title">Per Weekday</div>
+          <div class="content-block-title">Income by category (total: <span id="dc-category-total-plus-sum"></span>)</div>
           <div class="content-block tablet-inset">
             <div class="content-block-inner">
-              <div class="exp-stats-weekday ct-golden-section ct-chart ct-negative-labels"></div>
+              <div id="dc-category-plus-chart"></div>
+							<div id="dc-category-plus-pie-chart"></div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="content-block tablet-inset">
-        <div class="content-block-inner">
-        <table>
-          <tdead>
-            <tr>
-              <th>uniqueid</th>
-              <th>timestamp</th>
-              <th>lastupdate</th>
-              <th>synchronized</th>
-              <th>account</th>
-              <th>category</th>
-              <th>price</th>
-              <th>description</th>
-              <th>deleted</th>
-              <th>version</th>
-            </tr>
-          </tdead>
-          <tbody id="stats-item-list">
-          </tbody>
-        </table>
+			
+			<div class="row">
+        <div class="col-100 tablet-50">
+          <div class="content-block-title">Expenses by account (total: <span id="dc-account-total-minus-sum"></span>)</div>
+          <div class="content-block tablet-inset">
+            <div class="content-block-inner">
+							<div id="dc-account-minus-pie-chart"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-100 tablet-50">
+          <div class="content-block-title">Income by account (total: <span id="dc-account-total-plus-sum"></span>)</div>
+          <div class="content-block tablet-inset">
+            <div class="content-block-inner">
+							<div id="dc-account-plus-pie-chart"></div>
+            </div>
+          </div>
         </div>
       </div>
 

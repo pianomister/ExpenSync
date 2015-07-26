@@ -42,7 +42,7 @@ window.i18n = {
 window.globals = {
 
 	properties: {
-		version: '0.2.5',
+		version: '0.2.6',
 		appname: 'ExpenSync',
 		developer: 'Stephan Giesau',
 		website: 'http://www.stephan-giesau.de/',

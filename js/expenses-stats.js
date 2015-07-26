@@ -89,7 +89,7 @@ function getAccountBalance(accountID) {
 
 
 
-
+// page: stats-chartist
 // handler for date changes in selection
 function onStatsDateChange(e) {
   var date = $(e.delegateTarget).val();

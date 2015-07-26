@@ -59,6 +59,26 @@ function createUniqueid(timestamp, salt, noUserAgent) {
 
 
 /**
+ * returns a price, in currency format set by settings
+ *
+ * @param {float} price number to be displayed as price
+ * @returns {string} formatted price
+ */
+function getFormattedPrice(price) {
+	
+	price = parseFloat(price).toFixed(2);
+	
+	// get number format from settings
+	money_format = getSettings('ui_money_format');
+	if(money_format === 'comma')
+		price = price.replace('.', ',');
+	
+	return price;
+}
+
+
+
+/**
  * returns a price, suitable colored and currency format
  *
  * @param {float} price number to be displayed as price
@@ -69,18 +89,12 @@ function createUniqueid(timestamp, salt, noUserAgent) {
 function formatPrice(price, account) {
 
 	account = account || false;
-	price = parseFloat(price);
 
 	colorClass = 'red';
 	if(price >= 0)
 		colorClass = 'green';
 
-	formattedPrice = price.toFixed(2);
-
-	// get number format from settings
-	money_format = getSettings('ui_money_format');
-	if(money_format == 'comma')
-		formattedPrice = formattedPrice.replace('.', ',');
+	formattedPrice = getFormattedPrice(price);
 
 	// account displayed below price
 	// only if more than one account available
@@ -1491,9 +1505,9 @@ expApp.onPageInit('backup', function (page) {
 
 
 //////////////////////////////////////////////////////////////////
-// stats                                                        //
+// stats-chartist                                               //
 //////////////////////////////////////////////////////////////////
-expApp.onPageInit('stats', function (page) {
+expApp.onPageInit('stats-chartist', function (page) {
 
 	// handler for selection
 	$("#form-stats-date-start").on('change', onStatsDateChange);
@@ -1526,6 +1540,215 @@ expApp.onPageInit('stats', function (page) {
 			);
 		}
 	}
+});
+
+
+
+//////////////////////////////////////////////////////////////////
+// stats                                                        //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('stats', function (page) {
+	
+	var disabledAccounts = [];
+	var categories = [];
+	var accounts = [];
+
+  var allAccounts = getAccounts();
+  allAccounts.forEach(function(account) {
+		accounts[account.uniqueid] = account.description;
+    if (account.disabled)
+      disabledAccounts.push(account.uniqueid);
+  });
+
+  var data = db.queryAll('item', {
+      query: function(row) {
+        if(!row.deleted && disabledAccounts.indexOf(row.account) === -1)
+          return true;
+        else
+          return false;
+      }
+	});	
+	var dataCategory = db.query('category');
+	
+	dataCategory.forEach(function(c) {
+		categories[c.uniqueid] = c.description;
+	});
+
+	data.forEach(function(d) {
+		d.timestamp = new Date(d.timestamp);
+		d.monthYear = d3.time.format("%Y/%m").parse( d.timestamp.getFullYear() + '/' + (d.timestamp.getMonth()+1) );
+	});
+	
+	var facts = crossfilter(data);
+	var all = facts.groupAll();
+
+	var dateDim = facts.dimension( dc.pluck('monthYear') );
+	var dateTotal = dateDim.group().reduceSum( dc.pluck('price') );
+	var minDate = dateDim.bottom(1)[0].timestamp;
+	var maxDate = dateDim.top(1)[0].timestamp;
+
+	facts.groupAll();
+	var categoryDim = facts.dimension( dc.pluck('category') );
+	var categoryTotalMinus = categoryDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var categoryTotalPlus = categoryDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	var categoryTotalMinusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var categoryTotalPlusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	
+	facts.groupAll();
+	var accountDim = facts.dimension( dc.pluck('account') );
+	var accountTotalMinus = accountDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var accountTotalPlus = accountDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	var accountTotalMinusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var accountTotalPlusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	
+	// count all the facts and print out the data counts
+	dc.dataCount(".dc-data-count")
+		.dimension(facts)
+		.group(all);
+
+	var monthChart = dc.barChart('#dc-month-chart');
+	var categoryMinusChart = dc.rowChart('#dc-category-minus-chart');
+	var categoryPlusChart = dc.rowChart('#dc-category-plus-chart');
+	var categoryMinusPieChart = dc.pieChart('#dc-category-minus-pie-chart');
+	var categoryPlusPieChart = dc.pieChart('#dc-category-plus-pie-chart');
+	var accountMinusPieChart = dc.pieChart('#dc-account-minus-pie-chart');
+	var accountPlusPieChart = dc.pieChart('#dc-account-plus-pie-chart');
+
+	var monthScale = d3.time.scale();
+	monthScale.domain([minDate,maxDate]);
+
+	var categoryTitleFunction = function(d) {
+		var sum = d.value > 0 ? categoryTotalPlusSum : categoryTotalMinusSum;
+		return categories[d.key] + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100) + ' (' + (Math.round(d.value / sum.value() * 1000) / 10) + ' %)';
+	};
+	var accountTitleFunction = function(d) {
+		var sum = d.value > 0 ? accountTotalPlusSum : accountTotalMinusSum;
+		return accounts[d.key] + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100) + ' (' + (Math.round(d.value / sum.value() * 1000) / 10) + ' %)';
+	};
+	var updateTotals = function() {
+		$('#dc-category-total-minus-sum').text(getFormattedPrice(categoryTotalMinusSum.value()));
+		$('#dc-category-total-plus-sum').text(getFormattedPrice(categoryTotalPlusSum.value()));
+		$('#dc-account-total-minus-sum').text(getFormattedPrice(accountTotalMinusSum.value()));
+		$('#dc-account-total-plus-sum').text(getFormattedPrice(accountTotalPlusSum.value()));
+	};
+
+	monthChart
+		.width(function() {
+			return $('#dc-month-chart').width();
+		})
+		.height(200)
+		.margins({left: 35, right: 30, top: 20, bottom: 20})
+		.dimension(dateDim)
+		.group(dateTotal)
+		.x( monthScale )
+		.xUnits(d3.time.months)
+		.elasticX(true)
+		.elasticY(true)
+		.colors(d3.scale.ordinal().domain(["positive","negative"])
+																	.range(["#4cd964","#ff3b30"]))
+		.colorAccessor(function(d) { 
+			if(d.value > 0) 
+				return "positive"
+			return "negative";
+		})
+		.brushOn(true)
+		.round(d3.time.month.round)
+		.title(function(d) {
+			return (d.key.getMonth() + 1) + '/' + d.key.getFullYear() + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100);
+		})
+		.on('renderlet', function(chart) {
+			updateTotals();
+		})
+		.yAxis().ticks(4);
+
+	categoryMinusChart
+		.width(function() {
+			return $('#dc-category-minus-chart').width();
+		})
+		.height(500)
+		.margins({left: 30, right: 30, top: 20, bottom: 20})
+		.dimension(categoryDim)
+		.group(categoryTotalMinus)
+		.label(function(d) {
+			return categories[d.key];
+		})
+		.title(categoryTitleFunction)
+		.elasticX(true)
+		.xAxis().ticks(4);
+
+	categoryPlusChart
+		.width(function() {
+			return $('#dc-category-plus-chart').width();
+		})
+		.height(500)
+		.margins({left: 30, right: 30, top: 20, bottom: 20})
+		.dimension(categoryDim)
+		.group(categoryTotalPlus)
+		.label(function(d) {
+			return categories[d.key];
+		})
+		.title(categoryTitleFunction)
+		.elasticX(true)
+		.xAxis().ticks(4);
+
+	categoryMinusPieChart
+		.width(function() {
+			return $('#dc-category-minus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(categoryDim)
+		.group(categoryTotalMinus)
+		.label(function(d) {
+			return '';
+		})
+		.title(categoryTitleFunction)
+	categoryMinusPieChart.onClick = function() {};
+
+	categoryPlusPieChart
+		.width(function() {
+			return $('#dc-category-plus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(categoryDim)
+		.group(categoryTotalPlus)
+		.label(function(d) {
+			return '';
+		})
+		.title(categoryTitleFunction);
+	categoryPlusPieChart.onClick = function() {};
+	
+	accountMinusPieChart
+		.width(function() {
+			return $('#dc-account-minus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(accountDim)
+		.group(accountTotalMinus)
+		.label(function(d) {
+			return '';
+		})
+		.title(accountTitleFunction);
+
+	accountPlusPieChart
+		.width(function() {
+			return $('#dc-account-plus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(accountDim)
+		.group(accountTotalPlus)
+		.label(function(d) {
+			return '';
+		})
+		.title(accountTitleFunction);
+	
+
+	dc.renderAll();
+
+
 });
 
 
