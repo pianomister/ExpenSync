@@ -252,6 +252,23 @@ div.dc-chart, .dc-data-count {
 .dc-chart svg text {
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
+.dc-table {
+	width: 100%;
+	border-spacing: 0;
+}
+.dc-table th {
+	text-align: left;
+}
+.dc-table td, .dc-table th {
+	padding: .5em;
+	border-top: 1px solid #ccc;
+}
+.dc-table th {
+	border-top: 0; 
+}
+.dc-table-group td {
+	font-weight: bold;
+}
 
 
 /**

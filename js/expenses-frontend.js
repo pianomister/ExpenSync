@@ -1613,6 +1613,7 @@ expApp.onPageInit('stats', function (page) {
 	var categoryPlusPieChart = dc.pieChart('#dc-category-plus-pie-chart');
 	var accountMinusPieChart = dc.pieChart('#dc-account-minus-pie-chart');
 	var accountPlusPieChart = dc.pieChart('#dc-account-plus-pie-chart');
+	var dataTable = dc.dataTable('#dc-data-table');
 
 	var monthScale = d3.time.scale();
 	monthScale.domain([minDate,maxDate]);
@@ -1745,6 +1746,44 @@ expApp.onPageInit('stats', function (page) {
 		})
 		.title(accountTitleFunction);
 	
+	dataTable
+		.dimension(dateDim)
+		.group(function(d) {
+			return d.timestamp.getFullYear() + ' / ' + ('0' + (d.timestamp.getMonth()+1)).slice(-2);
+		})
+		.size(25)
+		.order(d3.descending)
+		.columns([
+		  {
+				label: 'Date',
+			 	format: function(d) {
+					var formattedDate = ('0' + d.timestamp.getDate()).slice(-2) + '.'
+							 + ('0' + (d.timestamp.getMonth()+1)).slice(-2) + '.'
+							 + d.timestamp.getFullYear() + ' '
+							 + ('0' + d.timestamp.getHours()).slice(-2) + ':'
+							 + ('0' + d.timestamp.getMinutes()).slice(-2);
+					return formattedDate;
+				}
+			},
+			{
+				label: 'Category',
+			 	format: function(d) {
+					return categories[d.category];
+				}
+			},
+			{
+				label: 'Description',
+			 	format: function(d) {
+					return d.description;
+				}
+			},
+			{
+				label: 'Price',
+			 	format: function(d) {
+					return parseFloat(d.price).toFixed(2);
+				}
+			}
+		]);
 
 	dc.renderAll();
 
