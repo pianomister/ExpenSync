@@ -1,0 +1,3 @@
+[submodule "js/multideviceDatabase"]
+	path = js/multideviceDatabase
+	url = https://github.com/topahl/multideviceDatabase.git
