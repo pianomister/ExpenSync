@@ -33,13 +33,14 @@ var mainView = expApp.addView('.view-main', {
 
 // Load DB
 // Initialise. If the database doesn't exist, it is created
-var db = new localStorageDB("expenSync", localStorage);
-
-// Check if the database was just created. Then create all tables
-if( db.isNew() ) {
-	createLocalDatabase();
-}
-
+var db = new FileDB("52oz9ocz0ne7yuk");
+db.setupDropbox(function(){
+	// Check if the database was just created. Then create all tables
+	if( db.isNew() ) {
+		createLocalDatabase();
+	}
+	initApp();
+});
 
 
 /**
@@ -65,14 +66,14 @@ function createUniqueid(timestamp, salt, noUserAgent) {
  * @returns {string} formatted price
  */
 function getFormattedPrice(price) {
-	
+
 	price = parseFloat(price).toFixed(2);
-	
+
 	// get number format from settings
 	money_format = getSettings('ui_money_format');
 	if(money_format === 'comma')
 		price = price.replace('.', ',');
-	
+
 	return price;
 }
 
@@ -1011,7 +1012,7 @@ function createDatetimePicker(dateObj, cssSelector) {
 
 
 
-
+function initApp(){
 
 //////////////////////////////////////////////////////////////////
 // index-left menu                                              //
@@ -1548,7 +1549,7 @@ expApp.onPageInit('stats-chartist', function (page) {
 // stats                                                        //
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('stats', function (page) {
-	
+
 	var disabledAccounts = [];
 	var categories = [];
 	var accounts = [];
@@ -1567,9 +1568,9 @@ expApp.onPageInit('stats', function (page) {
         else
           return false;
       }
-	});	
+	});
 	var dataCategory = db.query('category');
-	
+
 	dataCategory.forEach(function(c) {
 		categories[c.uniqueid] = c.description;
 	});
@@ -1578,7 +1579,7 @@ expApp.onPageInit('stats', function (page) {
 		d.timestamp = new Date(d.timestamp);
 		d.monthYear = d3.time.format("%Y/%m").parse( d.timestamp.getFullYear() + '/' + (d.timestamp.getMonth()+1) );
 	});
-	
+
 	var facts = crossfilter(data);
 	var all = facts.groupAll();
 
@@ -1593,14 +1594,14 @@ expApp.onPageInit('stats', function (page) {
 	var categoryTotalPlus = categoryDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
 	var categoryTotalMinusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var categoryTotalPlusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
-	
+
 	facts.groupAll();
 	var accountDim = facts.dimension( dc.pluck('account') );
 	var accountTotalMinus = accountDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var accountTotalPlus = accountDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
 	var accountTotalMinusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var accountTotalPlusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
-	
+
 	// count all the facts and print out the data counts
 	dc.dataCount(".dc-data-count")
 		.dimension(facts)
@@ -1647,8 +1648,8 @@ expApp.onPageInit('stats', function (page) {
 		.elasticY(true)
 		.colors(d3.scale.ordinal().domain(["positive","negative"])
 																	.range(["#4cd964","#ff3b30"]))
-		.colorAccessor(function(d) { 
-			if(d.value > 0) 
+		.colorAccessor(function(d) {
+			if(d.value > 0)
 				return "positive"
 			return "negative";
 		})
@@ -1719,7 +1720,7 @@ expApp.onPageInit('stats', function (page) {
 		})
 		.title(categoryTitleFunction);
 	categoryPlusPieChart.onClick = function() {};
-	
+
 	accountMinusPieChart
 		.width(function() {
 			return $('#dc-account-minus-pie-chart').width();
@@ -1745,7 +1746,7 @@ expApp.onPageInit('stats', function (page) {
 			return '';
 		})
 		.title(accountTitleFunction);
-	
+
 	dataTable
 		.dimension(dateDim)
 		.group(function(d) {
@@ -1849,4 +1850,5 @@ if(navigator && navigator.mozApps) {
 	};
 } else {
 	button.style.display = "none";
+}
 }
