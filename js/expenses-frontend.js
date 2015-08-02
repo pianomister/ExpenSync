@@ -1,54 +1,13 @@
-//expenses-frontend.js
-
-properties = {
-	version: '0.2',
-	name: 'ExpenSync',
-	developer: 'Stephan Giesau',
-	website: 'http://www.stephan-giesau.de/',
-	debug: true
-}
-
-i18n = {
-
-	month: [
-		"January",
-		"February",
-		"March",
-		"April",
-		"May",
-		"June",
-		"July",
-		"August",
-		"September",
-		"October",
-		"November",
-		"December"
-	]
-
-}
-
-globals = {
-
-	icons: [
-		"ion-ios7-more",
-		"ion-ios7-cart",
-		"ion-fork",
-		"ion-ios7-wineglass",
-		"ion-ios7-musical-notes",
-		"ion-ios7-pricetags",
-		"ion-model-s",
-		"ion-plane",
-		"ion-map",
-		"ion-ios7-home",
-		"ion-ios7-briefcase",
-		"ion-cash",
-		"ion-ios7-medkit",
-		"ion-university",
-		"ion-ios7-home",
-		"ion-ios7-telephone"
-	]
-
-}
+/***********************************
+ * ExpenSync                       *
+ *                                 *
+ * EXPENSES-FRONTEND.JS            *
+ * Frontend functions related to   *
+ * UI logic and support            *
+ *                                 *
+ * CONTRIBUTORS                    *
+ * Stephan Giesau                  *
+ ***********************************/
 
 
 // create app object
@@ -78,7 +37,6 @@ var db = new localStorageDB("expenSync", localStorage);
 
 // Check if the database was just created. Then create all tables
 if( db.isNew() ) {
-
 	createLocalDatabase();
 }
 
@@ -101,30 +59,56 @@ function createUniqueid(timestamp, salt, noUserAgent) {
 
 
 /**
+ * returns a price, in currency format set by settings
+ *
+ * @param {float} price number to be displayed as price
+ * @returns {string} formatted price
+ */
+function getFormattedPrice(price) {
+	
+	price = parseFloat(price).toFixed(2);
+	
+	// get number format from settings
+	money_format = getSettings('ui_money_format');
+	if(money_format === 'comma')
+		price = price.replace('.', ',');
+	
+	return price;
+}
+
+
+
+/**
  * returns a price, suitable colored and currency format
  *
  * @param {float} price number to be displayed as price
- * @param {string} account (optional) text to be displayed below price
+ * @param {string} account (optional) text to be displayed below price; false
+ * @param {boolean} noColor (optional) if true, color will be set as gray; false
+ * @returns {string} HTML with formatted price
  */
 function formatPrice(price, account) {
 
 	account = account || false;
 
-	colorClass = 'green';
-	if(price < 0)
-		colorClass = 'red';
+	colorClass = 'red';
+	if(price >= 0)
+		colorClass = 'green';
 
-	formattedPrice = parseFloat(price).toFixed(2);
+	formattedPrice = getFormattedPrice(price);
 
-	// get number format from settings
-	money_format = db.query('settings', {key: 'ui_money_format'});
-	if(money_format[0].value == 'comma')
-		formattedPrice = formattedPrice.replace('.', ',');
-
-	// subtitle displayed below price
+	// account displayed below price
+	// only if more than one account available
 	var subtext = '';
-	if(account)
-		subtext = '<br><span class="item-subtitle color-gray">' + getAccounts(account).description + '</span>';
+	if(account) {
+
+		account = getAccounts(account);
+
+		if(account.disabled)
+			colorClass = 'gray';
+
+		if(db.rowCount('account') > 1)
+			subtext = '<br><span class="item-subtitle color-gray">' + account.description + '</span>';
+	}
 
 	return '<span class="color-' + colorClass + '">' + formattedPrice + subtext + '</span>';
 }
@@ -263,8 +247,14 @@ function createAccountOptions(domElement, selectedID, appendZero, allEntries) {
 
 
 /**
- * Validates and formats fields from add/edit item forms
+ * Validates fields from add/edit item forms and formats in appropriate data type
  *
+ * @param {float/string} price field 'price' from item table
+ * @param {string} category field 'category' from item table
+ * @param {string} description field 'description' from item table
+ * @param {string/int} field 'date' from item table
+ * @param {string} account field 'account' from item table
+ * @param {boolean/string} deleted field 'deleted' from item table
  * @return false if invalid, else an object with validated and formatted values
  */
 function validateItemForm(price, category, description, date, account, deleted) {
@@ -302,7 +292,7 @@ function validateItemForm(price, category, description, date, account, deleted) 
 			return returnObj;
 
 		} else {
-			expApp.alert('Please select an account an a category.');
+			expApp.alert('Please select an account and a category.');
 		}
 
 	} else {
@@ -323,17 +313,20 @@ function validateItemForm(price, category, description, date, account, deleted) 
  * @param {object} itemLimit Limit for the result array
  * @param {domSelector/jQueryObject} domBalance Element to put the list balance in
  * @param {boolean} noDelete (optional) If true, delete button will not be added; default is false
+ * @param {String} tempID (optional) tempID for page query object (in window.globals)
+ * @param {boolean} infiniteScrollReset if true, list will be emptied before appending items
  */
-function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete) {
+function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBalance, noDelete, tempID, infiniteScrollReset) {
 
 	domBalance = domBalance || false;
 	noDelete = noDelete || false;
-	$list = $('<div />');
+	infiniteScrollReset = infiniteScrollReset || false;
+	$list = $('<ul />');
 	if(domBalance)
 		$balance = $(domBalance);
 
-	// calculate list balance
 	var listBalance = 0;
+	var page = window.globals.temp[tempID];
 
 	// get categories
 	var categories = db.queryAll('category', {sort: [['order', 'ASC']]});
@@ -343,58 +336,83 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	}
 
 	// get items according to request params
-	items = db.queryAll('item', { query: itemQuery,
+	items = db.queryAll('item', {
+									query: itemQuery,
 								  sort: itemSort,
 								  limit: itemLimit
 								});
+
+	// set up variables for infinite scroll loading
+	if(infiniteScrollReset) {
+		page.infiniteScroll = {
+			endReached: false,
+			lastIndex: 0
+		}
+		// remove loader if list is shorter than load limit
+		if(items.length <= window.globals.static.infiniteScrollItemsPerLoad) {
+			expApp.detachInfiniteScroll('.infinite-scroll-' + tempID);
+			$(page.container).find('.infinite-scroll-preloader').remove();
+		}
+	}
 
 	// add items to expenses list
 	for(i = 0; i < items.length; i++) {
 
 		var row = items[i];
-		var rowCategory = _category[row.category];
-		var description = row.description;
-		var category = ' | ' + rowCategory.description;
-
-		if(description == null || description.length == 0) {
-			description = '<span class="color-gray">' + rowCategory.description + '</span>';
-			category = '';
-		}
-
-		// don't add delete button, if param is set
-		var deleteButton = '<a class="swipeout-delete swipeout-overswipe" data-confirm="Are you sure that you want to delete this item?" href="">Delete</a>';
-		if(noDelete)
-			deleteButton = '';
-
-		$list.append(
-			'<li class="swipeout" data-uniqueid="' + row.uniqueid + '">' +
-			'	<div class="swipeout-content item-content">' +
-			'		<div class="item-media">' +
-			'			<span class="icon-wrap"><i class="color-black icon ion ' + getIcons(rowCategory.icon) + '"></i></span>' +
-			'		</div>' +
-			'		<div class="item-inner">' +
-			'			<div class="item-title-row">' +
-			'				<div class="item-title">' + description + '</div>' +
-			'				<div class="item-after">' +
-								formatPrice(row.price, row.account) +
-			'				</div>' +
-			'			</div>' +
-			'			<div class="item-subtitle color-gray">' + formatDate(row.timestamp) + category + '</div>' +
-			'		</div>' +
-			'	</div>' +
-			'	<div class="swipeout-actions-right">' +
-			'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '">Edit</a>' +
-					deleteButton +
-			'	</div>' +
-			'</li>'
-		);
-
-		// add cost to list balance
 		listBalance += row.price;
+
+		// render items if in current load range
+		if(i >= page.infiniteScroll.lastIndex
+				&& i < page.infiniteScroll.lastIndex + window.globals.static.infiniteScrollItemsPerLoad) {
+
+				var rowCategory = _category[row.category];
+				var description = row.description;
+				var category = ' | ' + rowCategory.description;
+
+				if(description == null || description.length == 0) {
+					description = '<span class="color-gray">' + rowCategory.description + '</span>';
+					category = '';
+				}
+
+				// don't add delete button, if param is set
+				var deleteButton = '<a class="swipeout-delete swipeout-overswipe" data-confirm="Are you sure that you want to delete this item?" href="">Delete</a>';
+				if(noDelete)
+					deleteButton = '';
+
+				$list.append(
+					'<li class="swipeout" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">' +
+					'	<div class="swipeout-content item-content">' +
+					'		<div class="item-media">' +
+					'			<span class="icon-wrap"><i class="color-black icon ion ' + getIcons(rowCategory.icon) + '"></i></span>' +
+					'		</div>' +
+					'		<div class="item-inner">' +
+					'			<div class="item-title-row">' +
+					'				<div class="item-title">' + description + '</div>' +
+					'				<div class="item-after">' +
+										formatPrice(row.price, row.account) +
+					'				</div>' +
+					'			</div>' +
+					'			<div class="item-subtitle color-gray">' + formatDate(row.timestamp) + category + '</div>' +
+					'		</div>' +
+					'	</div>' +
+					'	<div class="swipeout-actions-right">' +
+					'		<a href="" class="edit-item" data-uniqueid="' + row.uniqueid + '" data-tempid="' + tempID + '">Edit</a>' +
+							deleteButton +
+					'	</div>' +
+					'</li>'
+				);
+		}
 	}
 
+	// update infiniteScroll variables
+	page.infiniteScroll.lastIndex = page.infiniteScroll.lastIndex + window.globals.static.infiniteScrollItemsPerLoad;
+	if( page.infiniteScroll.lastIndex > items.length )
+		page.infiniteScroll.endReached = true;
+
 	//flush list to DOM element
-	$(domList).html( $list.html() );
+	if(infiniteScrollReset)
+		$(domList).empty();
+	$(domList).append( $list.html() );
 
 	// output list balance
 	if(domBalance)
@@ -404,17 +422,23 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 	$$('.page-expenses-list .edit-item').on('click', function (e) {
 
 		var editID = $(e.target).attr('data-uniqueid');
+		var tempID = $(e.target).attr('data-tempid');
 
 		// get item data and fill in the form on popup
 		var editItem = db.query('item', {uniqueid: editID})[0];
 
 		$('.popup-edit-item').attr('data-uniqueid', editID);
+		$('.popup-edit-item').attr('data-tempid', tempID);
+
 		$('.popup-edit-item #form-edit-price').val(editItem.price);
 		$('.popup-edit-item #form-edit-description').val(editItem.description);
 		$('.popup-edit-item #form-edit-date').val( formatDate(editItem.timestamp, true) );
 		$('.popup-edit-item').attr('data-deleted', editItem.deleted);
 		createCategoryOptions( $('.popup-edit-item #form-edit-category'), editItem.category, false, true );
 		createAccountOptions( $('.popup-edit-item #form-edit-account'), editItem.account, false, true );
+
+		// datepicker
+		//createDatetimePicker(new Date(editItem.timestamp), '#form-edit-date');
 
 		// if deleted, show restore button and add restore handler
 		if( editItem.deleted ) {
@@ -437,6 +461,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 
 			e.preventDefault();
 			var editID = $('.popup-edit-item').attr('data-uniqueid');
+			var tempID = $('.popup-edit-item').attr('data-tempid');
 
 			if(editID.length > 1) {
 
@@ -461,14 +486,16 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							row.deleted = validItem.deleted;
 							row.lastupdate = Date.now();
 							row.synchronized = false;
-							row.version = properties.version;
+							row.version = window.globals.properties.version;
 							return row;
 						});
 					db.commit();
 
 					expApp.closeModal('.popup-edit-item');
 
-					//TODO re-render list and menu to update everything
+					//re-render list to represent changes
+					updateItemList( $(page.container).find('#expenses-list-category').val(), tempID, true );
+
 					pageIndexLeft.trigger();
 					pageIndex.trigger();
 				}
@@ -669,6 +696,87 @@ function createAccountListElements(domSelector) {
 
 
 /**
+* get items based on expenses-list page query and optional category
+*
+* @param {String} filterCategory ID of category by which the list is filtered
+* @param {String} tempID ID of page object in globals.temp
+* @param {boolean} infiniteScrollReset if true, list will be emptied before appending items
+*/
+function updateItemList(filterCategory, tempID, infiniteScrollReset) {
+
+	filterCategory = filterCategory || 0;
+	infiniteScrollReset = infiniteScrollReset || false;
+	page = window.globals.temp[tempID];
+
+	// evaluate page params to determine what to display
+	// standard values
+	var itemQuery = {deleted: false};
+	var itemSort = [['timestamp', 'DESC']];
+	var itemLimit = null;
+	var itemDomBalance = $(page.container).find('#expenses-list-balance');
+	var itemNoDelete = false;
+
+	// add filter for category
+	if(filterCategory != 0)
+		itemQuery.category = filterCategory;
+
+	// override standards for special conditions
+	switch(page.query.request) {
+
+		case 'timerange':
+
+			// if no range is defined, get latest
+			if(page.query.start == null || page.query.end == null) {
+				itemLimit = 50;
+				page.query.title = 'Latest by date (error)';
+				break;
+			}
+
+			itemQuery = function(row) {
+					if(!row.deleted &&
+						row.timestamp >= page.query.start &&
+						row.timestamp < page.query.end &&
+						(filterCategory == 0 || row.category == filterCategory) )
+						return true;
+					else
+						return false;
+				};
+			break;
+
+		case 'deleted':
+			itemQuery.deleted = true;
+			itemSort = [['lastupdate', 'DESC']];
+			itemLimit = 50;
+			itemDomBalance = false;
+			itemNoDelete = true;
+			page.query.title = 'Last deleted';
+			break;
+
+		case 'lastupdate':
+			itemSort = [['lastupdate', 'DESC']];
+			itemLimit = 50;
+			itemDomBalance = false;
+			page.query.title = 'Last updated';
+			break;
+
+		case 'latest':
+		default:
+			itemLimit = 50;
+			itemDomBalance = false;
+			page.query.title = 'Latest by date';
+			break;
+	}
+
+	// add page title
+	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
+
+	// add items to list
+	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID, infiniteScrollReset );
+}
+
+
+
+/**
  * Opens 'edit category' popup with given category uniqueid
  *
  * @param {String} editID uniqueid of category to be edited
@@ -681,18 +789,24 @@ function openCategoryPopup(editID) {
 	$('.popup-edit-category').attr('data-uniqueid', editID);
 	$('.popup-edit-category #form-category-description').val(editCat.description);
 
-	// create icon options
+	// create icon selector
+	$('.popup-edit-category #form-category-icon').empty();
 	var icons = getIcons();
 	for(var z = 0; z < icons.length; z++) {
 
 		var selected = '';
 		if(z == editCat.icon)
-			selected = ' selected="selected"';
+			selected = ' class="icon-selected"';
 
-		$('#form-category-icon').append(
-			'<option value="' + z + '"' + selected + '>' + icons[z] + '</option>'
+		$('.popup-edit-category #form-category-icon').append(
+			'<li data-id="' + z + '"' + selected + '><i class="' + icons[z] + '"></i></li>'
 		);
 	}
+	$('.popup-edit-category #form-category-icon li').on('click', function(e) {
+		$(e.delegateTarget).addClass('icon-selected');
+		$(e.delegateTarget).siblings().removeClass('icon-selected');
+	});
+
 
 	// save handler
 	$('.popup-edit-category-save').on('click', function(e) {
@@ -703,7 +817,7 @@ function openCategoryPopup(editID) {
 		if(editID.length > 1) {
 
 			var newDescription = $('.popup-edit-category #form-category-description').val();
-			var newIcon = $('.popup-edit-category #form-category-icon').val();
+			var newIcon = $('.popup-edit-category #form-category-icon li.icon-selected').attr('data-id');
 
 			if(newDescription.length > 0 && newIcon.length > 0) {
 
@@ -795,6 +909,108 @@ function openAccountPopup(editID) {
 
 
 
+/**
+ * Creates a date picker for given element with given start point
+ *
+ * @param {Date} dateObj date as reference for field start value, or false for current time
+ * @param {String} cssSelector selector for target input field
+ */
+function createDatetimePicker(dateObj, cssSelector) {
+
+	var today = new Date();
+
+	if(!dateObj)
+		dateObj = today;
+
+	var picker = expApp.picker({
+			input: cssSelector,
+			toolbar: false,
+			inputReadOnly: true,
+			rotateEffect: false,
+
+			value: [dateObj.getMonth(), dateObj.getDate(), dateObj.getFullYear(), dateObj.getHours(), (dateObj.getMinutes() < 10 ? '0' + dateObj.getMinutes() : dateObj.getMinutes())],
+
+			onChange: function (picker, values, displayValues) {
+					var daysInMonth = new Date(picker.value[2], picker.value[0]*1 + 1, 0).getDate();
+					if (values[1] > daysInMonth) {
+							picker.cols[1].setValue(daysInMonth);
+					}
+			},
+
+			formatValue: function (p, values, displayValues) {
+
+					var month = parseInt(values[1])+1;
+					return values[2] + '-' + (month < 10 ? '0'+month : month) + '-' + (values[0] < 10 ? '0'+values[0] : values[0]) + 'T' + values[3] + ':' + values[4];
+			},
+
+			cols: [
+					// Days
+					{
+							values: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31],
+							textAlign: 'right',
+							cssClass: 'smaller'
+					},
+					// Divider
+					{
+							divider: true,
+							content: '.',
+							cssClass: 'smaller'
+					},
+					// Months
+					{
+							values: [0,1,2,3,4,5,6,7,8,9,10,11],
+							displayValues: [1,2,3,4,5,6,7,8,9,10,11,12],//TODO('January February March April May June July August September October November December').split(' '),
+							textAlign: 'right',
+							cssClass: 'smaller'
+					},
+					// Divider
+					{
+							divider: true,
+							content: '.',
+							cssClass: 'smaller'
+					},
+					// Years
+					{
+							values: (function () {
+									var arr = [];
+									for (var i = ((dateObj.getFullYear() < today.getFullYear()) ? dateObj.getFullYear() : today.getFullYear())-5; i <= ((dateObj.getFullYear() > today.getFullYear()) ? dateObj.getFullYear() : today.getFullYear())+5; i++) { arr.push(i); }
+									return arr;
+							})(),
+							cssClass: 'smaller'
+					},
+					// Space divider
+					{
+							divider: true,
+							content: ' ',
+							cssClass: 'smaller'
+					},
+					// Hours
+					{
+							values: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
+							cssClass: 'smaller'
+					},
+					// Divider
+					{
+							divider: true,
+							content: ':',
+							cssClass: 'smaller'
+					},
+					// Minutes
+					{
+							values: (function () {
+									var arr = [];
+									for (var i = 0; i <= 59; i++) { arr.push(i < 10 ? '0' + i : i); }
+									return arr;
+							})(),
+							cssClass: 'smaller'
+					}
+			]
+	});
+	return picker;
+}
+
+
+
 
 
 //////////////////////////////////////////////////////////////////
@@ -805,7 +1021,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 	// generate links to expenses in menu
 	var currentMonth = (new Date()).getMonth();
 	var currentYear = (new Date()).getFullYear();
-	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0); // zero values for hours
+	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 	var endDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
 
 	$('#menu-list').empty();
@@ -818,7 +1034,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 		// create menu link label and data object (is given to expenses page)
 		// data object contains information which list to show
-		var monthLabel = i18n.month[currentMonth] + ' ' + currentYear;
+		var monthLabel = window.i18n.month[currentMonth] + ' ' + currentYear;
 		var dataObj = {
 			request: 'timerange',
 			start: startDate.getTime(),
@@ -828,13 +1044,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 		// get items for current month
 		var monthBalance = 0;
-		var monthItems = db.query('item',
-			function(row) {
-				if(!row.deleted && row.timestamp >= startDate.getTime() && row.timestamp < endDate.getTime())
-					return true;
-				else
-					return false;
-			});
+		var monthItems = getItemsFromTimerange(startDate.getTime(), endDate.getTime());
 
 		// only generate link if month has items
 		if(monthItems.length > 0) {
@@ -904,7 +1114,11 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 	// add categories/accounts to dropdown select
 	createCategoryOptions( $(page.container).find('#form-add-category') );
-	createAccountOptions( $(page.container).find('#form-add-account') );
+	createAccountOptions( $(page.container).find('#form-add-account'), false, false, true );
+
+	// datepicker
+	var today = new Date();
+	//createDatetimePicker(today, '#form-add-date');
 
 	// add expense form: submit handler
 	$(page.container).find('#form-add-submit').on('click', function(e) {
@@ -912,15 +1126,15 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 		e.preventDefault();
 
 		// disable multiple inputs in short time
-		if(!window.blockedInput) {
+		if(!window.globals.state.blockedInput) {
 
 			// disable button to prevent multiple entries (by accident)
 			that = $( e.target );
 			that.addClass('disabled');
-			window.blockedInput = true;
+			window.globals.state.blockedInput = true;
 			window.setTimeout(function() {
 				that.removeClass('disabled');
-				window.blockedInput = false;
+				window.globals.state.blockedInput = false;
 			}, 1000);
 
 			var addPrice = $(page.container).find('#form-add-price').val();
@@ -933,6 +1147,11 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 
 			if(validItem) {
 
+				// empty input fields to prevent mistaken new entries
+				$(page.container).find('#form-add-price').val('');
+				$(page.container).find('#form-add-description').val('');
+				$(page.container).find('#form-add-date').val('');
+
 				// insert new item in DB
 				var addID = db.insert('item', {
 					uniqueid: createUniqueid( Date.now(), addDate+addDescription+addPrice+addCategory+addAccount ),
@@ -944,7 +1163,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 					price: validItem.price,
 					description: validItem.description,
 					deleted: false,
-					version: properties.version
+					version: window.globals.properties.version
 				});
 				db.commit();
 
@@ -972,47 +1191,41 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	if( !getSettings('sync_enabled') )
 		$('.index-sync').html('<p>You can synchronize all expenses with your Dropbox. Enable Synchronization in <a href="settings.html" data-view=".view-left" class="open-panel">settings</a>.</p>');
 
-	////////////////
-	// calculate balances
+	// insert balances
 	// total balance
-	var totalBalance = 0;
-	var allItems = db.query('item', {deleted: false});
-	for(var i = 0; i < allItems.length; i++) {
-		totalBalance += allItems[i].price;
-	}
-
-	var allAccounts = db.query('account', {disabled: false});
-	for(var i = 0; i < allAccounts.length; i++) {
-		totalBalance += allAccounts[i].initial_balance;
-	}
-
+	var totalBalance = getTotalBalance();
 	$(page.container).find('#total-balance').html( formatPrice(totalBalance) );
 
 	// current month's balance
-	var currentMonth = (new Date()).getMonth();
-	var currentYear = (new Date()).getFullYear();
+	var currentMonth = today.getMonth();
+	var currentYear = today.getFullYear();
 	var startDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
-	var endDate = new Date(currentYear, currentMonth+1, 0, 0, 0, 0, 0);
+	var endDate = new Date(currentYear, currentMonth+1, 1, 0, 0, 0, 0);
 
-	var currentItems = db.queryAll('item', {
-			query: function(row) {
-				if(!row.deleted &&
-					row.timestamp >= startDate.getTime() &&
-					row.timestamp < endDate.getTime())
-					return true;
-				else
-					return false;
-			}
-		});
-	var currentBalance = 0;
-	for(var i = 0; i < currentItems.length; i++) {
-		currentBalance += currentItems[i].price;
-	}
+	var currentBalance = getBalanceFromTimerange(startDate, endDate);
 	$(page.container).find('#total-balance-month').html( formatPrice(currentBalance) );
 
 	// last month's total balance
 	var lastBalance = totalBalance - currentBalance;
 	$(page.container).find('#total-balance-lastmonth').html( formatPrice(lastBalance) );
+
+	// account balances
+	var accounts = getAccounts();
+	$(page.container).find('#index-account-balance').empty();
+
+	for(var a = 0; a < accounts.length; a++) {
+
+		var balance = getAccountBalance(accounts[a].uniqueid);
+
+		$(page.container).find('#index-account-balance').append(
+			'<li><div class="item-content">' +
+			'	<div class="item-inner">' +
+			'		<div class="item-title">' + accounts[a].description + '</div>' +
+			'		<div class="item-after">' + formatPrice(balance) + '</div>' +
+			'	</div>' +
+			'</div></li>'
+		);
+	}
 });
 
 
@@ -1022,80 +1235,56 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('expenses-list', function (page) {
 
-	//TODO
-	window.currentPageQuery = page.query;
-	console.debug('init', page.query, window.currentPageQuery);
+	// save page query for later usage in globals.temp
+	var tempID = createUniqueid(Date.now(), page.query.request);
+	window.globals.temp[tempID] = page;
+	$(page.container).find('#expenses-list-category').attr('data-temppage', tempID);
 
 	// add categories to dropdown select
 	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
 
-	// category select dropdown TODO
-	/*$(page.container).find('#expenses-list-category').on('change', function(e) {
+	// category dropdown: onchange handler
+	$(page.container).find('#expenses-list-category').on('change', function(e) {
 
 		var catID = $(e.delegateTarget).val();
+		var tempID = $(e.delegateTarget).attr('data-temppage');
 
-		page.query.category = catID;
-		mainView.loadPage('expenses-list.html?' + $.param(page.query));
-	});*/
+		updateItemList(catID, tempID, true);
+	});
 
-	// evaluate page params to determine what to display
-	// standard values
-	var itemQuery = {deleted: false};
-	var itemSort = [['timestamp', 'DESC']];
-	var itemLimit = null;
-	var itemDomBalance = $(page.container).find('#expenses-list-balance');
-	var itemNoDelete = false;
+	// add tempID to page-content container and attach infinite scroll
+	$(page.container).find('.page-content').addClass('infinite-scroll-' + tempID);
+	expApp.attachInfiniteScroll('.infinite-scroll-' + tempID);
 
-	// override standards for special conditions
-	switch(page.query.request) {
+	// Attach 'infinite' event handler
+	$('.infinite-scroll-' + tempID).on('infinite', function () {
 
-		case 'timerange':
+	  // Exit, if loading in progress
+	  if (window.globals.state.infiniteScrollLoading) return;
 
-			// if no range is defined, get latest
-			if(page.query.start == null || page.query.end == null) {
-				itemLimit = 50;
-				page.query.title = 'Latest by date (error)';
-				break;
+	  // Set loading flag
+	  window.globals.state.infiniteScrollLoading = true;
+
+	  // Emulate 1s loading
+	  setTimeout(function () {
+	    // Reset loading flag
+	    window.globals.state.infiniteScrollLoading = false;
+			var page = window.globals.temp[tempID];
+
+			if( page.infiniteScroll.endReached ) {
+				// Nothing more to load, detach infinite scroll events to prevent unnecessary loadings
+				expApp.detachInfiniteScroll('.infinite-scroll-' + tempID);
+				// Remove preloader
+				$('.infinite-scroll-' + tempID + ' .infinite-scroll-preloader').remove();
+				return;
 			}
 
-			itemQuery = function(row) {
-					if(!row.deleted &&
-						row.timestamp >= page.query.start &&
-						row.timestamp < page.query.end)
-						return true;
-					else
-						return false;
-				};
-			break;
+			updateItemList( $(page.container).find('#expenses-list-category').val(), tempID, false);
 
-		case 'deleted':
-			itemQuery = {deleted: true};
-			itemSort = [['lastupdate', 'DESC']];
-			itemLimit = 50;
-			itemDomBalance = false;
-			itemNoDelete = true;
-			page.query.title = 'Last deleted';
-			break;
+	  }, 100);
+	});
 
-		case 'lastupdate':
-			itemSort = [['lastupdate', 'DESC']];
-			itemLimit = 50;
-			page.query.title = 'Last updated';
-			break;
-
-		case 'latest':
-		default:
-			itemLimit = 50;
-			page.query.title = 'Latest by date';
-			break;
-	}
-
-	// add page title
-	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
-
-	// add items to list
-	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete );
-
+	updateItemList(0, tempID, true);
 });
 
 
@@ -1107,14 +1296,9 @@ expApp.onPageInit('settings', function (page) {
 
 	// load settings
 	var settings = getSettings();
-	/*settings = [];
 
-	for(i = 0; i < settings_rows.length; i++) {
+	console.log(settings);
 
-		settings[ settings_rows[i].key ] = settings_rows[i].value;
-	}*///TODO
-
-	//$('#settings-preset_balance').val( settings['preset_balance'] );//TODO
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
 
 	if(settings['sync_enabled'])
@@ -1123,22 +1307,21 @@ expApp.onPageInit('settings', function (page) {
 	if(settings['sync_startup'])
 		$('#settings-sync_startup').prop('checked', 'checked');
 
-
-	// save settings
-	$('#settings-button-save').on('click', function() {
-
-		setSettings([
-				//{key: 'preset_balance', value: parseFloat( $('#settings-preset_balance').val() ) },//TODO
-				{key: 'ui_money_format', value: $('#settings-ui_money_format').val() },
-				{key: 'sync_enabled', value: $('#settings-sync_enabled').is(':checked') },
-				{key: 'sync_startup', value: $('#settings-sync_startup').is(':checked') }
-			]);
-
-		expApp.addNotification({
-			title: 'Settings saved',
-			message: 'Some settings require a reload.',
-			hold: 1000
-		});
+	// SAVE HANDLERS
+	// change handler: ui_money_format
+	$('#settings-ui_money_format').on('change', function() {
+		setSettings('ui_money_format', $('#settings-ui_money_format').val() );
+		console.log(getSettings('ui_money_format'));
+	});
+	// change handler: sync_enabled
+	$('#settings-sync_enabled').on('change', function() {
+		setSettings('sync_enabled', $('#settings-sync_enabled').is(':checked') );
+		console.log(getSettings('sync_enabled'));
+	});
+	// change handler: sync_startup
+	$('#settings-sync_startup').on('change', function() {
+		setSettings('sync_startup', $('#settings-sync_startup').is(':checked') );
+		console.log(getSettings('sync_startup'));
 	});
 });
 
@@ -1157,7 +1340,7 @@ expApp.onPageInit('settings-categories', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-checkmark-outline').removeClass('icon-ion-ios7-drag');
 			$('#settings-categories-list label.label-checkbox').removeClass('disabled');
 		}
 	});
@@ -1166,7 +1349,7 @@ expApp.onPageInit('settings-categories', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-drag').removeClass('icon-ion-ios7-checkmark-outline');
 			$('#settings-categories-list label.label-checkbox').addClass('disabled');
 
 			// save list and its order
@@ -1209,7 +1392,7 @@ expApp.onPageInit('settings-accounts', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-checkmark-outline').removeClass('ion-ios7-drag');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-checkmark-outline').removeClass('icon-ion-ios7-drag');
 			$('#settings-accounts-list label.label-checkbox').removeClass('disabled');
 		}
 	});
@@ -1218,7 +1401,7 @@ expApp.onPageInit('settings-accounts', function (page) {
 		// trigger events only when targeted on sorting list (prevent action when swiping on list elements)
 		if( $(e.target).hasClass('sortable') ) {
 
-			$$('.toggle-sortable i').addClass('ion-ios7-drag').removeClass('ion-ios7-checkmark-outline');
+			$$('.toggle-sortable i').addClass('icon-ion-ios7-drag').removeClass('icon-ion-ios7-checkmark-outline');
 			$('#settings-accounts-list label.label-checkbox').addClass('disabled');
 
 			// save list and its order
@@ -1252,22 +1435,418 @@ expApp.onPageInit('settings-accounts', function (page) {
 
 
 
+//////////////////////////////////////////////////////////////////
+// backup                                                       //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('backup', function (page) {
+
+	// assume main view if page is not defined
+	page = page || {container:'.view-main'};
+
+	// csv export button
+	$(page.container).find('a#export-csv').on('click', function() {
+		var encodedUri = createCSVDataLink(db.query('item'), "ExpenSync CSV Export " + Date.now());
+
+		if(encodedUri) {
+			var link = document.createElement("a");
+			link.setAttribute("href", encodedUri);
+			link.setAttribute("download", "expensync_export_" + Date.now() + ".csv");
+			link.setAttribute("class", "external");
+			document.body.appendChild(link);
+			link.click();
+		} else {
+			expApp.alert('No data was found for export.');
+		}
+	});
+
+	// text csv export button
+	$(page.container).find('a#export-text-csv').on('click', function() {
+		$('.popup-general .popup-title').html('CSV Export');
+		$('.popup-general .page-content').html(
+			'<div class="content-block-title">Text content</div>' +
+			'<div class="list-block">' +
+				'<ul>' +
+					'<li class="align-top">' +
+						'<div class="item-content">' +
+							'<div class="item-inner">' +
+								'<div class="item-input">' +
+									'<textarea style="height: 300px">' + createCSVDataLink(db.query('item'), "ExpenSync CSV Export " + Date.now(), true) + '</textarea>' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</li>' +
+				'</ul>' +
+			'</div>');
+		expApp.popup('.popup-general');
+	});
+
+	// text json export button
+	$(page.container).find('a#export-text-json').on('click', function() {
+		$('.popup-general .popup-title').html('JSON Export');
+		$('.popup-general .page-content').html(
+			'<div class="content-block-title">Text content</div>' +
+			'<div class="list-block">' +
+				'<ul>' +
+					'<li class="align-top">' +
+						'<div class="item-content">' +
+							'<div class="item-inner">' +
+								'<div class="item-input">' +
+									'<textarea style="height: 300px">' + JSON.stringify(db.query('item')) + '</textarea>' +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</li>' +
+				'</ul>' +
+			'</div>');
+		expApp.popup('.popup-general');
+	});
+});
+
+
+
+//////////////////////////////////////////////////////////////////
+// stats-chartist                                               //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('stats-chartist', function (page) {
+
+	// handler for selection
+	$("#form-stats-date-start").on('change', onStatsDateChange);
+	$("#form-stats-date-end").on('change', onStatsDateChange);
+
+	// draw charts
+	Charts.draw();
+
+	//TODO remove debug output
+	if(window.globals.properties.debug) {
+		// fill item list
+		var items = db.query('item');
+		for(var i = 0; i < items.length; i++) {
+
+			row = items[i];
+
+			$('#stats-item-list').append(
+				'<tr>' +
+				'  <td>' + row.uniqueid + '</td>' +
+				'  <td>' + row.timestamp + '</td>' +
+				'  <td>' + row.lastupdate + '</td>' +
+				'  <td>' + row.synchronized + '</td>' +
+				'  <td>' + row.account + '</td>' +
+				'  <td>' + row.category + '</td>' +
+				'  <td>' + row.price + '</td>' +
+				'  <td>' + row.description + '</td>' +
+				'  <td>' + row.deleted + '</td>' +
+				'  <td>' + row.version + '</td>' +
+				'</tr>'
+			);
+		}
+	}
+});
+
+
+
+//////////////////////////////////////////////////////////////////
+// stats                                                        //
+//////////////////////////////////////////////////////////////////
+expApp.onPageInit('stats', function (page) {
+	
+	var disabledAccounts = [];
+	var categories = [];
+	var accounts = [];
+
+  var allAccounts = getAccounts();
+  allAccounts.forEach(function(account) {
+		accounts[account.uniqueid] = account.description;
+    if (account.disabled)
+      disabledAccounts.push(account.uniqueid);
+  });
+
+  var data = db.queryAll('item', {
+      query: function(row) {
+        if(!row.deleted && disabledAccounts.indexOf(row.account) === -1)
+          return true;
+        else
+          return false;
+      }
+	});	
+	var dataCategory = db.query('category');
+	
+	dataCategory.forEach(function(c) {
+		categories[c.uniqueid] = c.description;
+	});
+
+	data.forEach(function(d) {
+		d.timestamp = new Date(d.timestamp);
+		d.monthYear = d3.time.format("%Y/%m").parse( d.timestamp.getFullYear() + '/' + (d.timestamp.getMonth()+1) );
+	});
+	
+	var facts = crossfilter(data);
+	var all = facts.groupAll();
+
+	var dateDim = facts.dimension( dc.pluck('monthYear') );
+	var dateTotal = dateDim.group().reduceSum( dc.pluck('price') );
+	var minDate = dateDim.bottom(1)[0].timestamp;
+	var maxDate = dateDim.top(1)[0].timestamp;
+
+	facts.groupAll();
+	var categoryDim = facts.dimension( dc.pluck('category') );
+	var categoryTotalMinus = categoryDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var categoryTotalPlus = categoryDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	var categoryTotalMinusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var categoryTotalPlusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	
+	facts.groupAll();
+	var accountDim = facts.dimension( dc.pluck('account') );
+	var accountTotalMinus = accountDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var accountTotalPlus = accountDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	var accountTotalMinusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
+	var accountTotalPlusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
+	
+	// count all the facts and print out the data counts
+	dc.dataCount(".dc-data-count")
+		.dimension(facts)
+		.group(all);
+
+	var monthChart = dc.barChart('#dc-month-chart');
+	var categoryMinusChart = dc.rowChart('#dc-category-minus-chart');
+	var categoryPlusChart = dc.rowChart('#dc-category-plus-chart');
+	var categoryMinusPieChart = dc.pieChart('#dc-category-minus-pie-chart');
+	var categoryPlusPieChart = dc.pieChart('#dc-category-plus-pie-chart');
+	var accountMinusPieChart = dc.pieChart('#dc-account-minus-pie-chart');
+	var accountPlusPieChart = dc.pieChart('#dc-account-plus-pie-chart');
+	var dataTable = dc.dataTable('#dc-data-table');
+
+	var monthScale = d3.time.scale();
+	monthScale.domain([minDate,maxDate]);
+
+	var categoryTitleFunction = function(d) {
+		var sum = d.value > 0 ? categoryTotalPlusSum : categoryTotalMinusSum;
+		return categories[d.key] + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100) + ' (' + (Math.round(d.value / sum.value() * 1000) / 10) + ' %)';
+	};
+	var accountTitleFunction = function(d) {
+		var sum = d.value > 0 ? accountTotalPlusSum : accountTotalMinusSum;
+		return accounts[d.key] + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100) + ' (' + (Math.round(d.value / sum.value() * 1000) / 10) + ' %)';
+	};
+	var updateTotals = function() {
+		$('.dc-category-total-minus-sum').text(getFormattedPrice(categoryTotalMinusSum.value()));
+		$('.dc-category-total-plus-sum').text(getFormattedPrice(categoryTotalPlusSum.value()));
+		$('#dc-account-total-minus-sum').text(getFormattedPrice(accountTotalMinusSum.value()));
+		$('#dc-account-total-plus-sum').text(getFormattedPrice(accountTotalPlusSum.value()));
+	};
+
+	monthChart
+		.width(function() {
+			return $('#dc-month-chart').width();
+		})
+		.height(200)
+		.margins({left: 35, right: 30, top: 20, bottom: 20})
+		.dimension(dateDim)
+		.group(dateTotal)
+		.x( monthScale )
+		.xUnits(d3.time.months)
+		.elasticX(true)
+		.elasticY(true)
+		.colors(d3.scale.ordinal().domain(["positive","negative"])
+																	.range(["#4cd964","#ff3b30"]))
+		.colorAccessor(function(d) { 
+			if(d.value > 0) 
+				return "positive"
+			return "negative";
+		})
+		.brushOn(true)
+		.round(d3.time.month.round)
+		.title(function(d) {
+			return (d.key.getMonth() + 1) + '/' + d.key.getFullYear() + ': ' + getFormattedPrice(Math.round(d.value * 100) / 100);
+		})
+		.on('renderlet', function(chart) {
+			updateTotals();
+		})
+		.yAxis().ticks(4);
+
+	categoryMinusChart
+		.width(function() {
+			return $('#dc-category-minus-chart').width();
+		})
+		.height(500)
+		.margins({left: 30, right: 30, top: 20, bottom: 20})
+		.dimension(categoryDim)
+		.group(categoryTotalMinus)
+		.label(function(d) {
+			return categories[d.key];
+		})
+		.title(categoryTitleFunction)
+		.elasticX(true)
+		.xAxis().ticks(4);
+
+	categoryPlusChart
+		.width(function() {
+			return $('#dc-category-plus-chart').width();
+		})
+		.height(500)
+		.margins({left: 30, right: 30, top: 20, bottom: 20})
+		.dimension(categoryDim)
+		.group(categoryTotalPlus)
+		.label(function(d) {
+			return categories[d.key];
+		})
+		.title(categoryTitleFunction)
+		.elasticX(true)
+		.xAxis().ticks(4);
+
+	categoryMinusPieChart
+		.width(function() {
+			return $('#dc-category-minus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(categoryDim)
+		.group(categoryTotalMinus)
+		.label(function(d) {
+			return '';
+		})
+		.title(categoryTitleFunction)
+	categoryMinusPieChart.onClick = function() {};
+
+	categoryPlusPieChart
+		.width(function() {
+			return $('#dc-category-plus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(categoryDim)
+		.group(categoryTotalPlus)
+		.label(function(d) {
+			return '';
+		})
+		.title(categoryTitleFunction);
+	categoryPlusPieChart.onClick = function() {};
+	
+	accountMinusPieChart
+		.width(function() {
+			return $('#dc-account-minus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(accountDim)
+		.group(accountTotalMinus)
+		.label(function(d) {
+			return '';
+		})
+		.title(accountTitleFunction);
+
+	accountPlusPieChart
+		.width(function() {
+			return $('#dc-account-plus-pie-chart').width();
+		})
+		.height(300)
+		.radius(115)
+		.dimension(accountDim)
+		.group(accountTotalPlus)
+		.label(function(d) {
+			return '';
+		})
+		.title(accountTitleFunction);
+	
+	dataTable
+		.dimension(dateDim)
+		.group(function(d) {
+			return d.timestamp.getFullYear() + ' / ' + ('0' + (d.timestamp.getMonth()+1)).slice(-2);
+		})
+		.size(25)
+		.order(d3.descending)
+		.columns([
+		  {
+				label: 'Date',
+			 	format: function(d) {
+					var formattedDate = ('0' + d.timestamp.getDate()).slice(-2) + '.'
+							 + ('0' + (d.timestamp.getMonth()+1)).slice(-2) + '.'
+							 + d.timestamp.getFullYear() + ' '
+							 + ('0' + d.timestamp.getHours()).slice(-2) + ':'
+							 + ('0' + d.timestamp.getMinutes()).slice(-2);
+					return formattedDate;
+				}
+			},
+			{
+				label: 'Category',
+			 	format: function(d) {
+					return categories[d.category];
+				}
+			},
+			{
+				label: 'Description',
+			 	format: function(d) {
+					return d.description;
+				}
+			},
+			{
+				label: 'Price',
+			 	format: function(d) {
+					return parseFloat(d.price).toFixed(2);
+				}
+			}
+		]);
+
+	dc.renderAll();
+
+
+});
+
 
 
 //////////////////////////////////////////////////////////////////
 // APPLICATION STARTUP                                          //
 //////////////////////////////////////////////////////////////////
 
-// globals
-window.blockedInput = false;
-
 // finally initialize app
 expApp.init();
+
+// check if database is from current app version, and ask for update
+/*if( getSettings('sync_enabled') && (db.query('settings', {key: 'db_version'}).length == 0 || window.globals.properties.version != getSettings('db_version')) )
+	expApp.alert(
+		'The version of ExpenSync is newer than your local database. You must update your local database in order to prevent errors and enable new features.<br>' +
+		'For this, go to settings menu and click "drop local database". Synchronize your data with Dropbox before doing this, or your data will be lost!',
+		'New version available'
+	);*/
 
 // check if dropbox sync on startup is enabled
 if( getSettings('sync_enabled') && getSettings('sync_startup') )
 	syncInit();
 
 // debug output of DB content if debug is enabled
-if(properties.debug)
+if(window.globals.properties.debug)
 	console.debug("DB content: ", JSON.parse(db.serialize()) );
+
+
+// Firefox install button
+var button = document.getElementById('button-install-firefox');
+
+if(navigator && navigator.mozApps) {
+	var manifest_url = location.href + 'manifest.webapp';
+
+	function install(ev) {
+	  ev.preventDefault();
+		//Manifest URL Definieren
+		// App Installieren
+	  var installLocFind = navigator.mozApps.install(manifest_url);
+	  installLocFind.onsuccess = function(data) {
+	    // Wenn die App Installiert ist
+			expApp.alert('ExpenSync was successfully installed!');
+	  };
+	  installLocFind.onerror = function() {
+	    // App ist nicht Installiert
+	    // installapp.error.name
+	    expApp.alert(installLocFind.error.name);
+	  };
+	};
+
+	var installCheck = navigator.mozApps.checkInstalled(manifest_url);
+
+	installCheck.onsuccess = function() {
+	  if(installCheck.result) {
+	    button.style.display = "none";
+	  } else {
+	    button.addEventListener('click', install, false);
+	  };
+	};
+} else {
+	button.style.display = "none";
+}

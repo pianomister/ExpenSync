@@ -1,96 +1,12 @@
 ﻿FEATURES / TODO
-- refactor methods to update lists on-the-fly
-- monthly list filter by category
-- infinite scroll for lists to enhance loading time
-- icon select verbessern in categories
-
-- Neue Icons hinzufügen
-- Synchronisation von Kategorien, Accounts
 - Möglichkeit fixe Ausgaben anzugeben (Anfang des Monats automatisch als Einträge anlegen)
 
-
-
-DATENSTRUKTUR REFACTORING
-item
-- category von ID auf uniqueid
-- synchronized auf "true" wenn nicht gesetzt
-- account auf Default (uniqueid)
-
-
-
-
-
-Speicherstruktur: localStorageDB
-https://github.com/knadh/localStorageDB
-
-
-Tabelle für
-fixcost
-	uniqueid
-	price
-	category
-	description
-	timestamp
-	lastupdate
-
-
-
-
-properties (nicht in db)
-	key
-	description
-	value
-
-Version
-AppName
-Developer
-Website
-
-
-settings
-	key
-	description
-	value
-
-app_category_count - counter for category ID , braucht man nicht
+IDEEN
+- ausgabe-prognose basiert auf bisherigen Monatsausgaben und Fixkosten + Einkommen:
+  -> reicht das Geld bis Monatsende?
 
 ui_lang - DE, EN ...
-ui_money_format - , or .
 ui_num_months - Number of months displayed in overview
-
-sync_enabled - true/false
-sync_url - URL für backup service
-sync_user - Username for synchronization
-sync_pass - Passwort for encryption before sending
-sync_key - ID für Datenbank
-sync_lastupdate - timestamp
-
-
-item
-	uniqueid
-	timestamp
-	lastupdate = timestamp
-	category
-	price
-	description
-	deleted (true/false) = für löschen vormerken
-
-categories
-	timestamp
-	lastupdate
-	description
-	icon
-	order
-	(color)
-	disabled
-
-	categories can't be deleted, but editable
-
-icons
-	id
-	class
-	description
-
 
 
 Sync process

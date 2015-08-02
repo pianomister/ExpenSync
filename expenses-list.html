@@ -1,9 +1,17 @@
-<!-- Expenses-list -->
+<!-- expenses-list -->
 <div class="navbar">
 	<div class="navbar-inner">
-		<div class="left"><a href="#" class="back link"><i class="icon icon-back"></i><span>Back</span></a></div>
+		<div class="left">
+			<a href="#" class="back link">
+				<i class="icon icon-back"></i><span>Back</span>
+			</a>
+		</div>
 		<div class="center sliding" id="expenses-list-title">Expenses List</div>
-		<div class="right"><a href="#" data-panel="left" class="link open-panel icon-only"><i class="icon icon-bars"></i></a></div>
+		<div class="right">
+			<a href="#" data-panel="left" class="link open-panel icon-only">
+				<i class="icon icon-bars"></i>
+			</a>
+		</div>
 	</div>
 </div>
 <div class="pages">
@@ -17,9 +25,11 @@
 						<ul>
 							<li><div class="item-content">
 								<div class="item-inner">
-									<div class="item-title label" id="expenses-list-balance"></div>
+									<div class="item-title label" id="expenses-list-balance">
+										&mdash;
+									</div>
 									<div class="item-input">
-										<select id="expenses-list-category" disabled>
+										<select id="expenses-list-category">
 										</select>
 									</div>
 								</div>
@@ -31,6 +41,10 @@
 					<div class="list-block media-list tablet-inset">
 						<ul id="expenses-list-items">
 						</ul>
+					</div>
+					<!-- Preloader -->
+					<div class="infinite-scroll-preloader">
+						<div class="preloader"></div>
 					</div>
 				</div>
 				<div class="col-100 tablet-33">

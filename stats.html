@@ -1,0 +1,91 @@
+<!-- stats -->
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="left">
+      <a href="#" class="back link">
+        <i class="icon icon-back"></i>
+        <span>Back</span>
+      </a>
+    </div>
+    <div class="center sliding">Analysis</div>
+    <div class="right">
+      <a href="#" data-panel="left" class="link open-panel icon-only">
+        <i class="icon icon-bars"></i>
+      </a>
+    </div>
+  </div>
+</div>
+<div class="pages">
+  <div data-page="stats" class="page">
+    <div class="page-content">
+      
+			<div class="content-block tablet-inset">
+				<div class="content-block-inner dc-data-count">
+					<span>
+						<span class="filter-count"></span>
+						 selected out of 
+						<span class="total-count"></span>
+						 records | 
+						<a class="external" href="javascript: dc.filterAll();dc.renderAll();">Reset All</a>
+					</span>
+					<br>
+				</div>
+			</div>
+			
+			<div class="content-block-title">Balance per month<br>base: expenses <span class="dc-category-total-minus-sum"></span> / income <span class="dc-category-total-plus-sum"></span></div>
+			<div class="content-block tablet-inset">
+				<div class="content-block-inner">
+					<div id="dc-month-chart"></div>
+				</div>
+			</div>
+			
+      <div class="row">
+        <div class="col-100 tablet-50">
+          <div class="content-block-title">Expenses by category<br>base: <span class="dc-category-total-minus-sum"></span></div>
+          <div class="content-block tablet-inset">
+            <div class="content-block-inner">
+              <div id="dc-category-minus-chart"></div>
+							<div id="dc-category-minus-pie-chart"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-100 tablet-50">
+          <div class="content-block-title">Income by category<br>base: <span class="dc-category-total-plus-sum"></span></div>
+          <div class="content-block tablet-inset">
+            <div class="content-block-inner">
+              <div id="dc-category-plus-chart"></div>
+							<div id="dc-category-plus-pie-chart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+			
+			<div class="row">
+        <div class="col-100 tablet-50">
+          <div class="content-block-title">Expenses by account<br>base: <span id="dc-account-total-minus-sum"></span></div>
+          <div class="content-block tablet-inset">
+            <div class="content-block-inner">
+							<div id="dc-account-minus-pie-chart"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-100 tablet-50">
+          <div class="content-block-title">Income by account<br>base: <span id="dc-account-total-plus-sum"></span></div>
+          <div class="content-block tablet-inset">
+            <div class="content-block-inner">
+							<div id="dc-account-plus-pie-chart"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+			
+			<div class="content-block-title">Top 25 selected items</div>
+			<div class="content-block tablet-inset">
+				<div class="content-block-inner">
+					<table id="dc-data-table" class="dc-table"></table>
+				</div>
+			</div>
+
+    </div>
+  </div>
+</div>

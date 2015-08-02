@@ -16,12 +16,34 @@
     <!--link rel="apple-touch-startup-image" sizes="320x460" href="ausgaben_startup460.png" /-->
     <link rel="stylesheet" href="css/framework7.min.css">
     <link rel="stylesheet" href="css/framework7.themes.min.css">
-    <link rel="stylesheet" href="css/ionicons.min.css">
+    <link rel="stylesheet" href="css/icomoon.css">
+    <link rel="stylesheet" href="css/chartist.min.css">
+		<link rel="stylesheet" href="css/dc.css">
     <link rel="stylesheet" href="css/expenses.css">
   </head>
   <body class="theme-white">
     <!-- Status bar overlay for homescreen mode-->
     <div class="statusbar-overlay"></div>
+
+    <!-- Popup: generic popup -->
+    <div class="popup popup-general">
+      <div class="view navbar-fixed">
+        <div class="pages">
+          <div class="page">
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="center popup-title">Generic Popup</div>
+                <div class="right">
+                  <a class="link close-popup" href="#">Close</a>
+                </div>
+              </div>
+            </div>
+            <div class="page-content">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Popup: Edit item -->
     <div class="popup popup-edit-item">
@@ -82,7 +104,7 @@
   									<div class="item-inner">
   										<div class="item-title label">Date</div>
   										<div class="item-input">
-  											<input id="form-edit-date" type="date" placeholder="(opt. YYYY-MM-DD)">
+  											<input id="form-edit-date" type="text" placeholder="(opt. YYYY-MM-DD)">
   										</div>
   									</div>
   								</div></li>
@@ -127,16 +149,15 @@
                       </div>
                     </div>
                   </div></li>
-                  <li><div class="item-content">
-                    <div class="item-inner">
-                      <div class="item-title label">Icon</div>
-                      <div class="item-input">
-                        <select id="form-category-icon">
-                        </select>
-                      </div>
-                    </div>
-                  </div></li>
                 </ul>
+              </div>
+
+              <div class="content-block-title">Select icon</div>
+              <div class="content-block tablet-inset">
+                <div class="content-block-inner">
+                  <ul class="icon-selector" id="form-category-icon">
+                  </ul>
+                </div>
               </div>
 
             </div>
@@ -145,7 +166,7 @@
       </div>
     </div>
 
-    <!-- Popup: Edit category -->
+    <!-- Popup: Edit account -->
     <div class="popup popup-edit-account">
       <div class="view navbar-fixed">
         <div class="pages">
@@ -183,10 +204,10 @@
                     </div>
                   </div></li>
                 </ul>
-              </div>
-              <div class="list-block-label">
-                Provide the initial balance on this account (before you started tracking it here).
-                So the balance here represents the actual balance in reality.
+                <div class="list-block-label">
+                  Provide the initial balance on this account (before you started tracking it here).
+                  So the balance here represents the actual balance in reality.
+                </div>
               </div>
 
             </div>
@@ -208,7 +229,7 @@
             <div class="navbar-inner">
               <div class="left">
                 <a href="settings.html" class="link icon-only">
-                  <i class="icon ion ion-ios7-gear-outline"></i>
+                  <i class="icon ion icon-ion-ios7-gear-outline"></i>
                 </a>
               </div>
               <div class="center sliding">Menu</div>
@@ -230,6 +251,24 @@
                         <div class="item-content">
                           <div class="item-inner">
                             <div class="item-title">Overview</div>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="stats.html" data-view=".view-main" class="item-link close-panel">
+                        <div class="item-content">
+                          <div class="item-inner">
+                            <div class="item-title">Analysis</div>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="backup.html" data-view=".view-main" class="item-link close-panel">
+                        <div class="item-content">
+                          <div class="item-inner">
+                            <div class="item-title">Backup &amp; Export</div>
                           </div>
                         </div>
                       </a>
@@ -270,6 +309,7 @@
     				<div class="page-content">
     					<div class="row">
     						<div class="col-100 tablet-50">
+
     							<div class="content-block-title">Add new expense</div>
     							<div class="list-block tablet-inset">
     								<ul>
@@ -311,7 +351,7 @@
     										<div class="item-inner">
     											<div class="item-title label">Date</div>
     											<div class="item-input">
-    												<input id="form-add-date" type="date" placeholder="(opt. YYYY-MM-DD)">
+    												<input id="form-add-date" type="text" placeholder="(opt. YYYY-MM-DD)">
     											</div>
     										</div>
     									</div></li>
@@ -320,8 +360,16 @@
     									</li>
     								</ul>
     							</div>
+
+                  <div class="content-block-title">Backup &amp; Sync</div>
+                  <div class="content-block index-sync">
+                    <p><a class="button" onclick="syncInit();"><i class="ion icon-ion-social-dropbox"></i> Sync now with Dropbox</a></p>
+                    <p>You might be asked to login with Dropbox first before you can use synchronization.</p>
+                  </div>
+
     						</div>
     						<div class="col-100 tablet-50">
+
     							<div class="content-block-title">Your balance</div>
     							<div class="list-block tablet-inset">
     								<ul>
@@ -346,11 +394,19 @@
     								</ul>
     							</div>
 
-    							<div class="content-block-title">Backup &amp; Sync</div>
-    							<div class="content-block index-sync">
-    								<p><a class="button" onclick="syncInit();"><i class="ion ion-social-dropbox"></i> Sync now with Dropbox</a></p>
-    								<p>You might be asked to login with Dropbox first before you can use synchronization.</p>
-    							</div>
+                  <div class="content-block-title">Accounts</div>
+                  <div class="list-block tablet-inset">
+                    <ul id="index-account-balance">
+                    </ul>
+                    <div class="list-block-label">
+                      <p><a href="settings-accounts.html" data-view=".view-left" class="open-panel">Add or edit accounts</a></p>
+                    </div>
+                  </div>
+
+                  <div class="content-block">
+                    <p><a class="button" id="button-install-firefox">Install as Firefox App</a></p>
+                  </div>
+
     						</div>
     					</div>
     				</div>
@@ -364,8 +420,12 @@
   	<script type="text/javascript" src="js/localstoragedb.min.js"></script>
   	<script type="text/javascript" src="js/dropbox-datastores-1.2.0.js"></script>
   	<script type="text/javascript" src="js/md5.js"></script>
+    <script type="text/javascript" src="js/d3.min.js"></script>
+		<script type="text/javascript" src="js/crossfilter.min.js"></script>
+		<script type="text/javascript" src="js/dc.min.js"></script>
   	<script type="text/javascript" src="js/expenses-backend.js"></script>
-  	<script type="text/javascript" src="js/expenses-sync.js"></script>
+    <script type="text/javascript" src="js/expenses-stats.js"></script>
+    <script type="text/javascript" src="js/expenses-sync.js"></script>
     <script type="text/javascript" src="js/expenses-frontend.js"></script>
   </body>
 </html>
