@@ -490,7 +490,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							row.version = window.globals.properties.version;
 							return row;
 						});
-					db.commit();
 
 					expApp.closeModal('.popup-edit-item');
 
@@ -521,7 +520,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 				row.synchronized = false;
 				return row;
 			});
-		db.commit();
 		delItem = db.query('item', {uniqueid: delID});
 
 		// get category description
@@ -830,7 +828,6 @@ function openCategoryPopup(editID) {
 						row.lastupdate = Date.now();
 						return row;
 					});
-				db.commit();
 
 				createCategoryListElements('#settings-categories-list');
 
@@ -887,7 +884,6 @@ function openAccountPopup(editID) {
 						row.lastupdate = Date.now();
 						return row;
 					});
-				db.commit();
 
 				createAccountListElements('#settings-accounts-list');
 				// recalculate the total balance on index page
@@ -1166,7 +1162,6 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 					deleted: false,
 					version: window.globals.properties.version
 				});
-				db.commit();
 
 				var addCategoryDescription = db.query('category', {uniqueid: addCategory});
 
@@ -1371,7 +1366,6 @@ expApp.onPageInit('settings-categories', function (page) {
 							row.lastupdate = Date.now();
 							return row;
 						});
-					db.commit();
 				}
 			});
 		}
@@ -1423,7 +1417,6 @@ expApp.onPageInit('settings-accounts', function (page) {
 							row.lastupdate = Date.now();
 							return row;
 						});
-					db.commit();
 				}
 			});
 
