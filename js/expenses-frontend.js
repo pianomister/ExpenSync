@@ -1554,10 +1554,13 @@ expApp.onPageInit('stats', function (page) {
 	var accounts = [];
 
   var allAccounts = getAccounts();
+	var accountSum = 0;
   allAccounts.forEach(function(account) {
 		accounts[account.uniqueid] = account.description;
     if (account.disabled)
       disabledAccounts.push(account.uniqueid);
+		else
+			accountSum += account.initial_balance;
   });
 
   var data = db.queryAll('item', {
@@ -1574,11 +1577,39 @@ expApp.onPageInit('stats', function (page) {
 		categories[c.uniqueid] = c.description;
 	});
 
+	var runningTotal = accountSum;
+	data.sort(function(a, b) {
+		return (a.date < b.date) ? -1 : (a.date > b.date ? 1 : 0);
+	});
 	data.forEach(function(d) {
 		d.timestamp = new Date(d.timestamp);
 		d.monthYear = d3.time.format("%Y/%m").parse( d.timestamp.getFullYear() + '/' + (d.timestamp.getMonth()+1) );
+		
+		runningTotal += d.price;
+		d.runningTotal = runningTotal;
 	});
 	
+	// reduce functions for running total
+	function reduceAdd(p, v) {
+    p.total += v.price;
+    p.count++;
+    p.average = p.total / p.count;
+    return p;
+	}
+	function reduceRemove(p, v) {
+			p.total -= v.price;
+			p.count--;
+			p.average = p.total / p.count;
+			return p;
+	}
+	function reduceInitial() {
+			return {
+					total: 0,
+					count: 0,
+					average: 0,
+			};
+	}
+
 	var facts = crossfilter(data);
 	var all = facts.groupAll();
 
@@ -1587,26 +1618,32 @@ expApp.onPageInit('stats', function (page) {
 	var minDate = dateDim.bottom(1)[0].timestamp;
 	var maxDate = dateDim.top(1)[0].timestamp;
 
+	//facts.groupAll();
+	var fullDateDim = facts.dimension( dc.pluck('timestamp') );
+	var averageGroup = fullDateDim.group().reduce(reduceAdd, reduceRemove, reduceInitial);
+	var runningTotalGroup = fullDateDim.group().reduceSum( dc.pluck('runningTotal') );
+
 	facts.groupAll();
 	var categoryDim = facts.dimension( dc.pluck('category') );
 	var categoryTotalMinus = categoryDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var categoryTotalPlus = categoryDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
 	var categoryTotalMinusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var categoryTotalPlusSum = categoryDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
-	
+
 	facts.groupAll();
 	var accountDim = facts.dimension( dc.pluck('account') );
 	var accountTotalMinus = accountDim.group().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var accountTotalPlus = accountDim.group().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
 	var accountTotalMinusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price < 0) return d.price; else return 0; } );
 	var accountTotalPlusSum = accountDim.groupAll().reduceSum( function(d) { if(d.price > 0) return d.price; else return 0; } );
-	
+
 	// count all the facts and print out the data counts
 	dc.dataCount(".dc-data-count")
 		.dimension(facts)
 		.group(all);
 
 	var monthChart = dc.barChart('#dc-month-chart');
+	var trendChart = dc.compositeChart('#dc-trend-chart');
 	var categoryMinusChart = dc.rowChart('#dc-category-minus-chart');
 	var categoryPlusChart = dc.rowChart('#dc-category-plus-chart');
 	var categoryMinusPieChart = dc.pieChart('#dc-category-minus-pie-chart');
@@ -1661,6 +1698,41 @@ expApp.onPageInit('stats', function (page) {
 			updateTotals();
 		})
 		.yAxis().ticks(4);
+	
+	trendChart
+		.width(function() {
+			return $('#dc-trend-chart').width();
+		})
+		.height(200)
+		.margins({left: 35, right: 30, top: 20, bottom: 20})
+		.dimension(fullDateDim)
+		.brushOn(false)
+		.elasticX(true)
+		.elasticY(true)
+		.title(function(d) {
+			var title = d.key.getDay() + '.' + (d.key.getMonth() + 1) + '.' + d.key.getFullYear() + ':';
+			if(typeof d.value === 'object')
+				title += ' expense for this day ' + parseFloat(d.value.total).toFixed(2);
+			else
+				title += ' overall total balance ' + parseFloat(d.value).toFixed(2);
+			return title;
+		})
+		.renderHorizontalGridLines(true)
+		.x( d3.time.scale() )
+		.legend(dc.legend().x(40).y(20).gap(10))
+		.compose([
+			dc.lineChart(trendChart)
+				.ordinalColors(['#ff9500'])
+				.group(averageGroup, 'Daily expense')
+				.valueAccessor(function(d) {
+					return d.value.average;
+				}),
+			dc.lineChart(trendChart)
+				.ordinalColors(['#4cd964'])
+				.group(runningTotalGroup, 'Total balance')
+		])
+		.yAxis().ticks(4);
+
 
 	categoryMinusChart
 		.width(function() {
