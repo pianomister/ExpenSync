@@ -33,13 +33,14 @@ var mainView = expApp.addView('.view-main', {
 
 // Load DB
 // Initialise. If the database doesn't exist, it is created
-var db = new localStorageDB("expenSync", localStorage);
-
-// Check if the database was just created. Then create all tables
-if( db.isNew() ) {
-	createLocalDatabase();
-}
-
+var db = new FileDB("52oz9ocz0ne7yuk");
+db.setupDropbox(function(){
+	// Check if the database was just created. Then create all tables
+	if( db.isNew() ) {
+		createLocalDatabase();
+	}
+	initApp();
+});
 
 
 /**
@@ -65,14 +66,14 @@ function createUniqueid(timestamp, salt, noUserAgent) {
  * @returns {string} formatted price
  */
 function getFormattedPrice(price) {
-	
+
 	price = parseFloat(price).toFixed(2);
-	
+
 	// get number format from settings
 	money_format = getSettings('ui_money_format');
 	if(money_format === 'comma')
 		price = price.replace('.', ',');
-	
+
 	return price;
 }
 
@@ -489,7 +490,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 							row.version = window.globals.properties.version;
 							return row;
 						});
-					db.commit();
 
 					expApp.closeModal('.popup-edit-item');
 
@@ -520,7 +520,6 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 				row.synchronized = false;
 				return row;
 			});
-		db.commit();
 		delItem = db.query('item', {uniqueid: delID});
 
 		// get category description
@@ -829,7 +828,6 @@ function openCategoryPopup(editID) {
 						row.lastupdate = Date.now();
 						return row;
 					});
-				db.commit();
 
 				createCategoryListElements('#settings-categories-list');
 
@@ -886,7 +884,6 @@ function openAccountPopup(editID) {
 						row.lastupdate = Date.now();
 						return row;
 					});
-				db.commit();
 
 				createAccountListElements('#settings-accounts-list');
 				// recalculate the total balance on index page
@@ -1011,7 +1008,7 @@ function createDatetimePicker(dateObj, cssSelector) {
 
 
 
-
+function initApp(){
 
 //////////////////////////////////////////////////////////////////
 // index-left menu                                              //
@@ -1165,7 +1162,6 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 					deleted: false,
 					version: window.globals.properties.version
 				});
-				db.commit();
 
 				var addCategoryDescription = db.query('category', {uniqueid: addCategory});
 
@@ -1370,7 +1366,6 @@ expApp.onPageInit('settings-categories', function (page) {
 							row.lastupdate = Date.now();
 							return row;
 						});
-					db.commit();
 				}
 			});
 		}
@@ -1422,7 +1417,6 @@ expApp.onPageInit('settings-accounts', function (page) {
 							row.lastupdate = Date.now();
 							return row;
 						});
-					db.commit();
 				}
 			});
 
@@ -1548,7 +1542,7 @@ expApp.onPageInit('stats-chartist', function (page) {
 // stats                                                        //
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('stats', function (page) {
-	
+
 	var disabledAccounts = [];
 	var categories = [];
 	var accounts = [];
@@ -1570,9 +1564,9 @@ expApp.onPageInit('stats', function (page) {
         else
           return false;
       }
-	});	
+	});
 	var dataCategory = db.query('category');
-	
+
 	dataCategory.forEach(function(c) {
 		categories[c.uniqueid] = c.description;
 	});
@@ -1584,11 +1578,11 @@ expApp.onPageInit('stats', function (page) {
 	data.forEach(function(d) {
 		d.timestamp = new Date(d.timestamp);
 		d.monthYear = d3.time.format("%Y/%m").parse( d.timestamp.getFullYear() + '/' + (d.timestamp.getMonth()+1) );
-		
+
 		runningTotal += d.price;
 		d.runningTotal = runningTotal;
 	});
-	
+
 	// reduce functions for running total
 	function reduceAdd(p, v) {
     p.total += v.price;
@@ -1684,8 +1678,8 @@ expApp.onPageInit('stats', function (page) {
 		.elasticY(true)
 		.colors(d3.scale.ordinal().domain(["positive","negative"])
 																	.range(["#4cd964","#ff3b30"]))
-		.colorAccessor(function(d) { 
-			if(d.value > 0) 
+		.colorAccessor(function(d) {
+			if(d.value > 0)
 				return "positive"
 			return "negative";
 		})
@@ -1698,7 +1692,7 @@ expApp.onPageInit('stats', function (page) {
 			updateTotals();
 		})
 		.yAxis().ticks(4);
-	
+
 	trendChart
 		.width(function() {
 			return $('#dc-trend-chart').width();
@@ -1791,7 +1785,7 @@ expApp.onPageInit('stats', function (page) {
 		})
 		.title(categoryTitleFunction);
 	categoryPlusPieChart.onClick = function() {};
-	
+
 	accountMinusPieChart
 		.width(function() {
 			return $('#dc-account-minus-pie-chart').width();
@@ -1817,7 +1811,7 @@ expApp.onPageInit('stats', function (page) {
 			return '';
 		})
 		.title(accountTitleFunction);
-	
+
 	dataTable
 		.dimension(dateDim)
 		.group(function(d) {
@@ -1921,4 +1915,5 @@ if(navigator && navigator.mozApps) {
 	};
 } else {
 	button.style.display = "none";
+}
 }
