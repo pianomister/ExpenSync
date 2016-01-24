@@ -33,7 +33,7 @@ var mainView = expApp.addView('.view-main', {
 
 // Load DB
 // Initialise. If the database doesn't exist, it is created
-var db = new FileDB("52oz9ocz0ne7yuk");
+var db = new FileDB(window.globals.properties.appkey);
 db.setupDropbox(function(){
 	// Check if the database was just created. Then create all tables
 	if( db.isNew() ) {
@@ -1916,4 +1916,4 @@ if(navigator && navigator.mozApps) {
 } else {
 	button.style.display = "none";
 }
-}
+}// end initApp()
