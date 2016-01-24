@@ -1,5 +1,4 @@
 CACHE MANIFEST
-css/chartist.min.css
 css/dc.css
 css/expenses.css
 css/framework7.min.css
@@ -10,6 +9,7 @@ fonts/icomoon.svg
 fonts/icomoon.ttf
 fonts/icomoon.woff
 img/startup640x920.png
+img/startup750x1294.png
 js/chartist.min.js
 js/crossfilter.min.js
 js/d3.min.js
@@ -23,6 +23,7 @@ js/framework7.min.js
 js/jquery.min.js
 js/localstoragedb.min.js
 js/md5.js
+js/multideviceDatabase/fileDB.js
 about.html
 apple-touch-icon.png
 backup.html
@@ -37,4 +38,4 @@ stats-chartist.html
 NETWORK:
 *
 
-#26.07.2015 15:00
+#24.01.2016 20:44
