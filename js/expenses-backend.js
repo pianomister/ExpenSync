@@ -233,7 +233,6 @@ function createLocalDatabase() {
 		disabled: false
 	}]);
 
-	db.commit();
 }
 
 
@@ -315,7 +314,6 @@ function setSettings(settings, newValue) {
 					}
 				);
 		}
-		db.commit();
 	}
 }
 
