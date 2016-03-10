@@ -244,15 +244,17 @@ function createLocalDatabase() {
 function deleteLocalDatabase() {
 
 	expApp.confirm(
-		'Do you really want to drop the local database? All local data (expenses, settings) will be lost.',
-		'Delete Database',
-		function() {
+		//'Do you really want to drop the local database? All local data (expenses, settings) will be lost.',
+		'This functionality is not available yet.',
+		//'Delete Database',
+		'OK',
+		function () {
 
-			db.drop();
+			/*db.drop();
 			db = new localStorageDB("expenSync", localStorage);
 			createLocalDatabase();
 			pageIndexLeft.trigger();
-			pageIndex.trigger();
+			pageIndex.trigger();*/
 		});
 }
 
