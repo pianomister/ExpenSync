@@ -1183,10 +1183,6 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 		}
 	});
 
-	// hide sync options if disabled
-	if ( !getSettings('sync_enabled') )
-		$('.index-sync').html('<p>You can synchronize all expenses with your Dropbox. Enable Synchronization in <a href="settings.html" data-view=".view-left" class="open-panel">settings</a>.</p>');
-
 	// insert balances
 	// total balance
 	var totalBalance = getTotalBalance();
@@ -1212,6 +1208,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	for(var a = 0; a < accounts.length; a++) {
 
 		var balance = getAccountBalance(accounts[a].uniqueid);
+		console.debug('index page, account balances: ', accounts[a].uniqueid, balance);
 
 		$(page.container).find('#index-account-balance').append(
 			'<li><div class="item-content">' +
@@ -1439,7 +1436,10 @@ expApp.onPageInit('backup', function (page) {
 
 	// csv export button
 	$(page.container).find('a#export-csv').on('click', function () {
-		var encodedUri = createCSVDataLink(db.query('item'), "ExpenSync CSV Export " + Date.now());
+		// detect table name for export (which data shall be exported?)
+		var tableName = $(page.container).find('#export-table').val();
+
+		var encodedUri = createCSVDataLink(tableName, db.query(tableName), "ExpenSync CSV Export " + Date.now());
 
 		if (encodedUri) {
 			var link = document.createElement("a");
@@ -1455,6 +1455,9 @@ expApp.onPageInit('backup', function (page) {
 
 	// text csv export button
 	$(page.container).find('a#export-text-csv').on('click', function () {
+		// detect table name for export (which data shall be exported?)
+		var tableName = $(page.container).find('#export-table').val();
+
 		$('.popup-general .popup-title').html('CSV Export');
 		$('.popup-general .page-content').html(
 			'<div class="content-block-title">Text content</div>' +
@@ -1464,7 +1467,7 @@ expApp.onPageInit('backup', function (page) {
 						'<div class="item-content">' +
 							'<div class="item-inner">' +
 								'<div class="item-input">' +
-									'<textarea style="height: 300px">' + createCSVDataLink(db.query('item'), "ExpenSync CSV Export " + Date.now(), true) + '</textarea>' +
+									'<textarea style="height: 300px">' + createCSVDataLink(tableName, db.query(tableName), "ExpenSync CSV Export " + Date.now(), true) + '</textarea>' +
 								'</div>' +
 							'</div>' +
 						'</div>' +
@@ -1476,6 +1479,9 @@ expApp.onPageInit('backup', function (page) {
 
 	// text json export button
 	$(page.container).find('a#export-text-json').on('click', function () {
+		// detect table name for export (which data shall be exported?)
+		var tableName = $(page.container).find('#export-table').val();
+
 		$('.popup-general .popup-title').html('JSON Export');
 		$('.popup-general .page-content').html(
 			'<div class="content-block-title">Text content</div>' +
@@ -1485,7 +1491,7 @@ expApp.onPageInit('backup', function (page) {
 						'<div class="item-content">' +
 							'<div class="item-inner">' +
 								'<div class="item-input">' +
-									'<textarea style="height: 300px">' + JSON.stringify(db.query('item')) + '</textarea>' +
+									'<textarea style="height: 300px">' + JSON.stringify(db.query(tableName)) + '</textarea>' +
 								'</div>' +
 							'</div>' +
 						'</div>' +
@@ -1496,9 +1502,57 @@ expApp.onPageInit('backup', function (page) {
 	});
 
 	// json import button
-	$(page.container).find('a#form-import-json-submit').on('click', function () {
-		alert($(page.container).find('#form-import-json-data').val());
-		
+	$(page.container).find('a#form-import-json-submit').on('click', function (e) {
+
+		e.preventDefault();
+
+		// disable multiple inputs in short time
+		if (!window.globals.state.blockedInput) {
+
+			// disable button to prevent multiple entries (by accident)
+			that = $( e.target );
+			that.addClass('disabled');
+			window.globals.state.blockedInput = true;
+			window.setTimeout(function () {
+				that.removeClass('disabled');
+				window.globals.state.blockedInput = false;
+			}, 1000);
+
+			var importData = JSON.parse($(page.container).find('#form-import-json-data').val());
+			var importTableName = $(page.container).find('#form-import-table').val();
+			var importStats = {
+				updated: 0,
+				created: 0
+			}
+
+			if (!!importData && Array.isArray(importData)) {
+				importData.forEach( function (row) {
+
+					// in legacy data sets, the ID is included in a single row
+					delete row.ID;
+
+					// as this was not implemented yet in multideviceDatabase ...
+					//db.insertOrUpdate(importTableName, {uniqueid: row.uniqueid}, row);
+
+					// ... taking this approach
+					var rowExists = db.queryAll(importTableName, {query: {uniqueid: row.uniqueid}});
+					console.debug("rowExists", rowExists, row.uniqueid, row.description);
+					rowExists = rowExists.length === 1;
+					if (rowExists) {
+						db.update(importTableName, {uniqueid: row.uniqueid}, function (oldRow) {
+							// overwrite, dropping old row
+							return $.extend(oldRow, row);
+						});
+						importStats.updated += 1;
+					} else {
+						db.insert(importTableName, row);
+						importStats.created += 1;
+					}
+				});
+			}
+
+			expApp.alert('The data import into <strong>' + importTableName + '</strong> was completed. Updated <strong>' + importStats.updated + '</strong> existing entries, created <strong>' + importStats.created + '</strong> new entries.', 'Import completed');
+		}
 	});
 });
 

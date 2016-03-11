@@ -15,6 +15,18 @@
 					<div class="content-block-title">Data Export</div>
 					<div class="list-block tablet-inset">
 						<ul>
+							<li><div class="item-content">
+									<div class="item-inner">
+										<div class="item-title label">Which data?</div>
+										<div class="item-input">
+											<select id="export-table">
+												<option value="item" selected>Items (Expenses)</option>
+												<option value="category">Categories</option>
+												<option value="account">Accounts</option>
+											</select>
+										</div>
+									</div>
+								</div></li>
 							<li>
 								<a class="item-link list-button external" id="export-csv">Export CSV file</a>
 							</li>
@@ -49,11 +61,23 @@
 					<div class="content-block-title">Data Import from JSON</div>
 					<div class="list-block tablet-inset">
 						<ul>
+							<li><div class="item-content">
+								<div class="item-inner">
+									<div class="item-title label">Which data?</div>
+									<div class="item-input">
+										<select id="form-import-table">
+											<option value="item" selected>Items (Expenses)</option>
+											<option value="category">Categories</option>
+											<option value="account">Accounts</option>
+										</select>
+									</div>
+								</div>
+							</div></li>
 							<li class="align-top"><div class="item-content">
 								<div class="item-inner">
 									<div class="item-title label">JSON data</div>
 									<div class="item-input">
-										<textarea id="form-import-json-data" placeholder="Insert import data here ..."></textarea>
+										<textarea id="form-import-json-data" placeholder="JSON import data"></textarea>
 									</div>
 								</div>
 							</div></li>

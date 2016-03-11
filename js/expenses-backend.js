@@ -205,7 +205,7 @@ function createLocalDatabase() {
 	var dateNow = Date.now();
 	var _categories = ["Other", "Groceries", "Canteen", "Eating Out", "Fun", "Clothing", "Car", "Transport", "Travel", "Household", "Salary", "Finance", "Medical", "Education", "Rent / Loan", "Communication"];
 
-	for(var k = 0; k < _categories.length; k++) {
+	for (var k = 0; k < _categories.length; k++) {
 
 		db.insert('category', {
 			uniqueid: createUniqueid( k, k, true ),
@@ -271,18 +271,18 @@ function getSettings(settingName) {
 	settingName = settingName || false;
 
 	var query = null;
-	if(settingName)
+	if (settingName)
 		query = {key: settingName};
 
 	var props = db.query('settings', query);
 
-	if(query) {
+	if (query) {
 
 		return props[0].value;
 	} else {
 
 		var returnObject = {};
-		for(i = 0; i < props.length; i++) {
+		for (i = 0; i < props.length; i++) {
 
 			returnObject[ props[i].key ] = props[i].value;
 		}
@@ -300,18 +300,18 @@ function getSettings(settingName) {
  */
 function setSettings(settings, newValue) {
 
-	if(newValue !== undefined) {
+	if (newValue !== undefined) {
 
 		settings = [{ key: settings, value: newValue }];
 	}
 
-	if(settings) {
+	if (settings) {
 
-		for(i = 0; i < settings.length; i++) {
+		for (i = 0; i < settings.length; i++) {
 
 			db.update('settings',
 					{key: settings[i].key},
-					function(row) {
+					function (row) {
 						row.value = settings[i].value;
 						return row;
 					}
@@ -331,10 +331,10 @@ function setSettings(settings, newValue) {
 */
 function getIcons(iconID) {
 
-	if(!(iconID === 0) )
+	if (!(iconID === 0) )
 		iconID = iconID || false;
 
-	if(iconID || iconID === 0) {
+	if (iconID || iconID === 0) {
 
 		return window.globals.icons[iconID];
 	} else {
@@ -356,18 +356,18 @@ function getAccounts(accountID) {
 	accountID = accountID || false;
 
 	var query = null;
-	if(accountID)
+	if (accountID)
 		query = {uniqueid: accountID};
 
-	var accs = db.query('account', query);
+	var accs = db.queryAll('account', {'query': query, 'sort': [['order', 'ASC']]});
 
-	if(query) {
+	if (query) {
 
 		return accs[0];
 	} else {
 
 		var returnArray = [];
-		for(i = 0; i < accs.length; i++) {
+		for (i = 0; i < accs.length; i++) {
 
 			returnArray.push( accs[i] );
 		}
@@ -394,14 +394,14 @@ function getItemsFromTimerange(startDate, endDate, returnBalance) {
 
 	// get all disabled accounts for item filtering
 	var allAccounts = db.query('account', {disabled: true});
-	for(var i = 0; i < allAccounts.length; i++) {
+	for (var i = 0; i < allAccounts.length; i++) {
 		disabledAccounts.push(allAccounts[i].uniqueid);
 	}
 
 	// get not-deleted items from enabled accounts
 	var returnItems = db.queryAll('item', {
-			query: function(row) {
-				if(!row.deleted &&
+			query: function (row) {
+				if (!row.deleted &&
 					row.timestamp >= startDate &&
 					row.timestamp < endDate &&
 					disabledAccounts.indexOf(row.account) === -1)
@@ -412,10 +412,10 @@ function getItemsFromTimerange(startDate, endDate, returnBalance) {
 		});
 
 	// if only balance was requested
-	if(returnBalance) {
+	if (returnBalance) {
 
 		var returnPrice = 0;
-		for(var i = 0; i < returnItems.length; i++) {
+		for (var i = 0; i < returnItems.length; i++) {
 			returnPrice += returnItems[i].price;
 		}
 		return returnPrice;
@@ -438,12 +438,12 @@ function getEntriesNewerThan(items, timestamp, table) {
 
 	var result = [];
 
-	for(var i = 0; i < items.length; i++) {
+	for (var i = 0; i < items.length; i++) {
 
 		// for check if local is not newer
 		var local =	db.query(table, {uniqueid: items[i].uniqueid});
 
-		if(items[i].lastupdate >= timestamp && (local.length == 0 || local[0].lastupdate <= timestamp) ) {
+		if (items[i].lastupdate >= timestamp && (local.length == 0 || local[0].lastupdate <= timestamp) ) {
 
 			result.push(items[i]);
 		}
@@ -476,7 +476,7 @@ function chunkString(str, len) {
 /**
  * create CSV file (encoded as utf-8) from JSON object
  */
-function createCSVDataLink(JSONData, title, noLink) {
+function createCSVDataLink(tableName, JSONData, title, noLink) {
 	noLink = noLink || false;
 	var CSV = '';
 
@@ -484,19 +484,19 @@ function createCSVDataLink(JSONData, title, noLink) {
 	CSV += title + '\r\n\n';
 
 	// this condition will generate the Label/Header
-	var tableFields = db.tableFields('item');
+	var tableFields = db.tableFields(tableName);
 	var row = tableFields.join();
 	CSV += row + '\r\n';
 
 	var data = convertJSONtoCSV(JSONData);
 
-	if(data.length == 0)
+	if (data.length == 0)
 		return false;
 
 	CSV += data;
 
 	// initialize file format you want csv or xls
-	if(!noLink)
+	if (!noLink)
 		CSV = 'data:text/csv;charset=utf-8,' + escape(CSV);
 
 	return CSV;
