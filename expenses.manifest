@@ -1,29 +1,13 @@
 CACHE MANIFEST
-css/dc.css
-css/expenses.css
-css/framework7.min.css
-css/framework7.themes.min.css
-css/icomoon.css
+dist/main.min.css
+dist/vendor.min.js
+dist/app.min.js
 fonts/icomoon.eot
 fonts/icomoon.svg
 fonts/icomoon.ttf
 fonts/icomoon.woff
 img/startup640x920.png
 img/startup750x1294.png
-js/chartist.min.js
-js/crossfilter.min.js
-js/d3.min.js
-js/dc.min.js
-js/dropbox-datastores-1.2.0.js
-js/expenses-backend.js
-js/expenses-frontend.js
-js/expenses-stats.js
-js/expenses-sync.js
-js/framework7.min.js
-js/jquery.min.js
-js/localstoragedb.min.js
-js/md5.js
-js/multideviceDatabase/fileDB.js
 about.html
 apple-touch-icon.png
 backup.html
@@ -33,9 +17,8 @@ settings-accounts.html
 settings-categories.html
 settings.html
 stats.html
-stats-chartist.html
 
 NETWORK:
 *
 
-#12.03.2016 00:13
+#03.09.2016 16:31

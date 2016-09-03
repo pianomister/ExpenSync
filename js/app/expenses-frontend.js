@@ -9,7 +9,6 @@
  * Stephan Giesau                  *
  ***********************************/
 
-
 // create app object
 var expApp = new Framework7({
 	init: false, // disabled so page callbacks for initial pages work
@@ -34,7 +33,7 @@ var mainView = expApp.addView('.view-main', {
 // Load DB
 // Initialise. If the database doesn't exist, it is created
 var db = new FileDB(window.globals.properties.appkey);
-db.setupDropbox(function (){
+db.setupDropbox(function () {
 	// Check if the database was just created. Then create all tables
 	if ( db.isNew() ) {
 		createLocalDatabase();
@@ -84,7 +83,6 @@ function getFormattedPrice(price) {
  *
  * @param {float} price number to be displayed as price
  * @param {string} account (optional) text to be displayed below price; false
- * @param {boolean} noColor (optional) if true, color will be set as gray; false
  * @returns {string} HTML with formatted price
  */
 function formatPrice(price, account) {
@@ -768,7 +766,7 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 
 	// add page title
 	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
-
+	console.debug("updateItemList query", itemQuery);
 	// add items to list
 	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID, infiniteScrollReset );
 }
@@ -1208,7 +1206,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	for(var a = 0; a < accounts.length; a++) {
 
 		var balance = getAccountBalance(accounts[a].uniqueid);
-		console.debug('index page, account balances: ', accounts[a].uniqueid, balance);
+		//TODO console.debug('index page, account balances: ', accounts[a].uniqueid, balance);
 
 		$(page.container).find('#index-account-balance').append(
 			'<li><div class="item-content">' +
@@ -1227,7 +1225,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 // expenses-list                                                //
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('expenses-list', function (page) {
-
+console.debug("in expenses list");
 	// save page query for later usage in globals.temp
 	var tempID = createUniqueid(Date.now(), page.query.request);
 	window.globals.temp[tempID] = page;
@@ -1243,6 +1241,7 @@ expApp.onPageInit('expenses-list', function (page) {
 		var tempID = $(e.delegateTarget).attr('data-temppage');
 
 		updateItemList(catID, tempID, true);
+		console.debug("change list category", e, catID, tempID);
 	});
 
 	// add tempID to page-content container and attach infinite scroll
@@ -1933,9 +1932,9 @@ expApp.init();
 		'New version available'
 	);*/
 
-// check if dropbox sync on startup is enabled
-if ( getSettings('sync_enabled') && getSettings('sync_startup') )
-	syncInit();
+// check if dropbox sync on startup is enabled TODO
+//if ( getSettings('sync_enabled') && getSettings('sync_startup') )
+//	syncInit();
 
 // debug output of DB content if debug is enabled
 if (window.globals.properties.debug)

@@ -69,10 +69,10 @@ function getTotalBalance() {
 */
 function getAccountBalance(accountID) {
 
-  var accItems = db.query('item', {account: accountID, deleted: false});
+  var accItems = db.queryAll('item', {query: {account: accountID, deleted: false}});
   var accInitBalance = getAccounts(accountID).initial_balance;
   var accBalance = 0;
-  console.debug('getAccountBalance', accountID, accItems.length, accItems);
+  console.debug('getAccountBalance', accountID, accItems.length, accItems);//TODO
   for(var i = 0; i < accItems.length; i++) {
 
     accBalance += accItems[i].price;

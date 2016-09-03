@@ -8,44 +8,48 @@
  * CONTRIBUTORS                    *
  * Stephan Giesau                  *
  ***********************************/
-
 /* quick fixes of platform bugs */
 /* FF: right alignment of item-after elements */
 .list-block .item-after {
 	margin-left: auto;
 }
-
-
-
 /**
 * @section app layout
 */
-
 /* color adjustments for blue app theme */
-.theme-white a, .theme-white .item-link.list-button {
+.theme-white .item-link.list-button,
+.theme-white a {
 	color: #39c;
 }
-.color-white.button:not(.button-fill), .color-white.buttons-row .button, .theme-white .button:not(.button-fill) {
+
+.color-white.button:not(.button-fill),
+.color-white.buttons-row .button,
+.theme-white .button:not(.button-fill) {
 	border-color: #39c;
 }
-.theme-white label.label-checkbox input[type="checkbox"]:checked + .item-media i.icon-form-checkbox, .theme-white label.label-checkbox input[type="radio"]:checked + .item-media i.icon-form-checkbox {
+
+.theme-white label.label-checkbox input[type="checkbox"]:checked + .item-media i.icon-form-checkbox,
+.theme-white label.label-checkbox input[type="radio"]:checked + .item-media i.icon-form-checkbox {
 	background: #39c;
 }
+
 .label-switch input[type="checkbox"]:checked + .checkbox {
 	background-color: #39c !important;
 }
+
 label.label-checkbox i.icon-form-checkbox {
 	border-color: #39c;
 }
-.navbar a.link {
-	color: #fff;
-}
+
 .navbar {
 	color: #fff;
 	background: #39c;
 	border-color: transparent !important;
-}
 
+	a.link {
+		color: #fff;
+	}
+}
 /* adapt statusbar color/layout to navbars */
 .statusbar-overlay {
 	background: #39c;
@@ -54,154 +58,165 @@ label.label-checkbox i.icon-form-checkbox {
 }
 /* Change Status bar background when panel opened */
 body.with-panel-left-cover .statusbar-overlay {
-		background: #131313;
+	background: #131313;
 }
+
 html.with-statusbar-overlay body .panel-left {
 	padding-top: 0;
 }
 
-/* This will fix flicker navbar in left panel view */
-.panel-left .page-content {
-	padding: 0;
-}
-.panel-left .page {
-	margin-top: 44px;
-	padding-bottom: 44px;
-}
-.panel-left .navbar {
-	position: relative;
-	margin-bottom: -44px;
+.panel-left {
+	/* This will fix flicker navbar in left panel view */
+	.page-content {
+		padding: 0;
+	}
+
+	.page {
+		margin-top: 44px;
+		padding-bottom: 44px;
+	}
+
+	.navbar {
+		position: relative;
+		margin-bottom: -44px;
+	}
 }
 /* Because we have panels-overlay inside of .views we need to fix its open position for right panel */
 body.with-panel-right-reveal .panel-overlay {
 	margin-left: 0 !important;
 }
-
-
-
 /**
 * @section custom adjustments
 */
-
 /* font */
 .smaller {
-	font-size: .9em;
+	font-size: 0.9em;
 }
-
 /* loading indicator for infinite scroll lists */
 .infinite-scroll-preloader {
-	margin-top:-20px;
+	margin-top: -20px;
 	margin-bottom: 10px;
 	text-align: center;
 }
-.infinite-scroll-preloader .preloader {
-	width:34px;
-	height:34px;
-}
 
+.infinite-scroll-preloader .preloader {
+	width: 34px;
+	height: 34px;
+}
 /* adjust size of icons */
 .ion {
 	font-size: 1.6em;
 }
+
 li .ion {
 	font-size: 1.4em;
 }
+
 .icon-wrap {
 	display: inline-block;
 	width: 1.4em;
 	text-align: center;
 }
-
 /* icon on sync button */
 .index-sync a.button i.ion {
 	position: relative;
 	top: 2px;
 }
-
 /* icon selector */
 ul.icon-selector {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-}
-ul.icon-selector li {
- 	display: inline-block;
-	width: 1.4em;
-	margin: .3em;
-	padding: .7em;
-	border-radius: .2em;
-	text-align: center;
-	cursor: pointer;
-	background-color: #fff;
-	transition: background-color .4s ease 0s;
-}
-ul.icon-selector li:hover {
-	background-color: #eee;
-}
-ul.icon-selector i {
-	color: #000;
-	font-size: 1.6em;
-}
-ul.icon-selector li.icon-selected {
-	background-color: #000;
-}
-ul.icon-selector li.icon-selected i {
-	color: #fff;
-}
 
+	li {
+		display: inline-block;
+		width: 1.4em;
+		margin: 0.3em;
+		padding: 0.7em;
+		border-radius: 0.2em;
+		text-align: center;
+		cursor: pointer;
+		background-color: #fff;
+		transition: background-color 0.4s ease 0s;
 
+		&:hover {
+			background-color: #eee;
+		}
+	}
 
+	i {
+		color: #000;
+		font-size: 1.6em;
+	}
+
+	li.icon-selected {
+		background-color: #000;
+
+		i {
+			color: #fff;
+		}
+	}
+}
 /* remove margin below blocks on overview page */
 div[data-page="index-1"] .list-block {
 	margin-bottom: 0;
 }
-
 /* right-align price and account in item lists */
 #expenses-list-items .item-after {
 	text-align: right;
 }
-
 /*.view-left .navbar-inner {
 	margin-right: -1px;
 }*/
-
 /* colors for charts */
 .ct-series.ct-series-a .ct-slice {
 	fill: #39c !important;
 }
+
 .ct-series.ct-series-b .ct-slice {
 	fill: #2886B5 !important;
 }
+
 .ct-series.ct-series-c .ct-slice {
 	fill: #1E749F !important;
 }
+
 .ct-series.ct-series-d .ct-slice {
 	fill: #146188 !important;
 }
+
 .ct-series.ct-series-e .ct-slice {
 	fill: #0A4F72 !important;
 }
+
 .ct-series.ct-series-f .ct-slice {
 	fill: #003D5C !important;
 }
+
 .ct-series.ct-series-g .ct-slice {
 	fill: #0A4F72 !important;
 }
+
 .ct-series.ct-series-h .ct-slice {
 	fill: #146188 !important;
 }
+
 .ct-series.ct-series-i .ct-slice {
 	fill: #1E749F !important;
 }
+
 .ct-series.ct-series-j .ct-slice {
 	fill: #2886B5 !important;
 }
+
 .ct-series.ct-series-k .ct-slice {
 	fill: #39c !important;
 }
+
 .ct-series.ct-series-l .ct-slice {
 	fill: #2886B5 !important;
 }
+
 .ct-series.ct-series-m .ct-slice {
 	fill: #1E749F !important;
 }
@@ -209,109 +224,123 @@ div[data-page="index-1"] .list-block {
 .ct-series.ct-series-a .ct-bar {
 	stroke: #39c !important;
 }
+
 .ct-series.ct-series-b .ct-bar {
 	stroke: #2886B5 !important;
 }
+
 .ct-series.ct-series-c .ct-bar {
 	stroke: #1E749F !important;
 }
+
 .ct-series.ct-series-d .ct-bar {
 	stroke: #146188 !important;
 }
+
 .ct-series.ct-series-e .ct-bar {
 	stroke: #0A4F72 !important;
 }
+
 .ct-series.ct-series-f .ct-bar {
 	stroke: #003D5C !important;
 }
+
 .ct-series.ct-series-g .ct-bar {
 	stroke: #0A4F72 !important;
 }
+
 .ct-series.ct-series-h .ct-bar {
 	stroke: #146188 !important;
 }
+
 .ct-series.ct-series-i .ct-bar {
 	stroke: #1E749F !important;
 }
+
 .ct-series.ct-series-j .ct-bar {
 	stroke: #2886B5 !important;
 }
+
 .ct-series.ct-series-k .ct-bar {
 	stroke: #39c !important;
 }
+
 .ct-series.ct-series-l .ct-bar {
 	stroke: #2886B5 !important;
 }
+
 .ct-series.ct-series-m .ct-bar {
 	stroke: #1E749F !important;
 }
 
-div.dc-chart, .dc-data-count {
+.dc-data-count,
+div.dc-chart {
 	float: none;
 }
+
 .dc-chart svg text {
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
+
 .dc-table {
 	width: 100%;
 	border-spacing: 0;
+
+	td,
+	th {
+		padding: 0.5em;
+		border-top: 1px solid #ccc;
+	}
+
+	th {
+		text-align: left;
+		border-top: 0;
+	}
 }
-.dc-table th {
-	text-align: left;
-}
-.dc-table td, .dc-table th {
-	padding: .5em;
-	border-top: 1px solid #ccc;
-}
-.dc-table th {
-	border-top: 0; 
-}
+
 .dc-table-group td {
 	font-weight: bold;
 }
-
-
 /**
  * @section media queries
  */
-
 /* iPad Vertical */
 @media (min-width: 569px) {
+	.panel.panel-left.panel-cover {
+		width: 320px;
+		left: -320px;
+	}
 
-  .panel.panel-left.panel-cover {
-    width: 320px;
-    left: -320px;
-  }
-  body.with-panel-left-cover .panel-left {
-    -webkit-transform: translate3d(320px, 0, 0);
-    -ms-transform: translate3d(320px, 0, 0);
-    transform: translate3d(320px, 0, 0);
-  }
+	body.with-panel-left-cover .panel-left {
+		-webkit-transform: translate3d(320px, 0, 0);
+		-ms-transform: translate3d(320px, 0, 0);
+		transform: translate3d(320px, 0, 0);
+	}
 }
-
-
 /* iPad Horizontal */
-@media (min-width: 900px) {/*769px*/
+@media (min-width: 900px) {
+	/*769px*/
+	body .panel.panel-left.panel-cover {
+		left: 0;
+		width: 320px;
+		display: block;
+	}
 
-  body .panel.panel-left.panel-cover {
-    left: 0;
-    width: 320px;
-    display: block;
-  }
-  body.with-panel-left-cover .panel-left {
-    -webkit-transform: translate3d(0px, 0, 0);
-    -ms-transform: translate3d(0px, 0, 0);
-    transform: translate3d(0px, 0, 0);
-  }
-  .view-main {
-    float: right;
-    width: -webkit-calc(100% - 320px);
-    width: -moz-calc(100% - 320px);
-    width: -ms-calc(100% - 320px);
-    width: calc(100% - 320px);
-  }
-  /* hide panel-opener when left panel is visible */
-  .view-main .navbar .open-panel {
-    display: none;
-  }
+	body.with-panel-left-cover .panel-left {
+		-webkit-transform: translate3d(0px, 0, 0);
+		-ms-transform: translate3d(0px, 0, 0);
+		transform: translate3d(0px, 0, 0);
+	}
+
+	.view-main {
+		float: right;
+		width: -webkit-calc(100% - 320px);
+		width: -moz-calc(100% - 320px);
+		width: -ms-calc(100% - 320px);
+		width: calc(100% - 320px);
+		/* hide panel-opener when left panel is visible */
+		.navbar .open-panel {
+			display: none;
+		}
+	}
 }
