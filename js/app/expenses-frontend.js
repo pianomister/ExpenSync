@@ -730,6 +730,7 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 			}
 
 			itemQuery = function (row) {
+				console.log("in updateItemList timerange query", page);
 					if (!row.deleted &&
 						row.timestamp >= page.query.start &&
 						row.timestamp < page.query.end &&
@@ -1022,6 +1023,7 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 	$('#menu-list').empty();
 	var entriesAvailable = false;
 
+	// TODO parameter to set amount of months to be shown
 	for(var i = 15; i >= 0; i--) {
 
 		startDate.setFullYear(currentYear, currentMonth);

@@ -145,12 +145,22 @@ gulp.task('scripts:build', ['scripts:vendor', 'scripts:app'], function() {
 		.on('error', util.log);
 });
 
+gulp.task('scripts:app-watch', ['scripts:app'], function() {
+	return gulp.src([paths.dist.js + 'vendor.js', paths.dist.js + 'app.js'])
+		.pipe(concat('main.js'))
+		.pipe(gulp.dest(paths.dist.js))
+		//.pipe(rename('main.min.js'))
+    //.pipe(uglify())
+		//.pipe(gulp.dest(paths.dist.js))
+		.on('error', util.log);
+});
+
 // full JS build
 gulp.task('scripts:default', ['scripts:vendor', 'scripts:app', 'scripts:build']);
 
 // watch files for changes
 gulp.task('watch', function() {
-	gulp.watch(paths.src.js + '**/*.js', ['scripts:app']);
+	gulp.watch(paths.src.js + '**/*.js', ['scripts:app-watch']);
 	gulp.watch(paths.src.scss + '**/*.scss', ['sass']);
 });
 

@@ -32,7 +32,7 @@ class File {
     this.scheduleSync();
     result = this.queryHelper(param);
     for (key in result) {
-      if (!hasProp.call(result, key)) continue;
+      if (!result.hasOwnProperty(key)) continue;
       delete this.dataObject[key];
     }
 
@@ -44,12 +44,12 @@ class File {
     result = this.queryHelper(param);
 
     for (id in result) {
-      if (!hasProp.call(result, id)) continue;
+      if (!result.hasOwnProperty(id)) continue;
       row = result[id];
       newRow = this.clone(row);
 
       for (field in values) {
-        if (!hasProp.call(values, field)) continue;
+        if (!values.hasOwnProperty(field)) continue;
         updateData = values[field];
         newRow[field] = updateData;
       }
@@ -71,11 +71,14 @@ class File {
     var id, ref, result, row;
     result = {};
     ref = this.dataObject;
+
+//    console.debug('queryByFunction,  func:', func);
+
     for (id in ref) {
-      if (!hasProp.call(ref, id)) continue;
+      if (!ref.hasOwnProperty(id)) continue;
       row = ref[id];
       if (func(this.clone(row)) === true) {
-        result[id] = row;
+        result[id] = this.clone(row);
       }
     }
 
@@ -83,27 +86,35 @@ class File {
   }
 
   queryByValue(params) {
-    var entry, field, found, id, ref, result, row;
+    var field, found, id, ref, result, row;
     result = {};
     ref = this.dataObject;
 
+//    console.debug('queryByValue,  params:', params);
+
     for (id in ref) {
-      if (!hasProp.call(ref, id)) continue;
+      if (!ref.hasOwnProperty(id)) continue;
       row = ref[id];
-      found = false;
+      found = null;
 
       for (field in params) {
-        if (!hasProp.call(params, field)) continue;
-        entry = params[field];
-        if (row[field] === entry) {
-          found = true;
-          // TODO check logic, might override found=true with false afterwards?
+        if (!params.hasOwnProperty(field)) continue;
+        if (row[field] === params[field]) {
+          if (found === null) {
+            // first call, set found to true;
+            found = true;
+          } else {
+            // since all conditions must be true,
+            // chain with previously found conditions
+            // for this row
+            found = found && true;
+          }
         } else {
           found = false;
         }
       }
 
-      if (found) {
+      if (!!found) {
         result[id] = this.clone(row);
       }
     }
@@ -128,7 +139,7 @@ class File {
   scheduleSync() {
     if (!this.syncing) {
       this.syncing = true;
-      return setTimeout(this.sync, 0);
+      return setTimeout(() => { this.sync() }, 0);
     }
   }
 
@@ -250,7 +261,7 @@ class File {
     time = 0;
 
     for (key in objB) {
-      if (!hasProp.call(objB, key)) continue;
+      if (!objB.hasOwnProperty(key)) continue;
 
       if (objA[key] != null) {
         objMerged[key] = objB[key];
@@ -295,6 +306,7 @@ class Table {
     this.dataFileObjects = [];
     this.data = [];
     this.client = client;
+    this.tableName = tableName; // TODO debug
     tableFile = new File(tableName, client);
 
     if (create) {
@@ -356,12 +368,14 @@ class Table {
 
   query(queryString, sort) {
     var dfo, result, s;
-    if (!!queryString) {
+    if (!queryString) {
       queryString = null;
     }
-    if (!!sort) {
+    if (!sort) {
       sort = null;
     }
+
+//    console.debug("FileDB.query", this.tableName, queryString, sort);
 
     result = [];
     for (dfo of this.dataFileObjects) {
@@ -370,7 +384,7 @@ class Table {
 
     if (sort != null && sort instanceof Array) {
       for (s of sort) {
-        result.sort(sortResults(s[0], s[1]));
+        result.sort(this.sortResults(s[0], s[1]));
       }
     }
 
@@ -393,7 +407,7 @@ class Table {
   }
 
   sortResults(field, order) {
-    if (!!order) {
+    if (!order) {
       order = null;
     }
 
@@ -401,11 +415,11 @@ class Table {
         var a = x[field];
         var b = y[field];
 
-        if (a(typeof "string")) {
+        if (typeof a === "string") {
           a = a.toLowerCase();
         }
 
-        if (b(typeof "string")) {
+        if (typeof b === "string") {
           b = b.toLowerCase();
         }
 
@@ -469,6 +483,7 @@ class FileDB {
    * @deprecated
    */
   query(tableName, queryString, sortArray) {
+    // TODO "limit" parameter?
     if (!queryString) {
       queryString = null;
     }
@@ -481,15 +496,25 @@ class FileDB {
   /**
    * Simple data table query.
    */
-  queryAll(tableName, arg) {
-    // TODO make syntax more readable ...
-    var argQuery, argSort, ref, ref1, ref2;
-    ref = arg != null ? arg : {
-      argQuery: null,
-      argSort: null
-    }, argQuery = (ref1 = ref.argQuery) != null ? ref1 : null, argSort = (ref2 = ref.argSort) != null ? ref2 : null;
+  queryAll(tableName, params) {
+  	// TODO make syntax more readable ...
+  	/*var argQuery, argSort, ref, ref1, ref2;
+  	ref = arg != null ? arg : {
+  	  argQuery: null,
+  	  argSort: null
+  	}, argQuery = (ref1 = ref.argQuery) != null ? ref1 : null, argSort = (ref2 = ref.argSort) != null ? ref2 : null;
+  	  */
 
-    return this.query(tableName, argQuery, argSort);
+  	if (!params) {
+  		return this.query(tableName);
+  	} else {
+  		return this.query(tableName,
+  			params.hasOwnProperty('query') ? params.query : null,
+        // TODO limit parameter
+  			//params.hasOwnProperty('limit') ? params.limit : null,
+  			params.hasOwnProperty('sort') ? params.sort : null
+  		);
+  	}
   }
 
   /**
