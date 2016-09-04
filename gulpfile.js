@@ -45,11 +45,13 @@ var jsFiles = {
 		'node_modules/dc/dc.min.js',
 		// local 3rd party libs
 		paths.src.js + 'vendor/md5.js',
-		paths.src.js + 'vendor/dropbox-datastores-1.2.0.js',
+		paths.src.js + 'vendor/dropbox-datastores-1.2.0.js'
 		// fileDB lib
-		paths.src.js + 'multideviceDatabase/fileDB.js'
+		//, paths.src.js + 'multideviceDatabase/fileDB.js'
 	],
 	app: [
+    // fileDB lib
+		paths.src.js + 'app/fileDB-ES6.js',
 		paths.src.js + 'app/expenses-backend.js',
 		paths.src.js + 'app/expenses-stats.js',
 		paths.src.js + 'app/expenses-sync.js',
