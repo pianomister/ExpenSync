@@ -235,533 +235,835 @@ for(r in l)n=l[r],a+=te.size_difference_for_field_op(i,r,n);return a;case"D":ret
 }().join("")},te.uint8ArrayFromBase64String=function(t){var e,r,n,i,o;for(t=t.replace(/-/g,"+").replace(/_/g,"/"),e=S.Util.atob(t),n=e.length,i=new Uint8Array(n),r=o=0;n>=0?n>o:o>n;r=n>=0?++o:--o)i[r]=e.charCodeAt(r);return i},te.dbase64FromBase64=function(t){return t.replace(/[+]/g,"-").replace(/[/]/g,"_").replace(/[\=]+$/g,"")},te.base64StringFromUint8Array=function(t){var e,r,n,i,o;for(r="",i=0,o=t.length;o>i;i++)e=t[i],r+=String.fromCharCode(e);return n=S.Util.btoa(r),te.dbase64FromBase64(n)},te.INT64_TAG="dbxInt64",te.isInt64=function(t){var e;return t&&"object"==typeof t&&t.constructor===Number&&isFinite(t)?(e=t[te.INT64_TAG],!Z.is_string(e)||"0"!==e&&!te.nonzero_int64_approximate_regex.test(e)?!1:!0):!1},te.validateInt64=function(t){var e,r;if(!t&&"object"==typeof t&&t.constructor===Number&&isFinite(t))throw new Error("Not a finite boxed number: "+t);if(r=t[te.INT64_TAG],!Z.is_string(r)||"0"!==r&&!te.nonzero_int64_approximate_regex.test(r))throw new Error("Missing or invalid tag in int64: "+r);if(e=parseInt(r,10),e!==Number(t))throw new Error("Tag in int64 does not match value "+Number(t)+": "+r);return t},te.toDsValue=function(t,e){var r,n;if(null==e&&(e=!0),null===t||"undefined"==typeof t)throw new Error("Bad value: "+t);if(Z.is_string(t))return t;if(Z.is_bool(t))return t;if(Z.is_number(t)){if(null!=t[te.INT64_TAG])return te.validateInt64(t),{I:t[te.INT64_TAG]};if(isFinite(t))return t;if(isNaN(t))return{N:"nan"};if(1/0===Number(t))return{N:"+inf"};if(Number(t)===-1/0)return{N:"-inf"};throw new Error("Unexpected number: "+t)}if(Z.is_array(t)){if(e)return function(){var e,r,i;for(i=[],e=0,r=t.length;r>e;e++)n=t[e],i.push(te.toDsValue(n,!1));return i}();throw new Error("Nested array not allowed: "+JSON.stringify(t))}if(Z.is_date(t))return r=Math.round(t.getTime()),{T:""+r};if(Z.isUint8Array(t))return{B:te.base64StringFromUint8Array(t)};throw new Error("Unexpected value: "+Z.safe_to_string(t))},te.fromDsValue=function(t,e,r,n){if(Z.is_string(n))return n;if(Z.is_bool(n))return n;if(Z.is_number(n))return n;if(Z.is_array(n))return new S.Datastore.List(t,e,r);if("object"!=typeof n)throw new Error("Unexpected value: "+n);if(null!=n.I)return S.Datastore.int64(n.I);if(null==n.N){if(null!=n.B)return te.uint8ArrayFromBase64String(n.B);if(null!=n.T)return new Date(parseInt(n.T,10));throw new Error("Unexpected object: "+JSON.stringify(n))}switch(n.N){case"nan":return 0/0;case"+inf":return 1/0;case"-inf":return-1/0;default:throw new Error("Unexpected object: "+JSON.stringify(n))}},te.matchDsValues=function(t,e){var r,n,i,o,s;n=function(t,e){if(null==t)throw new Error("Unexpected object: "+t);return null==e?!1:r(t,e)},r=function(t,e){var r,i,o,s,a,u;if(te.toDsValue(t),Z.is_string(t)&&Z.is_string(e))return String(t)===String(e);if(Z.is_bool(t)&&Z.is_bool(e))return"object"==typeof t&&(t=t.valueOf()),"object"==typeof e&&(e=e.valueOf()),Boolean(t)===Boolean(e);if(Z.is_number(t)&&(Z.is_number(e)||null!=e.N||null!=e.I))return e=te.fromDsValue(void 0,void 0,void 0,e),t[te.INT64_TAG]&&e[te.INT64_TAG]?(s=[S.Datastore.int64(t),S.Datastore.int64(e)],t=s[0],e=s[1],String(t[te.INT64_TAG])===String(e[te.INT64_TAG])):isNaN(t)&&isNaN(e)?!0:Number(t)===Number(e);if(Z.is_array(t)&&Z.is_array(e)){if(t.length!==e.length)return!1;for(r=i=0,a=t.length-1;a>=0?a>=i:i>=a;r=a>=0?++i:--i)if(!n(t[r],e[r]))return!1;return!0}if(Z.is_date(t)&&(Z.is_date(e)||null!=e.T))return null!=e.T&&(e=te.fromDsValue(void 0,void 0,void 0,e)),t-0===e-0;if(Z.isUint8Array(t)&&(Z.isUint8Array(e)||null!=e.B)){if(null!=e.B&&(e=te.fromDsValue(void 0,void 0,void 0,e)),t.length!==e.length)return!1;for(r=o=0,u=t.length-1;u>=0?u>=o:o>=u;r=u>=0?++o:--o)if(t[r]!==e[r])return!1;return!0}return!1};for(i in t)if(s=t[i],o=n(s,e[i]),!o)return o;return!0},V=function(){function t(t){this._datastore=t,this._cache={}}return t.prototype.get=function(t,e){return null==this._cache[t]?null:this._cache[t][e]},t.prototype.getOrCreate=function(t,e){var r;return null==this._cache[t]&&(this._cache[t]={}),r=this._cache[t][e],null==r&&(r=this._cache[t][e]=new S.Datastore.Record(this._datastore,t,e)),r},t.prototype.remove=function(t,e){return delete this._cache[t][e],Z.is_empty(this._cache[t])&&delete this._cache[t],void 0},t}(),E=function(){function t(){this._registered_handlers=[]}return t.prototype.register=function(t,e){return t.addListener(e),this._registered_handlers.push([t,e]),void 0},t.prototype.unregister_all=function(){var t,e,r,n,i,o;for(i=this._registered_handlers,r=0,n=i.length;n>r;r++)o=i[r],e=o[0],t=o[1],e.removeListener(t);return void 0},t}(),S.Datastore.DatastoreInfo=function(){function t(t,e,r,n){this._dsid=t,this._handle=e,this._info_record_data=r,this._role=n}return t.prototype.toString=function(){return"Datastore.DatastoreInfo("+this._dsid+" "+JSON.stringify(this._info_record_data||{})+" "+this.getEffectiveRole()+")"},t.prototype.getId=function(){return this._dsid},t.prototype.isShareable=function(){return"."===this._dsid[0]},t.prototype.getHandle=function(){return this._handle},t.prototype.getTitle=function(){var t;return null==(null!=(t=this._info_record_data)?t.title:void 0)?null:this._info_record_data.title},t.prototype.getModifiedTime=function(){var t;return null==(null!=(t=this._info_record_data)?t.mtime:void 0)?null:this._info_record_data.mtime},t.prototype.getEffectiveRole=function(){return this.isShareable()&&null!=this._role?S.Datastore._roleFromInt(this._role):S.Datastore.OWNER},t.prototype.isWritable=function(){var t;return t=this.getEffectiveRole(),t===S.Datastore.OWNER||t===S.Datastore.EDITOR},t}(),S.Datastore.DatastoreListChanged=function(){function t(t){this._dsinfos=t}return t.prototype.toString=function(){return"Datastore.DatastoreListChanged("+this._dsinfos.length+" datastores)"},t.prototype.getDatastoreInfos=function(){return this._dsinfos},t}(),S.Datastore.impl.EventSourceWithInitialData=function(t){function e(t){this.options=t,e.__super__.constructor.call(this,t),this._have_event=!1,this._last_event=null,this._listenersChanged=new S.Util.EventSource}return ie(e,t),e.prototype._clearLastEvent=function(){return this._have_event=!1,this._last_event=null},e.prototype.addListener=function(t){var r;return r=e.__super__.addListener.call(this,t),this._have_event&&t(this._last_event),this._listenersChanged.dispatch(this._listeners),r},e.prototype.removeListener=function(t){var r;return r=e.__super__.removeListener.call(this,t),this._listenersChanged.dispatch(this._listeners),r},e.prototype.dispatch=function(t){return this._last_event=t,this._have_event=!0,e.__super__.dispatch.call(this,t)},e}(S.Util.EventSource),a="default",S.Datastore.DatastoreManager=function(){function t(t){var e=this;if(!t.isAuthenticated())throw new Error("DatastoreManager requires an authenticated Dropbox.Client!");this.datastoreListChanged=new S.Datastore.impl.EventSourceWithInitialData,this._flob_client=new R(t),this._lastListDsServerResponse=null,this._obj_manager=new z(new I(this._flob_client),this._flob_client,function(t){return e._handleRemoteDslistUpdate(t)},function(){return e._handleLocalDslistUpdate()})}return t.prototype.datastoreListChanged=null,t.prototype.close=function(){return this._obj_manager.destroy()},t.prototype.toString=function(){return"Datastore.DatastoreManager()"},t.prototype._dispatchDslistEvent=function(){var t;return t=this._lastListDsServerResponse||new k({datastores:[],token:"dummy"}),this.datastoreListChanged.dispatch(new S.Datastore.DatastoreListChanged(this._getOverlaidDatastoreInfosFromListResponse(t))),void 0},t.prototype._handleLocalDslistUpdate=function(){return this._dispatchDslistEvent(),void 0},t.prototype._handleRemoteDslistUpdate=function(t){return this._lastListDsServerResponse=t,this._dispatchDslistEvent(),void 0},t.prototype._getOverlaidDatastoreInfo=function(t,e){var r,n,i,o,s,a,u,l,h;r=this._obj_manager.getCachedDatastore(t),s=(null!=e?e.info:void 0)||{},o=null==r?te.clone(s):null==e||e.rev<r.sync_state.get_server_rev()?r.datastore_model.getLocalInfoData():r.datastore_model.updateDatastoreInfo(s);for(n in o)l=o[n],o[n]=Z.is_array(l)?function(){var t,e,r;for(r=[],t=0,e=l.length;e>t;t++)u=l[t],r.push(te.fromDsValue(null,null,null,u));return r}():te.fromDsValue(null,null,null,l);return Z.is_empty(o)&&(o=null),i=null!=(null!=e?e.handle:void 0)?e.handle:r.get_handle(),a=null!=(h=null!=e?e.role:void 0)?h:te.ROLE_OWNER,new S.Datastore.DatastoreInfo(t,i,o,a)},t.prototype._getOverlaidDatastoreInfosFromListResponse=function(t){var e,r,n,i,o,s,a,u,l,h,c;for(k.Type(t),e=this._obj_manager.getAllCachedUndeletedDatastoreIDs(),s={},a=0,l=e.length;l>a;a++)i=e[a],s[i]=null;for(c=t.datastores,u=0,h=c.length;h>u;u++)n=c[u],s[n.dsid]=n;return function(){var t;t=[];for(o in s)r=s[o],t.push(this._getOverlaidDatastoreInfo(o,r));return t}.call(this)},t.prototype._wrapDatastore=function(t,e){return e&&(t._update_mtime(),t.sync()),new S.Datastore(this,t)},t.prototype._getOrCreateDatastoreByDsid=function(t,e){var r=this;return this._flob_client.get_or_create_db(t,function(n,i){return null!=n?e(n):null==i.handle?e(new Error("get_or_create_datastore failed for "+t)):r._obj_manager.open(t,i.handle,function(t,n){return null!=t?e(t):e(null,r._wrapDatastore(n,i.created))})}),void 0},t.prototype._createDatastore=function(t,e,r){var n=this;return this._flob_client.create_db(t,e,function(e,i){return null!=e?r(e):null==i.handle?r(new Error("create_datastore failed for "+t)):n._obj_manager.open(t,i.handle,function(t,e){return null!=t?r(t):r(null,n._wrapDatastore(e,i.created))})}),void 0},t.prototype._getExistingDatastoreByDsid=function(t,e){var r=this;return this._flob_client.get_db(t,function(n,i){return null!=n?e(n):null==i.handle?e(new Error("Datastore "+t+" not found or not accessible")):r._obj_manager.open(t,i.handle,function(t,n){return null!=t?e(t):e(null,new S.Datastore(r,n))})}),void 0},t.prototype.openDefaultDatastore=function(t){return this._getOrCreateDatastoreByDsid(a,t),void 0},t.prototype.openOrCreateDatastore=function(t,e){return this._getOrCreateDatastoreByDsid(t,e),void 0},t.prototype.openDatastore=function(t,e){return this._getExistingDatastoreByDsid(t,e),void 0},t.prototype.createDatastore=function(t){var e,r;return r=te.randomWeb64String(Math.ceil(256/6)),e="."+te.dbase64FromBase64(S.Util.sha256(r)),this._createDatastore(e,r,t),void 0},t.prototype.deleteDatastore=function(t,e){var r=this;return this._flob_client.get_db(t,function(n,i){return null!=n?e(n):null==i.handle?e(new Error("Datastore "+t+" not found or not accessible")):r._flob_client.delete_db(i.handle,function(t){return null!=t?e(t):e(null)})}),void 0},t.prototype.listDatastores=function(t){var e=this;return null!=this._lastListDsServerResponse?t(null,this._getOverlaidDatastoreInfosFromListResponse(this._lastListDsServerResponse)):(this._flob_client.list_dbs(function(r,n){return null!=r?t(r):t(null,e._getOverlaidDatastoreInfosFromListResponse(n))}),void 0)},t}(),S.Datastore.List=function(){function t(t,e,r){this._datastore=t,this._record=e,this._field=r}return t.BASE_ITEM_SIZE=20,t.prototype.toString=function(){return"Datastore.List(("+this._record._tid+", "+this._record._rid+", "+this._field+"): "+JSON.stringify(this._array)+")"},t.prototype._array=function(){return this._record._rawFieldValues()[this._field]},t.prototype._checkValid=function(){if(this._record._checkNotDeleted(),!Z.is_array(this._array()))throw new Error("Attempt to operate on deleted list ("+this._record._tid+", "+this._record._rid+", "+this._field+")")},t.prototype._storeUpdate=function(t){var e;return e={},e[this._field]=t,this._record._storeUpdate(e),void 0},t.prototype._fixInsertionIndex=function(t){var e,r;if(!Z.is_json_number(t))throw new RangeError("Index not a number: "+t);if(e=this._array().length,r=t>=0?t:e+t,r>=0&&e>=r)return r;throw new RangeError("Bad index for list of length "+e+": "+t)},t.prototype._fixIndex=function(t){var e,r;if(r=this._fixInsertionIndex(t),e=this._array().length,e>r)return r;throw new RangeError("Bad index for list of length "+e+": "+t)},t.prototype.get=function(t){var e;return this._checkValid(),e=te.clone(this._array()[this._fixIndex(t)]),te.fromDsValue(void 0,void 0,void 0,e)},t.prototype.set=function(t,e){return this._checkValid(),t=this._fixIndex(t),this._storeUpdate(["LP",t,te.toDsValue(e,!1)]),void 0},t.prototype.length=function(){return this._checkValid(),this._array().length},t.prototype.pop=function(){if(this._checkValid(),0===this._array().length)throw new Error("List is empty");return this.remove(this._array.length-1)},t.prototype.push=function(t){return this._checkValid(),this.insert(this._array().length,t),void 0},t.prototype.shift=function(){if(this._checkValid(),0===this._array().length)throw new Error("List is empty");return this.remove(0)},t.prototype.unshift=function(t){return this.insert(0,t),void 0},t.prototype.splice=function(){var t,e,r,n,i,o,s,a,u;if(n=arguments[0],e=arguments[1],t=3<=arguments.length?oe.call(arguments,2):[],this._checkValid(),!Z.is_json_number(e)||0>e)throw new RangeError("Bad second arg to splice: "+n+", "+e);for(n=this._fixInsertionIndex(n),i=this.slice(n,n+e),r=s=0;e>=0?e>s:s>e;r=e>=0?++s:--s)this.remove(n);for(a=0,u=t.length;u>a;a++)o=t[a],this.insert(n,o),n++;return i},t.prototype.move=function(t,e){return this._checkValid(),t=this._fixIndex(t),e=this._fixIndex(e),t===e?void 0:(this._storeUpdate(["LM",t,e]),void 0)},t.prototype.remove=function(t){var e;return this._checkValid(),t=this._fixIndex(t),e=this.get(t),this._storeUpdate(["LD",t]),e},t.prototype.insert=function(t,e){return this._checkValid(),t=this._fixInsertionIndex(t),this._storeUpdate(["LI",t,te.toDsValue(e,!1)]),void 0},t.prototype.slice=function(t,e){var r;return this._checkValid(),function(){var n,i,o,s;for(o=this._array().slice(t,e),s=[],n=0,i=o.length;i>n;n++)r=o[n],s.push(te.fromDsValue(void 0,void 0,void 0,r));return s}.call(this)},t.prototype.toArray=function(){var t;return this._checkValid(),function(){var e,r,n,i;for(n=this._array().slice(),i=[],e=0,r=n.length;r>e;e++)t=n[e],i.push(te.fromDsValue(void 0,void 0,void 0,t));return i}.call(this)},t}(),S.Datastore.Record=function(){function t(t,e,r){this._datastore=t,this._tid=e,this._rid=r,this._deleted=!1,this._record_cache=this._datastore._record_cache,this._managed_datastore=this._datastore._managed_datastore}return t.RECORD_SIZE_LIMIT=102400,t.BASE_RECORD_SIZE=100,t.BASE_FIELD_SIZE=100,t.prototype.get=function(t){var e;return this._checkNotDeleted(),e=this._rawFieldValues(),t in e?te.fromDsValue(this._datastore,this,t,e[t]):null},t.prototype.set=function(t,e){var r;return r={},r[t]=e,this.update(r)},t.prototype.getOrCreateList=function(t){var e,r;if(this._checkNotDeleted(),r=this._rawFieldValues(),null==r[t])e={},e[t]=["LC"],this._storeUpdate(e),r=this._rawFieldValues();else if(!Z.is_array(r[t]))throw new Error("Can't call getOrCreateList on field "+t+" for record ("+this.tid+", "+this.rid+"): existing value "+r[t]+" is not a list");return te.fromDsValue(this._datastore,this,t,r[t])},t.prototype.getFields=function(){var t,e,r,n;this._checkNotDeleted(),t={},n=this._rawFieldValues();for(e in n)r=n[e],t[e]=te.fromDsValue(this._datastore,this,e,r);return t},t.prototype.getSize=function(){return this._managed_datastore.get_record_size(this._tid,this._rid)},t.prototype.update=function(t){var e,r,n;this._datastore._checkWritable(),this._checkNotDeleted(),e={};for(r in t)n=t[r],null!=n?e[r]=["P",te.toDsValue(n)]:null!=this.get(r)&&(e[r]=["D"]);return Z.is_empty(e)||this._storeUpdate(e),this},t.prototype.deleteRecord=function(){var t;return this._datastore._checkWritable(),this._checkNotDeleted(),this._deleted=!0,this._record_cache.remove(this._tid,this._rid),t=n.from_array(["D",this._tid,this._rid]),this._managed_datastore.perform_local_change(t),this._datastore._recordsChangedLocally([this]),this},t.prototype.has=function(t){var e;return this._checkNotDeleted(),e=this._rawFieldValues(),t in e},t.prototype.getId=function(){return this._rid},t.prototype.getTable=function(){return this._datastore.getTable(this._tid)},t.prototype.isDeleted=function(){return this._deleted},t.prototype.toString=function(){var t;return t=this.isDeleted()?"deleted":JSON.stringify(this.getFields()),"Datastore.Record(("+this._tid+", "+this._rid+"): "+t+")"},t.prototype._rawFieldValues=function(){return this._managed_datastore.query(this._tid,this._rid)},t.prototype._storeUpdate=function(t){var e;e=n.from_array(["U",this._tid,this._rid,t]),this._managed_datastore.perform_local_change(e),this._datastore._recordsChangedLocally([this])},t.isValidId=function(t){var e;return e=new RegExp(Z.SS_ID_REGEX),Z.is_string(t)&&e.test(t)},t.prototype._checkNotDeleted=function(){if(this._deleted)throw new Error("Attempt to operate on deleted record ("+this._tid+", "+this._rid+")")},t}(),S.Datastore.RecordsChanged=function(){function t(t,e){this._recordsByTable=t,this._local=e}return t.prototype.toString=function(){var t,e,r,n,i,o,s;i=0,r=0,s=this._recordsByTable;for(o in s)t=s[o],i+=1,r+=t.length;return n=""+i+" "+(1===i?"table":"tables"),e=""+r+" "+(1===r?"record":"records"),"Datastore.RecordsChanged("+e+" in "+n+" changed "+(this._local?"locally":"remotely")+")"},t._fromRecordList=function(e,r){var n,i,o,s,a;for(i={},s=0,a=e.length;a>s;s++)n=e[s],o=n._tid,null==i[o]&&(i[o]=[]),i[o].push(n);return new t(i,r)},t.prototype.affectedRecordsByTable=function(){return this._recordsByTable},t.prototype.affectedRecordsForTable=function(t){var e;return null!=(e=this._recordsByTable[t])?e:[]},t.prototype.isLocal=function(){return this._local},t}(),q=S.Datastore.RecordsChanged,S.Datastore.Table=function(){function t(t,e){this._datastore=t,this._tid=e,this._record_cache=this._datastore._record_cache,this._managed_datastore=this._datastore._managed_datastore}return t.prototype.getId=function(){return this._tid},t.prototype.get=function(t){var e,r;if(!S.Datastore.Record.isValidId(t))throw new Error("Invalid record ID: "+t);return r=this._record_cache.get(this._tid,t),null!=r?(Y(!r._deleted),r):(e=this._managed_datastore.query(this._tid,t),null==e?null:this._record_cache.getOrCreate(this._tid,t))},t.prototype.getOrInsert=function(t,e){var r;return this._datastore._checkWritable(),r=this.get(t),r?r:this._insertWithId(t,e)},t.prototype.insert=function(t){var e;return this._datastore._checkWritable(),e=this._datastore._generateRid(),Y(null==this.get(e)),this._insertWithId(e,t)},t.prototype.query=function(t){var e,r,n,i,o,s,a;for(o=this._managed_datastore.list_rows_for_table(this._tid),n=[],s=0,a=o.length;a>s;s++)i=o[s],e=this._managed_datastore.query(this._tid,i),(null==t||te.matchDsValues(t,e))&&(r=this.get(i),Y(null!=r),n.push(r));return n},t.prototype.setResolutionRule=function(t,e){if("remote"!==e&&"local"!==e&&"min"!==e&&"max"!==e&&"sum"!==e)throw new Error(""+e+" is not a valid resolution rule. Valid rules are 'remote', 'local', 'min', 'max', and 'sum'.");return this._managed_datastore.resolver.add_resolution_rule(this._tid,t,e),this},t.isValidId=function(t){var e;return e=new RegExp(Z.SS_ID_REGEX),Z.is_string(t)&&e.test(t)},t.prototype.toString=function(){return"Datastore.Table("+this._tid+")"},t.prototype._insertWithId=function(t,e){var r,i,o,s,a;i={};for(o in e)a=e[o],i[o]=te.toDsValue(a);return r=n.from_array(["I",this._tid,t,i]),this._managed_datastore.perform_local_change(r),s=this._record_cache.getOrCreate(this._tid,t),this._datastore._recordsChangedLocally([s]),s},t}(),S.File.ShareUrl=function(){function t(t,e){this.url=t.url,this.expiresAt=S.Util.parseDate(t.expires),this.isDirect=e===!0?!0:e===!1?!1:"direct"in t?t.direct:Date.now()-this.expiresAt<=864e5,this.isPreview=!this.isDirect,this._json=null}return t.parse=function(t,e){return t&&"object"==typeof t?new S.File.ShareUrl(t,e):t},t.prototype.url=null,t.prototype.expiresAt=null,t.prototype.isDirect=null,t.prototype.isPreview=null,t.prototype.json=function(){return this._json||(this._json={url:this.url,expires:this.expiresAt.toUTCString(),direct:this.isDirect})},t}(),S.File.CopyReference=function(){function t(t){"object"==typeof t?(this.tag=t.copy_ref,this.expiresAt=S.Util.parseDate(t.expires),this._json=t):(this.tag=t,this.expiresAt=new Date(1e3*Math.ceil(Date.now()/1e3)),this._json=null)}return t.parse=function(t){return!t||"object"!=typeof t&&"string"!=typeof t?t:new S.File.CopyReference(t)},t.prototype.tag=null,t.prototype.expiresAt=null,t.prototype.json=function(){return this._json||(this._json={copy_ref:this.tag,expires:this.expiresAt.toUTCString()})},t}(),S.File.Stat=function(){function t(t){var e,r,n,i;switch(this._json=t,this.path=t.path,"/"!==this.path.substring(0,1)&&(this.path="/"+this.path),e=this.path.length-1,e>=0&&"/"===this.path.substring(e)&&(this.path=this.path.substring(0,e)),r=this.path.lastIndexOf("/"),this.name=this.path.substring(r+1),this.isFolder=t.is_dir||!1,this.isFile=!this.isFolder,this.isRemoved=t.is_deleted||!1,this.typeIcon=t.icon,this.modifiedAt=(null!=(n=t.modified)?n.length:void 0)?S.Util.parseDate(t.modified):null,this.clientModifiedAt=(null!=(i=t.client_mtime)?i.length:void 0)?S.Util.parseDate(t.client_mtime):null,t.root){case"dropbox":this.inAppFolder=!1;break;case"app_folder":this.inAppFolder=!0;break;default:this.inAppFolder=null}this.size=t.bytes||0,this.humanSize=t.size||"",this.hasThumbnail=t.thumb_exists||!1,this.versionTag=t.rev,this.contentHash=t.hash||null,this.mimeType=this.isFolder?t.mime_type||"inode/directory":t.mime_type||"application/octet-stream"}return t.parse=function(t){return t&&"object"==typeof t?new S.File.Stat(t):t},t.prototype.path=null,t.prototype.name=null,t.prototype.inAppFolder=null,t.prototype.isFolder=null,t.prototype.isFile=null,t.prototype.isRemoved=null,t.prototype.typeIcon=null,t.prototype.versionTag=null,t.prototype.contentHash=null,t.prototype.mimeType=null,t.prototype.size=null,t.prototype.humanSize=null,t.prototype.hasThumbnail=null,t.prototype.modifiedAt=null,t.prototype.clientModifiedAt=null,t.prototype.json=function(){return this._json},t}(),S.Http.AppInfo=function(){function t(t,e){var r;this.name=t.name,this._icons=t.icons,r=t.permissions||{},this.canUseDatastores=!!r.datastores,this.canUseFiles=!!r.files,this.canUseFullDropbox="full_dropbox"===r.files,this.hasAppFolder="app_folder"===r.files,this.key=e?e:t.key||null}return t.parse=function(t,e){return t?new S.Http.AppInfo(t,e):t},t.prototype.name=void 0,t.prototype.key=void 0,t.prototype.canUseDatastores=void 0,t.prototype.canUseFiles=void 0,t.prototype.hasAppFolder=void 0,t.prototype.canUseFullDropbox=void 0,t.prototype.icon=function(t,e){return e||(e=t),this._icons[""+t+"x"+e]||null},t.ICON_SMALL=64,t.ICON_LARGE=256,t}(),S.Http.PulledChanges=function(){function t(t){var e;this.blankSlate=t.reset||!1,this.cursorTag=t.cursor,this.shouldPullAgain=t.has_more,this.shouldBackOff=!this.shouldPullAgain,this.changes=t.cursor&&t.cursor.length?function(){var r,n,i,o;for(i=t.entries,o=[],r=0,n=i.length;n>r;r++)e=i[r],o.push(S.Http.PulledChange.parse(e));return o}():[]}return t.parse=function(t){return t&&"object"==typeof t?new S.Http.PulledChanges(t):t},t.prototype.blankSlate=void 0,t.prototype.cursorTag=void 0,t.prototype.changes=void 0,t.prototype.shouldPullAgain=void 0,t.prototype.shouldBackOff=void 0,t.prototype.cursor=function(){return this.cursorTag},t}(),S.Http.PulledChange=function(){function t(t){this.path=t[0],this.stat=S.File.Stat.parse(t[1]),this.stat?this.wasRemoved=!1:(this.stat=null,this.wasRemoved=!0)}return t.parse=function(t){return t&&"object"==typeof t?new S.Http.PulledChange(t):t},t.prototype.path=void 0,t.prototype.wasRemoved=void 0,t.prototype.stat=void 0,t}(),S.Http.PollResult=function(){function t(t){this.hasChanges=t.changes,this.retryAfter=t.backoff||0}return t.parse=function(t){return t?new S.Http.PollResult(t):t},t.prototype.hasChanges=void 0,t.prototype.retryAfter=void 0,t}(),S.Http.RangeInfo=function(){function t(t){var e;(e=/^bytes (\d*)-(\d*)\/(.*)$/.exec(t))?(this.start=parseInt(e[1]),this.end=parseInt(e[2]),this.size="*"===e[3]?null:parseInt(e[3])):(this.start=0,this.end=0,this.size=null)}return t.parse=function(t){return"string"==typeof t?new S.Http.RangeInfo(t):t},t.prototype.start=null,t.prototype.size=null,t.prototype.end=null,t}(),S.Http.UploadCursor=function(){function t(t){this.replace(t)}return t.parse=function(t){return!t||"object"!=typeof t&&"string"!=typeof t?t:new S.Http.UploadCursor(t)},t.prototype.tag=null,t.prototype.offset=null,t.prototype.expiresAt=null,t.prototype.json=function(){return this._json||(this._json={upload_id:this.tag,offset:this.offset,expires:this.expiresAt.toUTCString()})},t.prototype.replace=function(t){return"object"==typeof t?(this.tag=t.upload_id||null,this.offset=t.offset||0,this.expiresAt=S.Util.parseDate(t.expires)||Date.now(),this._json=t):(this.tag=t||null,this.offset=0,this.expiresAt=new Date(1e3*Math.floor(Date.now()/1e3)),this._json=null),this},t}(),"function"==typeof S.Env.global.atob&&"function"==typeof S.Env.global.btoa?(S.Util.atob=function(t){return S.Env.global.atob(t)},S.Util.btoa=function(t){return S.Env.global.btoa(t)}):S.Env.global.require&&S.Env.global.Buffer?(S.Util.atob=function(t){var e,r;return e=new Buffer(t,"base64"),function(){var t,n,i;for(i=[],r=t=0,n=e.length;n>=0?n>t:t>n;r=n>=0?++t:--t)i.push(String.fromCharCode(e[r]));return i}().join("")},S.Util.btoa=function(t){var e,r;return e=new Buffer(function(){var e,n,i;for(i=[],r=e=0,n=t.length;n>=0?n>e:e>n;r=n>=0?++e:--e)i.push(t.charCodeAt(r));return i}()),e.toString("base64")}):!function(){var t,e,r;return e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",r=function(t,r,n){var i,o;for(o=3-r,t<<=8*o,i=3;i>=o;)n.push(e.charAt(63&t>>6*i)),i-=1;for(i=r;3>i;)n.push("="),i+=1;return null},t=function(t,e,r){var n,i;for(i=4-e,t<<=6*i,n=2;n>=i;)r.push(String.fromCharCode(255&t>>8*n)),n-=1;return null},S.Util.btoa=function(t){var e,n,i,o,s,a;for(o=[],e=0,n=0,i=s=0,a=t.length;a>=0?a>s:s>a;i=a>=0?++s:--s)e=e<<8|t.charCodeAt(i),n+=1,3===n&&(r(e,n,o),e=n=0);return n>0&&r(e,n,o),o.join("")},S.Util.atob=function(r){var n,i,o,s,a,u,l;for(a=[],n=0,o=0,s=u=0,l=r.length;(l>=0?l>u:u>l)&&(i=r.charAt(s),"="!==i);s=l>=0?++u:--u)n=n<<6|e.indexOf(i),o+=1,4===o&&(t(n,o,a),n=o=0);return o>0&&t(n,o,a),a.join("")}}(),function(){var t,e,r,n,i,o,s,a,u,l,h;if(S.Util.hmac=function(e,n){return t(r(u(e),u(n),e.length,n.length))},S.Util.sha1=function(e){return t(i(u(e),e.length))},S.Util.sha256=function(e){return t(o(u(e),e.length))},S.Env.require)try{e=S.Env.require("crypto"),e.createHmac&&e.createHash&&(S.Util.hmac=function(t,r){var n;return n=e.createHmac("sha1",r),n.update(t),n.digest("base64")},S.Util.sha1=function(t){var r;return r=e.createHash("sha1"),r.update(t),r.digest("base64")},S.Util.sha256=function(t){var r;return r=e.createHash("sha256"),r.update(t),r.digest("base64")})}catch(c){n=c}return r=function(t,e,r,n){var o,s,a,u;return e.length>16&&(e=i(e,n)),a=function(){var t,r;for(r=[],s=t=0;16>t;s=++t)r.push(909522486^e[s]);return r}(),u=function(){var t,r;for(r=[],s=t=0;16>t;s=++t)r.push(1549556828^e[s]);return r}(),o=i(a.concat(t),64+r),i(u.concat(o),84)},i=function(t,e){var r,n,i,o,s,a,u,l,h,c,d,_,p,f,g,y,m;for(t[e>>2]|=1<<31-((3&e)<<3),t[(e+8>>6<<4)+15]=e<<3,g=Array(80),r=1732584193,i=4023233417,s=2562383102,u=271733878,h=3285377520,d=0,p=t.length;p>d;){for(n=r,o=i,a=s,l=u,c=h,_=m=0;80>m;_=++m)16>_?g[_]=0|t[d+_<<2>>2]:(f=(0|g[_-3<<2>>2])^(0|g[_-8<<2>>2])^(0|g[_-14<<2>>2])^(0|g[_-16<<2>>2]),g[_]=f<<1|f>>>31),y=0|(0|(r<<5|r>>>27)+h)+g[_<<2>>2],y=20>_?0|y+(0|(i&s|~i&u)+1518500249):40>_?0|y+(0|(i^s^u)+1859775393):60>_?0|(0|y+((i&s|i&u|s&u)-1894007588)):0|y+(0|(i^s^u)-899497514),h=u,u=s,s=i<<30|i>>>2,i=r,r=y;r=0|n+r,i=0|o+i,s=0|a+s,u=0|l+u,h=0|c+h,d=0|d+16}return[r,i,s,u,h]},o=function(t,e){var r,n,i,o,u,l,h,c,d,_,p,f,g,y,m,v,w,b,D,S,E,I,A,O,R,T,x,C,U,k,L,P;for(t[e>>2]|=1<<31-((3&e)<<3),t[(e+8>>6<<4)+15]=e<<3,U=Array(80),r=s[0],i=s[1],u=s[2],c=s[3],_=s[4],f=s[5],y=s[6],S=s[7],I=0,O=t.length;O>I;){for(n=r,o=i,l=u,d=c,p=_,g=f,m=y,E=S,A=P=0;64>P;A=++P)16>A?C=U[A]=0|t[I+A<<2>>2]:(w=0|U[A-15<<2>>2],v=(w<<25|w>>>7)^(w<<14|w>>>18)^w>>>3,D=0|U[A-2<<2>>2],b=(D<<15|D>>>17)^(D<<13|D>>>19)^D>>>10,C=U[A]=0|(0|v+(0|U[A-7<<2>>2]))+(0|b+(0|U[A-16<<2>>2]))),h=_&f^~_&y,R=r&i^r&u^i&u,T=(r<<30|r>>>2)^(r<<19|r>>>13)^(r<<10|r>>>22),x=(_<<26|_>>>6)^(_<<21|_>>>11)^(_<<7|_>>>25),k=0|(0|(0|S+x)+(0|h+C))+(0|a[A<<2>>2]),L=0|T+R,S=y,y=f,f=_,_=0|c+k,c=u,u=i,i=r,r=0|k+L;r=0|n+r,i=0|o+i,u=0|l+u,c=0|d+c,_=0|p+_,f=0|g+f,y=0|m+y,S=0|E+S,I+=16}return[r,i,u,c,_,f,y,S]},l=function(t){return 0>t&&(t=4*(1<<30)+t),t.toString(16)},s=[],a=[],function(){var t,e,r,n,i,o,u;for(e=function(t){return 0|4294967296*(t-Math.floor(t))},i=2,u=[],r=o=0;64>o;r=++o){for(;;){for(n=!0,t=2;i>=t*t;){if(0===i%t){n=!1;break}t+=1}if(n)break;i+=1}8>r&&(s[r]=e(Math.pow(i,.5))),a[r]=e(Math.pow(i,1/3)),u.push(i+=1)}return u}(),t=function(t){var e,r,n,i,o;for(i="",e=0,n=4*t.length;n>e;)r=e,o=(255&t[r>>2]>>(3-(3&r)<<3))<<16,r+=1,o|=(255&t[r>>2]>>(3-(3&r)<<3))<<8,r+=1,o|=255&t[r>>2]>>(3-(3&r)<<3),i+=h[63&o>>18],i+=h[63&o>>12],e+=1,i+=e>=n?"=":h[63&o>>6],e+=1,i+=e>=n?"=":h[63&o],e+=1;return i},h="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",u=function(t){var e,r,n,i,o;for(e=[],n=255,r=i=0,o=t.length;o>=0?o>i:i>o;r=o>=0?++i:--i)e[r>>2]|=(t.charCodeAt(r)&n)<<(3-(3&r)<<3);return e}}(),S.Util.Oauth=function(){function t(t){this._id=null,this._secret=null,this._stateParam=null,this._authCode=null,this._token=null,this._tokenKey=null,this._tokenKid=null,this._error=null,this._appHash=null,this._loaded=null,this.setCredentials(t)}return t.prototype.setCredentials=function(t){if(t.key)this._id=t.key;else{if(!t.token)throw new Error("No API key supplied");this._id=null}return this._secret=t.secret||null,this._appHash=null,this._error=null,this._loaded=!0,this.reset(),t.token?(this._token=t.token,t.tokenKey&&(this._tokenKey=t.tokenKey,this._tokenKid=t.tokenKid)):t.oauthCode?this._authCode=t.oauthCode:t.oauthStateParam&&(this._stateParam=t.oauthStateParam),this},t.prototype.credentials=function(){var t;return t={},this._id&&(t.key=this._id),this._secret&&(t.secret=this._secret),null!==this._token?(t.token=this._token,this._tokenKey&&(t.tokenKey=this._tokenKey,t.tokenKid=this._tokenKid)):null!==this._authCode?t.oauthCode=this._authCode:null!==this._stateParam&&(t.oauthStateParam=this._stateParam),t},t.prototype.step=function(){return null!==this._token?S.Client.DONE:null!==this._authCode?S.Client.AUTHORIZED:null!==this._stateParam?this._loaded?S.Client.PARAM_LOADED:S.Client.PARAM_SET:null!==this._error?S.Client.ERROR:S.Client.RESET},t.prototype.setAuthStateParam=function(t){if(null===this._id)throw new Error("No API key supplied, cannot do authorization");return this.reset(),this._loaded=!1,this._stateParam=t,this},t.prototype.checkAuthStateParam=function(t){return this._stateParam===t&&null!==this._stateParam},t.prototype.authStateParam=function(){return this._stateParam},t.prototype.error=function(){return this._error},t.prototype.processRedirectParams=function(t){var e;if(t.error){if(null===this._id)throw new Error("No API key supplied, cannot process errors");return this.reset(),this._error=new S.AuthError(t),!0}if(t.code){if(null===this._id)throw new Error("No API key supplied, cannot do Authorization Codes");return this.reset(),this._loaded=!1,this._authCode=t.code,!0}if(e=t.token_type){if(e=e.toLowerCase(),"bearer"!==e&&"mac"!==e)throw new Error("Unimplemented token type "+e);if(this.reset(),this._loaded=!1,"mac"===e){if("hmac-sha-1"!==t.mac_algorithm)throw new Error("Unimplemented MAC algorithms "+t.mac_algorithm);this._tokenKey=t.mac_key,this._tokenKid=t.kid}return this._token=t.access_token,!0}return!1},t.prototype.authHeader=function(t,e,r){var n,i;return null===this._token?(i=null===this._secret?S.Util.btoa(""+this._id+":"):S.Util.btoa(""+this._id+":"+this._secret),"Basic "+i):null===this._tokenKey?"Bearer "+this._token:(n=this.macParams(t,e,r),"MAC kid="+n.kid+" ts="+n.ts+" "+("access_token="+this._token+" mac="+n.mac))},t.prototype.addAuthParams=function(t,e,r){var n;return null===this._token?(r.client_id=this._id,null!==this._secret&&(r.client_secret=this._secret)):(null!==this._tokenKey&&(n=this.macParams(t,e,r),r.kid=n.kid,r.ts=n.ts,r.mac=n.mac),r.access_token=this._token),r
 },t.prototype.authorizeUrlParams=function(t,e){var r;if("token"!==t&&"code"!==t)throw new Error("Unimplemented /authorize response type "+t);return r={client_id:this._id,state:this._stateParam,response_type:t},e&&(r.redirect_uri=e),r},t.prototype.accessTokenParams=function(t){var e;return e={grant_type:"authorization_code",code:this._authCode},t&&(e.redirect_uri=t),e},t.queryParamsFromUrl=function(t){var e,r,n,i,o,s,a,u,l,h;if(i=/^[^?#]+(\?([^\#]*))?(\#(.*))?$/.exec(t),!i)return{};for(a=i[2]||"","/"===a.substring(0,1)&&(a=a.substring(1)),e=i[4]||"",r=e.indexOf("?"),-1!==r&&(e=e.substring(r+1)),"/"===e.substring(0,1)&&(e=e.substring(1)),s={},h=a.split("&").concat(e.split("&")),u=0,l=h.length;l>u;u++)n=h[u],o=n.indexOf("="),-1!==o&&(s[decodeURIComponent(n.substring(0,o))]=decodeURIComponent(n.substring(o+1)));return s},t.prototype.macParams=function(t,e,r){var n,i;return n={kid:this._tokenKid,ts:S.Util.Oauth.timestamp()},i=t.toUpperCase()+"&"+S.Util.Xhr.urlEncodeValue(e)+"&"+S.Util.Xhr.urlEncodeValue(S.Util.Xhr.urlEncode(r)),n.mac=S.Util.hmac(i,this._tokenKey),n},t.prototype.appHash=function(){return this._appHash?this._appHash:this._appHash=S.Util.sha1("oauth2-"+this._id).replace(/[\/+=]/g,"")},t.prototype.reset=function(){return this._stateParam=null,this._authCode=null,this._token=null,this._tokenKey=null,this._tokenKid=null,this._error=null,this},t.timestamp=function(){return Math.floor(Date.now()/1e3)},t.randomAuthStateParam=function(){return["oas",Date.now().toString(36),Math.random().toString(36)].join("_")},t}(),null==Date.now&&(S.Util.Oauth.timestamp=function(){return Math.floor((new Date).getTime()/1e3)}),2274814865e3===new Date("Fri, 31 Jan 2042 21:01:05 +0000").valueOf()?S.Util.parseDate=function(t){return new Date(t)}:2274814865e3===Date.parse("Fri, 31 Jan 2042 21:01:05 +0000")?S.Util.parseDate=function(t){return new Date(Date.parse(t))}:!function(){var t,e;return e=/^\w+\, (\d+) (\w+) (\d+) (\d+)\:(\d+)\:(\d+) (\+\d+|UTC|GMT)$/,t={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11},S.Util.parseDate=function(r){var n;return(n=e.exec(r))?new Date(Date.UTC(parseInt(n[3]),t[n[2]],parseInt(n[1]),parseInt(n[4]),parseInt(n[5]),parseInt(n[6]),0)):0/0}}(),S.Util.countUtf8Bytes=function(t){var e,r,n,i,o;for(e=0,n=i=0,o=t.length;o>=0?o>i:i>o;n=o>=0?++i:--i)r=t.charCodeAt(n),127>=r?e+=1:2047>=r?e+=2:r>=55296&&57343>=r?e+=2:65535>=r?e+=3:Y(!1);return e},S.Env.global.XMLHttpRequest?(!S.Env.global.XDomainRequest||"withCredentials"in new XMLHttpRequest?(y=XMLHttpRequest,g=!1,p="undefined"!=typeof FormData&&-1===navigator.userAgent.indexOf("Firefox")):(y=XDomainRequest,g=!0,p=!1),f=!0):(y=S.Env.require("xhr2"),g=!1,p=!1,f=!1),S.Env.global.Uint8Array)if(Object.getPrototypeOf?_=Object.getPrototypeOf(Object.getPrototypeOf(new Uint8Array(0))).constructor:Object.__proto__&&(_=new Uint8Array(0).__proto__.__proto__.constructor),S.Env.global.Blob){try{!function(){return 2===new Blob([new Uint8Array(2)]).size?(v=!0,m=!0):(m=!1,v=2===new Blob([new ArrayBuffer(2)]).size)}()}catch(se){m=!1,v=!1,S.Env.global.WebKitBlobBuilder&&-1!==navigator.userAgent.indexOf("Android")&&(p=!1)}_===Object&&(m=!1)}else v=!1,m=!0;else _=null,v=!1,m=!1;S.Util.Xhr=function(){function t(t,e){this.method=t,this.isGet="GET"===this.method,this.url=e,this.wantHeaders=!1,this.headers={},this.params=null,this.body=null,this.preflight=!(this.isGet||"POST"===this.method),this.signed=!1,this.completed=!1,this.responseType=null,this.callback=null,this.xhr=null,this.onError=null}return t.Request=y,t.ieXdr=g,t.canSendForms=p,t.doesPreflight=f,t.ArrayBufferView=_,t.sendArrayBufferView=m,t.wrapBlob=v,t.prototype.xhr=null,t.prototype.onError=null,t.prototype.setParams=function(t){if(this.signed)throw new Error("setParams called after addOauthParams or addOauthHeader");if(this.params)throw new Error("setParams cannot be called twice");return this.params=t,this},t.prototype.setCallback=function(t){return this.callback=t,this},t.prototype.signWithOauth=function(t,e){return S.Util.Xhr.ieXdr?this.addOauthParams(t):this.preflight||!S.Util.Xhr.doesPreflight?this.addOauthHeader(t):this.isGet&&e?this.addOauthHeader(t):this.addOauthParams(t)},t.prototype.addOauthParams=function(t){if(this.signed)throw new Error("Request already has an OAuth signature");return this.params||(this.params={}),t.addAuthParams(this.method,this.url,this.params),this.signed=!0,this},t.prototype.addOauthHeader=function(t){if(this.signed)throw new Error("Request already has an OAuth signature");return this.params||(this.params={}),this.signed=!0,this.setHeader("Authorization",t.authHeader(this.method,this.url,this.params))},t.prototype.setBody=function(t){if(this.isGet)throw new Error("setBody cannot be called on GET requests");if(null!==this.body)throw new Error("Request already has a body");return"string"==typeof t||"undefined"!=typeof FormData&&t instanceof FormData||(this.headers["Content-Type"]="application/octet-stream",this.preflight=!0),this.body=t,this},t.prototype.setResponseType=function(t){return this.responseType=t,this},t.prototype.setHeader=function(t,e){var r;if(this.headers[t])throw r=this.headers[t],new Error("HTTP header "+t+" already set to "+r);if("Content-Type"===t)throw new Error("Content-Type is automatically computed based on setBody");return this.preflight=!0,this.headers[t]=e,this},t.prototype.reportResponseHeaders=function(){return this.wantHeaders=!0},t.prototype.setFileField=function(t,e,r,n){var i,o,s,a,u;if(null!==this.body)throw new Error("Request already has a body");if(this.isGet)throw new Error("setFileField cannot be called on GET requests");if("object"==typeof r){"undefined"!=typeof ArrayBuffer&&(r instanceof ArrayBuffer?S.Util.Xhr.sendArrayBufferView&&(r=new Uint8Array(r)):!S.Util.Xhr.sendArrayBufferView&&0===r.byteOffset&&r.buffer instanceof ArrayBuffer&&(r=r.buffer)),n||(n="application/octet-stream");try{r=new Blob([r],{type:n})}catch(l){o=l,window.WebKitBlobBuilder&&(a=new WebKitBlobBuilder,a.append(r),(i=a.getBlob(n))&&(r=i))}"undefined"!=typeof File&&r instanceof File&&(r=new Blob([r],{type:r.type})),u=r instanceof Blob}else u=!1;return u?(this.body=new FormData,this.body.append(t,r,e)):(n||(n="application/octet-stream"),s=this.multipartBoundary(),this.headers["Content-Type"]="multipart/form-data; boundary="+s,this.body=["--",s,"\r\n",'Content-Disposition: form-data; name="',t,'"; filename="',e,'"\r\n',"Content-Type: ",n,"\r\n","Content-Transfer-Encoding: binary\r\n\r\n",r,"\r\n","--",s,"--","\r\n"].join(""))},t.prototype.multipartBoundary=function(){return[Date.now().toString(36),Math.random().toString(36)].join("----")},t.prototype.paramsToUrl=function(){var t;return this.params&&(t=S.Util.Xhr.urlEncode(this.params),0!==t.length&&(this.url=[this.url,"?",t].join("")),this.params=null),this},t.prototype.paramsToBody=function(){if(this.params){if(null!==this.body)throw new Error("Request already has a body");if(this.isGet)throw new Error("paramsToBody cannot be called on GET requests");this.headers["Content-Type"]="application/x-www-form-urlencoded",this.body=S.Util.Xhr.urlEncode(this.params),this.params=null}return this},t.prototype.prepare=function(){var t,e,r,n,i=this;if(e=S.Util.Xhr.ieXdr,this.isGet||null!==this.body||e?(this.paramsToUrl(),null!==this.body&&"string"==typeof this.body&&(this.headers["Content-Type"]="text/plain; charset=utf8")):this.paramsToBody(),this.xhr=new S.Util.Xhr.Request,e?(this.xhr.onload=function(){return i.onXdrLoad()},this.xhr.onerror=function(){return i.onXdrError()},this.xhr.ontimeout=function(){return i.onXdrError()},this.xhr.onprogress=function(){}):this.xhr.onreadystatechange=function(){return i.onReadyStateChange()},this.xhr.open(this.method,this.url,!0),!e){n=this.headers;for(t in n)re.call(n,t)&&(r=n[t],this.xhr.setRequestHeader(t,r))}return this.responseType&&("b"===this.responseType?this.xhr.overrideMimeType&&this.xhr.overrideMimeType("text/plain; charset=x-user-defined"):this.xhr.responseType=this.responseType),this},t.prototype.send=function(t){var e,r;if(this.callback=t||this.callback,null!==this.body){e=this.body,S.Util.Xhr.sendArrayBufferView?e instanceof ArrayBuffer&&(e=new Uint8Array(e)):0===e.byteOffset&&e.buffer instanceof ArrayBuffer&&(e=e.buffer);try{this.xhr.send(e)}catch(n){if(r=n,S.Util.Xhr.sendArrayBufferView||!S.Util.Xhr.wrapBlob)throw r;e=new Blob([e],{type:"application/octet-stream"}),this.xhr.send(e)}}else this.xhr.send();return this},t.urlEncode=function(t){var e,r,n;e=[];for(r in t)n=t[r],e.push(this.urlEncodeValue(r)+"="+this.urlEncodeValue(n));return e.sort().join("&")},t.urlEncodeValue=function(t){return encodeURIComponent(t.toString()).replace(/\!/g,"%21").replace(/'/g,"%27").replace(/\(/g,"%28").replace(/\)/g,"%29").replace(/\*/g,"%2A")},t.urlDecode=function(t){var e,r,n,i,o,s;for(r={},s=t.split("&"),i=0,o=s.length;o>i;i++)n=s[i],e=n.split("="),r[decodeURIComponent(e[0])]=decodeURIComponent(e[1]);return r},t.prototype.onReadyStateChange=function(){var t,e,r,n,i,o,s,a,u,l,h,c,d,_,p;if(4!==this.xhr.readyState)return!0;if(this.completed)return!0;if(this.completed=!0,this.xhr.status<200||this.xhr.status>=300)return e=new S.ApiError(this.xhr,this.method,this.url),this.onError?this.onError(e,this.callback):this.callback(e),!0;if(this.wantHeaders?(t=this.xhr.getAllResponseHeaders(),s=t?S.Util.Xhr.parseResponseHeaders(t):this.guessResponseHeaders(),h=s["x-dropbox-metadata"]):(s=void 0,h=this.xhr.getResponseHeader("x-dropbox-metadata")),null!=h?h.length:void 0)try{l=JSON.parse(h)}catch(f){if(u=f,o=h.search(/\}\,\s*\{/),-1!==o)try{h=h.substring(0,o+1),l=JSON.parse(h)}catch(f){u=f,l=void 0}else l=void 0}else l=void 0;if(this.responseType){if("b"===this.responseType){for(i=null!=this.xhr.responseText?this.xhr.responseText:this.xhr.response,r=[],a=_=0,p=i.length;p>=0?p>_:_>p;a=p>=0?++_:--_)r.push(String.fromCharCode(255&i.charCodeAt(a)));d=r.join(""),this.callback(null,d,l,s)}else this.callback(null,this.xhr.response,l,s);return!0}switch(d=null!=this.xhr.responseText?this.xhr.responseText:this.xhr.response,n=this.xhr.getResponseHeader("Content-Type"),n&&(c=n.indexOf(";"),-1!==c&&(n=n.substring(0,c))),n){case"application/x-www-form-urlencoded":this.callback(null,S.Util.Xhr.urlDecode(d),l,s);break;case"application/json":case"text/javascript":this.callback(null,JSON.parse(d),l,s);break;default:this.callback(null,d,l,s)}return!0},t.parseResponseHeaders=function(t){var e,r,n,i,o,s,a,u;for(n={},r=t.split("\n"),a=0,u=r.length;u>a;a++)i=r[a],e=i.indexOf(":"),o=i.substring(0,e).trim().toLowerCase(),s=i.substring(e+1).trim(),n[o]=s;return n},t.prototype.guessResponseHeaders=function(){var t,e,r,n,i,o;for(t={},o=["cache-control","content-language","content-range","content-type","expires","last-modified","pragma","x-dropbox-metadata"],n=0,i=o.length;i>n;n++)e=o[n],r=this.xhr.getResponseHeader(e),r&&(t[e]=r);return t},t.prototype.onXdrLoad=function(){var t,e,r;if(this.completed)return!0;if(this.completed=!0,r=this.xhr.responseText,t=this.wantHeaders?{"content-type":this.xhr.contentType}:void 0,e=void 0,this.responseType)return this.callback(null,r,e,t),!0;switch(this.xhr.contentType){case"application/x-www-form-urlencoded":this.callback(null,S.Util.Xhr.urlDecode(r),e,t);break;case"application/json":case"text/javascript":this.callback(null,JSON.parse(r),e,t);break;default:this.callback(null,r,e,t)}return!0},t.prototype.onXdrError=function(){var t;return this.completed?!0:(this.completed=!0,t=new S.ApiError(this.xhr,this.method,this.url),this.onError?this.onError(t,this.callback):this.callback(t),!0)},t}(),Q="X-Dropbox-User-Agent",M="X-Dropbox-Request-Id",S.DatastoresClient={_dispatchDatastoreXhr:function(t,e,r,n,i,o){var s,a,l;return l=new S.Util.Xhr(t,e),i.setRequestId&&(a="xxxxxxxxxxxxxxxx".replace(/x/g,function(){return Math.floor(16*Math.random()).toString(16)}),l.setHeader(M,a)),Y(null==r[Q]),r=te.clone(r),r[Q]="dropbox-js-datastore-sdk/"+u,l.setParams(r),l.signWithOauth(this._oauth,!1),s=function(t,e){return null!=t?o(t):o(null,n.fromJSON(e))},i.isLongPoll?this._dispatchLongPollXhr(l,s):this._dispatchXhr(l,s),l},_listDatastores:function(t){return this._dispatchDatastoreXhr("GET",this._urls.listDbs,{},k,{},t)},_getOrCreateDatastore:function(t,e){return this._dispatchDatastoreXhr("POST",this._urls.getOrCreateDb,{dsid:t},s,{},e)},_createDatastore:function(t,e,r){return this._dispatchDatastoreXhr("POST",this._urls.createDb,{dsid:t,key:e},s,{},r)},_getDatastore:function(t,e){return this._dispatchDatastoreXhr("GET",this._urls.getDb,{dsid:t},T,{},e)},_deleteDatastore:function(t,e){return this._dispatchDatastoreXhr("POST",this._urls.deleteDb,{handle:t},b,{setRequestId:!0},e)},_putDelta:function(t,e,r){return this._dispatchDatastoreXhr("POST",this._urls.putDelta,{handle:t,rev:e.rev,nonce:e.nonce,changes:JSON.stringify(e.changes)},X,{setRequestId:!0},r)},_getSnapshot:function(t,e){return this._dispatchDatastoreXhr("GET",this._urls.getSnapshot,{handle:t},C,{},e)},_datastoreAwait:function(e,r,n){return this._dispatchDatastoreXhr("POST",this._urls.datastoreAwait,{get_deltas:JSON.stringify({cursors:e}),list_datastores:JSON.stringify({token:r})},t,{isLongPoll:!0,setRequestId:!0},n)},getDatastoreManager:function(){var t,e=this;return null==this._datastoreManager&&(this._datastoreManager=new S.Datastore.DatastoreManager(this),t=function(){return e.authStep===S.Client.SIGNED_OUT?(e._datastoreManager.close(),e._datastoreManager=null,e.onAuthStepChange.removeListener(t)):void 0},this.onAuthStepChange.addListener(t)),this._datastoreManager}},function(){var t,e,r,n;r=S.DatastoresClient,n=[];for(e in r)t=r[e],n.push(S.Client.prototype[e]=t);return n}()}).call(this);
 
-// Generated by CoffeeScript 1.10.0
-var FileDB,
-  bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-  hasProp = {}.hasOwnProperty;
+"use strict";
 
-FileDB = (function() {
-  var File, Table, call, client, clone, join, joinCounter;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  function FileDB(apiKey) {
-    this.apiKey = apiKey;
-    this.allTables = {};
-  }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  joinCounter = 0;
+var File = function () {
+	function File(fileName, client) {
+		_classCallCheck(this, File);
 
-  FileDB.file = File;
+		this.fileName = fileName;
+		//this.sync = bind(this.sync, this);
+		this.syncing = false;
+		this.syncingAddedData = null;
+		this.timeExtension = 0;
+		this.timeLastRead = 0;
+		this.fileStats = null;
+		this.dataObject = {};
+		this.client = client;
+	}
 
-  client = null;
+	_createClass(File, [{
+		key: "query",
+		value: function query(param) {
+			return this.toDataArray(this.queryHelper(param));
+		}
+	}, {
+		key: "queryHelper",
+		value: function queryHelper(param) {
+			if (typeof param === "function") {
+				return this.queryByFunction(param);
+			} else if (param == null) {
+				return this.dataObject;
+			} else {
+				return this.queryByValue(param);
+			}
+		}
+	}, {
+		key: "remove",
+		value: function remove(param) {
+			var key, result;
+			this.scheduleSync();
+			result = this.queryHelper(param);
+			for (key in result) {
+				if (!result.hasOwnProperty(key)) continue;
+				delete this.dataObject[key];
+			}
 
-  FileDB.prototype.setupDropbox = function(callback) {
-    client = new Dropbox.Client({
-      "key": this.apiKey
-    });
-    return client.authenticate(null, (function(_this) {
-      return function(error) {
-        if (error != null) {
-          throw error;
-        }
-        return _this.loadTables(callback);
-      };
-    })(this));
-  };
+			return this.query(param);
+		}
+	}, {
+		key: "update",
+		value: function update(param, values) {
+			var field, id, newRow, result, row, updateData;
+			result = this.queryHelper(param);
 
-  FileDB.prototype.query = function(tableName, queryString, sortArray) {
-    if (queryString == null) {
-      queryString = null;
-    }
-    if (sortArray == null) {
-      sortArray = null;
-    }
-    return this.allTables[tableName].query(queryString, sortArray);
-  };
+			for (id in result) {
+				if (!result.hasOwnProperty(id)) continue;
+				row = result[id];
+				newRow = this.clone(row);
 
-  FileDB.prototype.queryAll = function(tableName, arg) {
-    var argQuery, argSort, ref, ref1, ref2;
-    ref = arg != null ? arg : {
-      argQuery: null,
-      argSort: null
-    }, argQuery = (ref1 = ref.argQuery) != null ? ref1 : null, argSort = (ref2 = ref.argSort) != null ? ref2 : null;
-    return this.query(tableName, argQuery, argSort);
-  };
+				for (field in values) {
+					if (!values.hasOwnProperty(field)) continue;
+					updateData = values[field];
+					newRow[field] = updateData;
+				}
+				this.remove(this.dataObject[id]);
+				this.insert(newRow);
+			}
 
-  FileDB.prototype.rowCount = function(tableName) {
-    return this.query(tableName).length;
-  };
+			return this.query(param);
+		}
+	}, {
+		key: "insert",
+		value: function insert(data) {
+			this.scheduleSync();
+			var nid = this.getNextId();
 
-  FileDB.prototype.createTable = function(tableName) {
-    return this.allTables[tableName] = new Table(tableName, true);
-  };
+			return this.dataObject[nid] = data;
+		}
+	}, {
+		key: "queryByFunction",
+		value: function queryByFunction(func) {
+			var id, ref, result, row;
+			result = {};
+			ref = this.dataObject;
 
-  FileDB.prototype.createTableWithData = function(tableName, data) {
-    var d, i, len;
-    this.createTable(tableName);
-    for (i = 0, len = data.length; i < len; i++) {
-      d = data[i];
-      this.insert(tableName, d);
-    }
-    return this.query(tableName);
-  };
+			//    console.debug('queryByFunction,  func:', func);
 
-  FileDB.prototype.insert = function(tableName, data) {
-    return this.allTables[tableName].insert(data);
-  };
+			for (id in ref) {
+				if (!ref.hasOwnProperty(id)) continue;
+				row = ref[id];
+				if (func(this.clone(row)) === true) {
+					result[id] = this.clone(row);
+				}
+			}
 
-  FileDB.prototype.isNew = function() {
-    return Object.keys(this.allTables).length === 0;
-  };
+			return result;
+		}
+	}, {
+		key: "queryByValue",
+		value: function queryByValue(params) {
+			var field, found, id, ref, result, row;
+			result = {};
+			ref = this.dataObject;
 
-  FileDB.prototype.loadTables = function(callback) {
-    return client.readdir("/", (function(_this) {
-      return function(error, files) {
-        var file, i, len;
-        joinCounter++;
-        for (i = 0, len = files.length; i < len; i++) {
-          file = files[i];
-          if (!(file[0] !== "_")) {
-            continue;
-          }
-          joinCounter++;
-          _this.allTables[file] = new Table(file, false, function() {
-            return join(callback);
-          });
-        }
-        return join(callback);
-      };
-    })(this));
-  };
+			//    console.debug('queryByValue,  params:', params);
 
-  clone = function(obj) {
-    var new_obj, str;
-    str = JSON.stringify(obj);
-    return new_obj = JSON.parse(str);
-  };
+			for (id in ref) {
+				if (!ref.hasOwnProperty(id)) continue;
+				row = ref[id];
+				found = null;
 
-  join = function(callback) {
-    joinCounter--;
-    if (joinCounter === 0) {
-      return setTimeout(callback, 0);
-    }
-  };
+				for (field in params) {
+					if (!params.hasOwnProperty(field)) continue;
+					if (row[field] === params[field]) {
+						if (found === null) {
+							// first call, set found to true;
+							found = true;
+						} else {
+							// since all conditions must be true,
+							// chain with previously found conditions
+							// for this row
+							found = found && true;
+						}
+					} else {
+						found = false;
+					}
+				}
 
-  call = function(func) {
-    return typeof func === "function" ? func() : void 0;
-  };
+				if (!!found) {
+					result[id] = this.clone(row);
+				}
+			}
 
-  Table = (function() {
-    function Table(tableName, create, callbackOnLoad) {
-      var file, tableFile;
-      if (create == null) {
-        create = false;
-      }
-      this.tableFileData = {};
-      this.dataFileObjects = [];
-      this.data = [];
-      tableFile = new File(tableName);
-      if (create) {
-        tableFile.readFile();
-        this.data[0] = {};
-        this.data[0].maxSize = 62500;
-        this.data[0].dataFiles = [];
-        file = this.createNewDatafile();
-        this.dataFileObjects.push(file);
-        this.data[0].dataFiles.push(file.getName());
-        tableFile.insert(this.data[0]);
-        this.tableFileData = this.data[0];
-        call(callbackOnLoad);
-      } else {
-        tableFile.readFile((function(_this) {
-          return function() {
-            var df, f, i, len, ref, results;
-            _this.data = tableFile.getDataArray();
-            _this.tableFileData = _this.data[0];
-            ref = _this.tableFileData.data_files;
-            results = [];
-            for (i = 0, len = ref.length; i < len; i++) {
-              df = ref[i];
-              f = new File(df);
-              _this.dataFileObjects.push(f);
-              results.push(f.readFile(callbackOnLoad));
-            }
-            return results;
-          };
-        })(this));
-      }
-    }
+			return result;
+		}
+	}, {
+		key: "getNextId",
+		value: function getNextId() {
+			var increment, time;
+			time = new Date().getTime();
+			this.timeExtension++;
+			increment = this.timeExtension % 1000;
+			if (increment < 10) {
+				return time + "00" + increment;
+			} else if (increment < 100) {
+				return time + "0" + increment;
+			} else {
+				return "" + time + increment;
+			}
+		}
+	}, {
+		key: "scheduleSync",
+		value: function scheduleSync() {
+			var _this = this;
 
-    Table.prototype.updateTableData = function() {
-      var dataFile, dfo, i, len, ref;
-      dataFile = [];
-      ref = this.dataFileObjects;
-      for (i = 0, len = ref.length; i < len; i++) {
-        dfo = ref[i];
-        dataFile.push(dfo.getName());
-      }
-      return tableFile.update(void 0, {
-        'data_files': dataFiles
-      });
-    };
+			if (!this.syncing) {
+				this.syncing = true;
+				return setTimeout(function () {
+					_this.sync();
+				}, 0);
+			}
+		}
+	}, {
+		key: "sync",
+		value: function sync() {
+			var _this2 = this;
 
-    Table.prototype.insert = function(insertData) {
-      var df;
-      df = this.dataFileObjects[this.dataFileObjects.length - 1];
-      if (df.getSize() > this.tableFileData.maxSize) {
-        df = createNewDatafile();
-        this.dataFileObjects.push(df);
-        this.tableFileData.dataFiles.push(df.getName());
-        this.updateTableData();
-      }
-      return df.insert(insertData);
-    };
+			var oldVersionTag, time, promise;
+			this.syncing = false;
+			time = new Date().getTime();
+			oldVersionTag = "0";
 
-    Table.prototype.query = function(queryString, sort) {
-      var dfo, i, j, len, len1, ref, result, s;
-      if (queryString == null) {
-        queryString = null;
-      }
-      if (sort == null) {
-        sort = null;
-      }
-      result = [];
-      ref = this.dataFileObjects;
-      for (i = 0, len = ref.length; i < len; i++) {
-        dfo = ref[i];
-        result = result.concat(dfo.query(queryString));
-      }
-      if ((sort != null) instanceof Array) {
-        for (j = 0, len1 = sort.length; j < len1; j++) {
-          s = sort[j];
-          result.sort(sortResults(s[0], s[1]));
-        }
-      }
-      return result;
-    };
+			if (this.fileStats != null) {
+				oldVersionTag = this.fileStats.versionTag;
+			}
 
-    Table.prototype.createNewDatafile = function() {
-      var file, name;
-      name = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (function(_this) {
-        return function(c) {
-          var r, v;
-          r = Math.random() * 16 | 0;
-          v = c === 'x' ? r : r & 0x3 | 0x8;
-          return v.toString(16);
-        };
-      })(this));
-      file = new File("_" + name);
-      file.readFile();
-      return file;
-    };
+			this.readStat().then(function (value) {
+				var oldData;
+				if (oldVersionTag !== _this2.fileStats.versionTag) {
+					oldData = _this2.clone(_this2.dataObject);
 
-    Table.prototype.sortResults = function(field, order) {
-      if (order == null) {
-        order = null;
-      }
-      return (function(_this) {
-        return function(x, y) {
-          var a, b;
-          a = x[field];
-          b = y[field];
-          if (a(typeof "string")) {
-            a = a.toLowerCase();
-          }
-          if (b(typeof "string")) {
-            b = b.toLowerCase();
-          }
-          if (order === "DESC") {
-            if (a === b) {
-              return 0;
-            } else if (a < b) {
-              return 1;
-            } else {
-              return -1;
-            }
-          } else {
-            if (a === b) {
-              return 0;
-            } else if (a > b) {
-              return 1;
-            } else {
-              return -1;
-            }
-          }
-        };
-      })(this);
-    };
+					_this2.readFile().then(function (data) {
+						_this2.dataObject = _this2.merge(oldData, _this2.dataObject);
+						_this2.timeLastRead = time;
+						return _this2.writeFile();
+					});
+				}
+			});
+		}
+	}, {
+		key: "getVersionTag",
+		value: function getVersionTag() {
+			return this.fileStats.versionTag;
+		}
+	}, {
+		key: "getSize",
+		value: function getSize() {
+			var syncingLength;
+			syncingLength = 0;
+			if (this.syncingAddedData != null) {
+				syncingLength = JSON.stringify(this.syncingAddedData).length;
+			}
 
-    return Table;
+			return JSON.stringify(this.dataObject).length + syncingLength;
+		}
+	}, {
+		key: "getName",
+		value: function getName() {
+			return this.fileName;
+		}
+	}, {
+		key: "getData",
+		value: function getData() {
+			return this.clone(this.dataObject);
+		}
+	}, {
+		key: "getDataArray",
+		value: function getDataArray() {
+			return this.toDataArray(this.dataObject);
+		}
+	}, {
+		key: "toDataArray",
+		value: function toDataArray(object) {
+			var array, key;
+			array = [];
+			for (key in object) {
+				array.push(object[key]);
+			}
+			return this.clone(array);
+		}
 
-  })();
+		/**
+   * reads file contents into local variable representation.
+   * Returns promise to listen on.
+   */
 
-  File = (function() {
-    var query, queryByFunction, queryByValue;
+	}, {
+		key: "readFile",
+		value: function readFile() {
+			var _this3 = this;
 
-    function File(fileName) {
-      this.fileName = fileName;
-      this.sync = bind(this.sync, this);
-      this.syncing = false;
-      this.syncingAddedData = null;
-      this.timeExtension = 0;
-      this.timeLastRead = 0;
-      this.fileStats = null;
-      this.dataObject = {};
-    }
+			return new Promise(function (resolve, reject) {
+				_this3.client.readFile(_this3.fileName, function (err, data, stats) {
+					if (_this3.error(err)) {
+						_this3.dataObject = JSON.parse(data);
+						_this3.fileStats = stats;
+						resolve(_this3.dataObject);
+					}
+				});
+			});
+		}
 
-    File.prototype.query = function(param) {
-      return this.toDataArray(query(param));
-    };
+		/**
+   * writes local data representation into file.
+   * Returns promise to listen on.
+   */
 
-    query = function(param) {
-      if (typeof param === "function") {
-        return queryByFunction(param);
-      } else if (param == null) {
-        return this.dataObject;
-      } else {
-        return queryByValue(param);
-      }
-    };
+	}, {
+		key: "writeFile",
+		value: function writeFile() {
+			var _this4 = this;
 
-    File.prototype.remove = function(param) {
-      var key, result;
-      this.scheduleSync();
-      result = query(param);
-      for (key in result) {
-        if (!hasProp.call(result, key)) continue;
-        delete this.dataObject[key];
-      }
-      return this.query(param);
-    };
+			return new Promise(function (resolve, reject) {
+				_this4.client.writeFile(_this4.fileName, JSON.stringify(_this4.dataObject), function (err, stats) {
+					if (_this4.error(err)) {
+						_this4.fileStats = stats;
+						resolve(stats);
+					}
+				});
+			});
+		}
+	}, {
+		key: "readStat",
+		value: function readStat() {
+			var _this5 = this;
 
-    File.prototype.update = function(param, values) {
-      var field, id, newRow, result, row, updateData;
-      result = query(param);
-      for (id in result) {
-        if (!hasProp.call(result, id)) continue;
-        row = result[id];
-        newRow = clone(row);
-        for (field in values) {
-          if (!hasProp.call(values, field)) continue;
-          updateData = values[field];
-          newRow[field] = updateData;
-        }
-        this.remove(this.dataObject[id]);
-        this.insert(newRow);
-      }
-      return this.query(param);
-    };
+			return new Promise(function (resolve, reject) {
+				_this5.client.stat(_this5.fileName, function (err, stats) {
+					if (_this5.error(err)) {
+						_this5.fileStats = stats;
+						resolve(stats);
+					}
+				});
+			});
+		}
+	}, {
+		key: "error",
+		value: function error(err) {
+			var result;
+			result = true;
+			if (err != null) {
+				switch (err.status) {
+					case 404:
+						result = false;
+						console.log("File not found - creating new file");
+						this.writeFile();
+						break;
+					case 503:
+						result = false;
+						console.log("Too many requests - try again in 1000ms");
+						setTimeout(this.sync, 1000);
+						break;
+					default:
+						console.error(err);
+						result = false;
+				}
+			}
 
-    File.prototype.insert = function(data) {
-      var nid;
-      this.scheduleSync();
-      nid = this.getNextId();
-      return this.dataObject[nid] = data;
-    };
+			return result;
+		}
+	}, {
+		key: "merge",
+		value: function merge(objA, objB) {
+			var key, objMerged, time;
+			console.log("MERGING");
+			objMerged = {};
+			time = 0;
 
-    queryByFunction = function(func) {
-      var id, ref, result, row;
-      result = {};
-      ref = this.dataObject;
-      for (id in ref) {
-        if (!hasProp.call(ref, id)) continue;
-        row = ref[id];
-        if (func(clone(row)) === true) {
-          result[id] = row;
-        }
-      }
-      return result;
-    };
+			for (key in objB) {
+				if (!objB.hasOwnProperty(key)) continue;
 
-    queryByValue = function(params) {
-      var entry, field, found, id, ref, result, row;
-      result = {};
-      ref = this.dataObject;
-      for (id in ref) {
-        if (!hasProp.call(ref, id)) continue;
-        row = ref[id];
-        found = false;
-        for (field in params) {
-          if (!hasProp.call(params, field)) continue;
-          entry = params[field];
-          if (row[field] === entry(found = true)) {
+				if (objA[key] != null) {
+					objMerged[key] = objB[key];
+				}
 
-          } else {
-            found = false;
-          }
-        }
-        if (found) {
-          result[id] = clone(row);
-        }
-      }
-      return result;
-    };
+				if (objA[key] == null) {
+					time = parseInt(key.slice(0, 13));
 
-    File.prototype.getNextId = function() {
-      var increment, time;
-      time = (new Date()).getTime();
-      this.timeExtension++;
-      increment = this.timeExtension % 1000;
-      if (increment < 10) {
-        return time + "00" + increment;
-      } else if (increment < 100) {
-        return time + "0" + increment;
-      } else {
-        return "" + time + increment;
-      }
-    };
+					if (time > this.timeLastRead) {
+						objMerged[key] = objA[key];
+					}
+				}
+			}
 
-    File.prototype.scheduleSync = function() {
-      if (!this.syncing) {
-        this.syncing = true;
-        return setTimeout(this.sync, 0);
-      }
-    };
+			return objMerged;
+		}
 
-    File.prototype.sync = function() {
-      var oldVersionTag, time;
-      this.syncing = false;
-      time = (new Date()).getTime();
-      oldVersionTag = "0";
-      if (this.fileStats != null) {
-        oldVersionTag = this.fileStats.versionTag;
-      }
-      return this.readStat((function(_this) {
-        return function() {
-          var oldData;
-          if (oldVersionTag !== _this.fileStats.versionTag) {
-            oldData = clone(_this.dataObject);
-            return _this.readFile(function() {
-              _this.dataObject = _this.merge(oldData, _this.dataObject);
-              _this.timeLastRead = time;
-              return _this.writeFile();
-            });
-          }
-        };
-      })(this));
-    };
+		/**
+   * Helper function to create a clone of given object.
+   */
 
-    File.prototype.getVersionTag = function() {
-      return this.fileStats.versionTag;
-    };
+	}, {
+		key: "clone",
+		value: function clone(obj) {
+			var str = JSON.stringify(obj);
+			return JSON.parse(str);
+			// results in NaN and undefined values:
+			/*var new_obj = {};
+   	for(var key in obj) {
+   		if( obj.hasOwnProperty(key) ) {
+   			new_obj[key] = obj[key];
+   		}
+   	}
+   	return new_obj;*/
+			s;
+		}
+	}, {
+		key: "call",
+		value: function call(func) {
+			return typeof func === "function" ? func() : void 0;
+		}
+	}]);
 
-    File.prototype.getSize = function() {
-      var syncingLength;
-      syncingLength = 0;
-      if (this.syncingAddedData != null) {
-        syncingLength = JSON.stringify(this.syncingAddedData).length;
-      }
-      return JSON.stringify(this.dataObject).length + syncingLength;
-    };
+	return File;
+}();
 
-    File.prototype.getName = function() {
-      return this.fileName;
-    };
+var Table = function () {
 
-    File.prototype.getData = function() {
-      return clone(this.dataObject);
-    };
+	// TODO callback with promise
+	function Table(tableName, create, client, promiseResolve, promiseReject) {
+		var _this6 = this;
 
-    File.prototype.getDataArray = function() {
-      return this.toDataArray(this.dataObject);
-    };
+		_classCallCheck(this, Table);
 
-    File.prototype.toDataArray = function(object) {
-      var array, key;
-      array = [];
-      for (key in object) {
-        array.push(object[key]);
-      }
-      return clone(array);
-    };
+		create = create || false;
+		promiseResolve = promiseResolve || false;
+		promiseReject = promiseReject || false;
+		var file, tableFile;
 
-    File.prototype.readFile = function(callback) {
-      return client.readFile(this.fileName, (function(_this) {
-        return function(err, data, stats) {
-          if (_this.error(err, callback)) {
-            _this.dataObject = JSON.parse(data);
-            _this.fileStats = stats;
-            return call(callback);
-          }
-        };
-      })(this));
-    };
+		this.tableFileData = {};
+		this.dataFileObjects = [];
+		this.data = [];
+		this.client = client;
+		this.tableName = tableName; // TODO debug
+		tableFile = new File(tableName, client);
 
-    File.prototype.writeFile = function(callback) {
-      return client.writeFile(this.fileName, JSON.stringify(this.dataObject), (function(_this) {
-        return function(err, stats) {
-          var file_stats;
-          if (_this.error(err, callback)) {
-            file_stats = stats;
-            return call(callback);
-          }
-        };
-      })(this));
-    };
+		if (create) {
+			var promise = tableFile.readFile();
+			this.data[0] = {
+				maxSize: 62500, // 62500 bytes = 50kB
+				dataFiles: []
+			};
+			file = this.createNewDatafile();
+			this.dataFileObjects.push(file);
+			this.data[0].dataFiles.push(file.getName());
+			tableFile.insert(this.data[0]);
+			this.tableFileData = this.data[0];
 
-    File.prototype.readStat = function(callback) {
-      return client.stat(this.fileName, (function(_this) {
-        return function(err, stats) {
-          if (_this.error(err, callback)) {
-            _this.fileStats = stats;
-            return call(callback);
-          }
-        };
-      })(this));
-    };
+			promise.then(function (data) {
+				if (promiseResolve) {
+					promiseResolve(file.getName());
+				}
+			});
+		} else {
+			tableFile.readFile().then(function (data) {
+				var df, f, results;
+				_this6.data = tableFile.getDataArray();
+				_this6.tableFileData = _this6.data[0];
+				var promises = [];
 
-    File.prototype.error = function(err, callback) {
-      var result;
-      result = true;
-      if (err != null) {
-        switch (err.status) {
-          case 404:
-            result = false;
-            console.log("File not found - creating new file");
-            this.writeFile(callback);
-            break;
-          case 503:
-            result = false;
-            console.log("Too many requests - try again in 1000ms");
-            setTimeout(this.sync, 1000);
-            break;
-          default:
-            console.error(err);
-            result = false;
-        }
-      }
-      return result;
-    };
+				var _iteratorNormalCompletion = true;
+				var _didIteratorError = false;
+				var _iteratorError = undefined;
 
-    File.prototype.merge = function(objA, objB) {
-      var key, objMerged, time;
-      console.log("MERGING");
-      objMerged = {};
-      time = 0;
-      for (key in objB) {
-        if (!hasProp.call(objB, key)) continue;
-        if (objA[key] != null) {
-          objMerged[key] = objB[key];
-        }
-        if (objA[key] == null) {
-          time = parseInt(key.slice(0, 13));
-          if (time > this.timeLastRead) {
-            objMerged[key] = objA[key];
-          }
-        }
-      }
-      return objMerged;
-    };
+				try {
+					for (var _iterator = _this6.tableFileData.data_files[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+						df = _step.value;
 
-    return File;
+						f = new File(df, _this6.client);
+						_this6.dataFileObjects.push(f);
+						promises.push(f.readFile());
+					}
+				} catch (err) {
+					_didIteratorError = true;
+					_iteratorError = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion && _iterator.return) {
+							_iterator.return();
+						}
+					} finally {
+						if (_didIteratorError) {
+							throw _iteratorError;
+						}
+					}
+				}
 
-  })();
+				Promise.all(promises).then(function (values) {
+					if (promiseResolve) {
+						console.debug("[Table.constructor] successfully loaded files for", tableName, values);
+						promiseResolve(values);
+					}
+				}).catch(function (error) {
+					console.error("[Table.constructor] error when loading file:", error);
+					if (promiseReject) {
+						promiseReject(f.getName());
+					}
+				});
+			});
+		}
+	}
 
-  return FileDB;
+	_createClass(Table, [{
+		key: "updateTableData",
+		value: function updateTableData() {
+			var dataFile, dfo;
+			dataFile = [];
 
-})();
+			var _iteratorNormalCompletion2 = true;
+			var _didIteratorError2 = false;
+			var _iteratorError2 = undefined;
 
-//# sourceMappingURL=fileDB.js.map
+			try {
+				for (var _iterator2 = this.dataFileObjects[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+					dfo = _step2.value;
 
+					dataFile.push(dfo.getName());
+				}
+			} catch (err) {
+				_didIteratorError2 = true;
+				_iteratorError2 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion2 && _iterator2.return) {
+						_iterator2.return();
+					}
+				} finally {
+					if (_didIteratorError2) {
+						throw _iteratorError2;
+					}
+				}
+			}
+
+			return tableFile.update(void 0, {
+				'data_files': dataFiles
+			});
+		}
+	}, {
+		key: "insert",
+		value: function insert(insertData) {
+			var df = this.dataFileObjects[this.dataFileObjects.length - 1];
+
+			if (df.getSize() > this.tableFileData.maxSize) {
+				df = createNewDatafile();
+				this.dataFileObjects.push(df);
+				this.tableFileData.dataFiles.push(df.getName());
+				this.updateTableData();
+			}
+
+			return df.insert(insertData);
+		}
+	}, {
+		key: "query",
+		value: function query(queryString, sort, start, limit) {
+			var dfo, result, s;
+			if (!queryString) {
+				queryString = null;
+			}
+			if (!sort) {
+				sort = null;
+			}
+
+			//    console.debug("FileDB.query", this.tableName, queryString, sort);
+
+			result = [];
+			var _iteratorNormalCompletion3 = true;
+			var _didIteratorError3 = false;
+			var _iteratorError3 = undefined;
+
+			try {
+				for (var _iterator3 = this.dataFileObjects[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+					dfo = _step3.value;
+
+					result = result.concat(dfo.query(queryString));
+				}
+
+				// there are sorting params
+			} catch (err) {
+				_didIteratorError3 = true;
+				_iteratorError3 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion3 && _iterator3.return) {
+						_iterator3.return();
+					}
+				} finally {
+					if (_didIteratorError3) {
+						throw _iteratorError3;
+					}
+				}
+			}
+
+			if (sort != null && sort instanceof Array) {
+				var _iteratorNormalCompletion4 = true;
+				var _didIteratorError4 = false;
+				var _iteratorError4 = undefined;
+
+				try {
+					for (var _iterator4 = sort[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+						s = _step4.value;
+
+						result.sort(this.sortResults(s[0], s.length > 1 ? s[1] : null));
+					}
+				} catch (err) {
+					_didIteratorError4 = true;
+					_iteratorError4 = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion4 && _iterator4.return) {
+							_iterator4.return();
+						}
+					} finally {
+						if (_didIteratorError4) {
+							throw _iteratorError4;
+						}
+					}
+				}
+			}
+
+			// limit and offset
+			start = start && typeof start === "number" ? start : null;
+			limit = limit && typeof limit === "number" ? limit : null;
+
+			if (start && limit) {
+				result = result.slice(start, start + limit);
+			} else if (start) {
+				result = result.slice(start);
+			} else if (limit) {
+				result = result.slice(start, limit);
+			}
+
+			return result;
+		}
+	}, {
+		key: "createNewDatafile",
+		value: function createNewDatafile() {
+			var file, name;
+			name = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+				var r, v;
+				r = Math.random() * 16 | 0;
+				v = c === 'x' ? r : r & 0x3 | 0x8;
+				return v.toString(16);
+			});
+
+			file = new File("_" + name, this.client);
+			file.readFile();
+			// TODO check if we need to wait for file reading here
+			return file;
+		}
+	}, {
+		key: "sortResults",
+		value: function sortResults(field, order) {
+			if (!order) {
+				order = null;
+			}
+
+			return function (x, y) {
+				// case insensitive comparison for string values
+				var v1 = typeof x[field] === "string" ? x[field].toLowerCase() : x[field],
+				    v2 = typeof y[field] === "string" ? y[field].toLowerCase() : y[field];
+
+				if (order === "DESC") {
+					return v1 == v2 ? 0 : v1 < v2 ? 1 : -1;
+				} else {
+					return v1 == v2 ? 0 : v1 > v2 ? 1 : -1;
+				}
+			};
+		}
+	}, {
+		key: "call",
+		value: function call(func) {
+			return typeof func === "function" ? func() : void 0;
+		}
+	}]);
+
+	return Table;
+}();
+
+var FileDB = function () {
+	function FileDB(apiKey) {
+		_classCallCheck(this, FileDB);
+
+		this.apiKey = apiKey;
+		this.allTables = {};
+		FileDB.file = File;
+		this.client = null;
+	}
+
+	/**
+  * initializes authentication to Dropbox API, and trigggers
+  * loading of tables from Dropbox directory.
+  */
+
+
+	_createClass(FileDB, [{
+		key: "setupDropbox",
+		value: function setupDropbox(callback) {
+			var _this7 = this;
+
+			var promise = new Promise(function (resolve, reject) {
+				_this7.client = new Dropbox.Client({
+					"key": _this7.apiKey
+				});
+
+				_this7.client.authenticate(null, function (error) {
+					if (!!error) {
+						throw error;
+					}
+					_this7.loadTables(resolve, reject);
+				});
+			});
+
+			promise.then(function (value) {
+				console.debug("[setupDropbox] all promises resolved, calling callback function");
+				callback();
+			}).catch(function (error) {
+				console.error("[setupDropbox] Error on authentication or table initialization.", error);
+			});
+		}
+
+		/**
+   * Simple data table query. Deprecated in localstoragedb,
+   * use queryAll instead consistently.
+   * @deprecated
+   */
+
+	}, {
+		key: "query",
+		value: function query(tableName, _query, sort, start, limit) {
+			if (!_query) _query = null;
+			if (!sort) sort = null;
+			if (!start) start = null;
+			if (!limit) limit = null;
+
+			return this.allTables[tableName].query(_query, sort, start, limit);
+		}
+
+		/**
+   * Simple data table query.
+   */
+
+	}, {
+		key: "queryAll",
+		value: function queryAll(tableName, params) {
+			if (!params) {
+				return this.query(tableName);
+			} else {
+				return this.query(tableName, params.hasOwnProperty('query') ? params.query : null, params.hasOwnProperty('sort') ? params.sort : null, params.hasOwnProperty('start') ? params.start : null, params.hasOwnProperty('limit') ? params.limit : null);
+			}
+		}
+
+		/**
+   * Returns number of rows for given table.
+   */
+
+	}, {
+		key: "rowCount",
+		value: function rowCount(tableName) {
+			return this.query(tableName).length;
+		}
+
+		/**
+   * Creates a new table with given name.
+   */
+
+	}, {
+		key: "createTable",
+		value: function createTable(tableName) {
+			return this.allTables[tableName] = new Table(tableName, true, this.client);
+		}
+
+		/**
+   * Creates a new table with given name, and fills in
+   * given data as initial data set.
+   */
+
+	}, {
+		key: "createTableWithData",
+		value: function createTableWithData(tableName, data) {
+			var d, i, len;
+			this.createTable(tableName);
+			for (i = 0, len = data.length; i < len; i++) {
+				d = data[i];
+				this.insert(tableName, d);
+			}
+			return this.query(tableName);
+		}
+
+		/**
+   * Insert data row into given table.
+   */
+
+	}, {
+		key: "insert",
+		value: function insert(tableName, data) {
+			return this.allTables[tableName].insert(data);
+		}
+
+		/**
+   * Returns true if database was just created
+   * with initialization of this instance.
+   */
+
+	}, {
+		key: "isNew",
+		value: function isNew() {
+			return Object.keys(this.allTables).length === 0;
+		}
+
+		/**
+   * Load table data from Dropbox directory into
+   * local memory, preparing the database for operations.
+   */
+
+	}, {
+		key: "loadTables",
+		value: function loadTables(resolve, reject) {
+			var _this8 = this;
+
+			this.client.readdir("/", function (error, files) {
+				if (!!error) {
+					reject(error);
+				}
+
+				var file,
+				    promises = [];
+
+				var _iteratorNormalCompletion5 = true;
+				var _didIteratorError5 = false;
+				var _iteratorError5 = undefined;
+
+				try {
+					for (var _iterator5 = files[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+						file = _step5.value;
+
+						// files beginning with _ are containing data,
+						// tables do not have prefix - we need the tables here
+						if (file[0] === "_") {
+							continue;
+						}
+
+						// add a promise for this file to promises list
+						console.debug("[loadTables] add promise for file", file);
+						promises.push(new Promise(function (_resolve, _reject) {
+							_this8.allTables[file] = new Table(file, false, _this8.client, _resolve, _reject);
+						}));
+					}
+
+					// wait for all files to be loaded successfully
+				} catch (err) {
+					_didIteratorError5 = true;
+					_iteratorError5 = err;
+				} finally {
+					try {
+						if (!_iteratorNormalCompletion5 && _iterator5.return) {
+							_iterator5.return();
+						}
+					} finally {
+						if (_didIteratorError5) {
+							throw _iteratorError5;
+						}
+					}
+				}
+
+				Promise.all(promises).then(function (values) {
+					console.debug("[loadTables] all files loaded successfully, values:", values);
+					resolve(values);
+				}).catch(function (error) {
+					console.debug("[loadTables] failed loading at least one file, error of failed promise:", error);
+					reject(error);
+				});
+			});
+		}
+	}]);
+
+	return FileDB;
+}();
 "use strict";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -887,7 +1189,8 @@ function getSettings(settingName) {
 	var props = db.query('settings', query);
 	var propsAll = db.query('settings', null); //TODO delete
 
-	console.debug("getSettings settingName", settingName, query, props, propsAll);
+	//TODO remove debug
+	//console.debug("getSettings settingName", settingName, query, props, propsAll);
 
 	if (query) {
 
@@ -1119,7 +1422,6 @@ function convertJSONtoCSV(JSONData) {
  *                                 *
  * CONTRIBUTORS                    *
  * Stephan Giesau                  *
- * Nicolas Marin                   *
  ***********************************/
 
 /**
@@ -1172,127 +1474,13 @@ function getAccountBalance(accountID) {
   var accItems = db.queryAll('item', { query: { account: accountID, deleted: false } });
   var accInitBalance = getAccounts(accountID).initial_balance;
   var accBalance = 0;
-  console.debug('getAccountBalance', accountID, accItems.length, accItems); //TODO
-  for (var i = 0; i < accItems.length; i++) {
 
+  for (var i = 0; i < accItems.length; i++) {
     accBalance += accItems[i].price;
   }
 
   return accBalance + accInitBalance;
 }
-
-// page: stats-chartist
-// handler for date changes in selection
-function onStatsDateChange(e) {
-  var date = $(e.delegateTarget).val();
-  var validDate;
-
-  if (date == undefined || date == null || date.length == 0 || Date.parse(date) == NaN) {
-    validDate = 0;
-  } else {
-    validDate = Date.parse(date);
-  }
-
-  // start or end
-  if ($(e.delegateTarget).attr('id') == "form-stats-date-start") Charts.filter.timestamp.start = validDate;else Charts.filter.timestamp.end = validDate;
-
-  // update charts
-  Charts.draw();
-}
-
-// all Charts
-var Charts = {
-  // selection filter
-  filter: {
-    timestamp: {
-      start: 0,
-      end: Date.now()
-    },
-    account: ""
-  },
-
-  // filter functions
-  filterFunc: {
-    timestamp: function timestamp(item) {
-      return Charts.filter.timestamp.start <= item.timestamp && Charts.filter.timestamp.end >= item.timestamp;
-    },
-    account: function account() {
-      return Charts.filter.account === "" || Charts.filter.account == item.account;
-    },
-    all: function all(item) {
-      return Charts.filterFunc.timestamp(item) && Charts.filterFunc.account(item);
-    }
-  },
-
-  // draw all charts
-  draw: function draw() {
-    this.categoryPie();
-    this.weekdayBar();
-  },
-
-  // category chart
-  categoryPie: function categoryPie() {
-    var _data = { labels: [], series: [] };
-    var total = 0;
-
-    // query data: categories and for each sum price and leave out categories with no items
-    var _cats = db.queryAll('category', { sort: [['order', 'ASC']] });
-    $.each(_cats, function (i, cat) {
-      var _items = db.query('item', function (item) {
-        return item.deleted == false && item.price < 0 && item.category === cat.uniqueid && Charts.filterFunc.all(item);
-      });
-
-      if (_items.length > 0) {
-        var index = _data.labels.length;
-        _data.labels[index] = cat.description;
-        _data.series[index] = 0;
-        $.each(_items, function (j, item) {
-          _data.series[index] += item.price;
-        });
-        total += _data.series[index];
-      }
-    });
-
-    // set option for labels with name and value
-    var _options = {
-      labelInterpolationFnc: function labelInterpolationFnc(value, index) {
-        //return value + ": " + _data.series[index].toFixed(2);
-        return value + ': ' + Math.round(_data.series[index] / total * 100) + '%';
-      },
-      labelOffset: 40
-    };
-
-    // draw Pie chart (in .exp-stats-pie)
-    new Chartist.Pie(".exp-stats-pie", _data, _options);
-  },
-
-  // per weekday chart
-  weekdayBar: function weekdayBar() {
-    var _data = { labels: [], series: [[0, 0, 0, 0, 0, 0, 0]] };
-    _data.labels = i18n.weekday;
-
-    // set options (dfault)
-    var _options = {
-      high: 50,
-      low: -50
-    };
-
-    // query data
-    var _items = db.query('item', Charts.filterFunc.all);
-    $.each(_items, function (i, item) {
-      _data.series[0][new Date(item.timestamp).getDay()] += item.price;
-    });
-
-    // set bounds for chart
-    $.each(_data.series[0], function (i, v) {
-      _options.high = v > _options.high ? v : _options.high;
-      _options.low = v < _options.low ? v : _options.low;
-    });
-
-    // draw chart (in .exp-stats-weekday)
-    new Chartist.Bar('.exp-stats-weekday', _data, _options);
-  }
-};
 'use strict';
 
 /***********************************
@@ -1617,6 +1805,9 @@ db.setupDropbox(function () {
 	if (db.isNew()) {
 		createLocalDatabase();
 	}
+
+	$('.splash-screen').hide();
+
 	initApp();
 });
 
@@ -2226,7 +2417,6 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 
 	// add page title
 	$(page.navbarInnerContainer).find('#expenses-list-title').html(page.query.title.replace('+', ' '));
-	console.debug("updateItemList query", itemQuery);
 	// add items to list
 	createItemListElements($(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID, infiniteScrollReset);
 }
@@ -2468,6 +2658,7 @@ function initApp() {
 		$('#menu-list').empty();
 		var entriesAvailable = false;
 
+		// TODO parameter to set amount of months to be shown
 		for (var i = 15; i >= 0; i--) {
 
 			startDate.setFullYear(currentYear, currentMonth);
@@ -2636,7 +2827,7 @@ function initApp() {
 	// expenses-list                                                //
 	//////////////////////////////////////////////////////////////////
 	expApp.onPageInit('expenses-list', function (page) {
-		console.debug("in expenses list");
+
 		// save page query for later usage in globals.temp
 		var tempID = createUniqueid(Date.now(), page.query.request);
 		window.globals.temp[tempID] = page;
@@ -2921,31 +3112,6 @@ function initApp() {
 				expApp.alert('The data import into <strong>' + importTableName + '</strong> was completed. Updated <strong>' + importStats.updated + '</strong> existing entries, created <strong>' + importStats.created + '</strong> new entries.', 'Import completed');
 			}
 		});
-	});
-
-	//////////////////////////////////////////////////////////////////
-	// stats-chartist                                               //
-	//////////////////////////////////////////////////////////////////
-	expApp.onPageInit('stats-chartist', function (page) {
-
-		// handler for selection
-		$("#form-stats-date-start").on('change', onStatsDateChange);
-		$("#form-stats-date-end").on('change', onStatsDateChange);
-
-		// draw charts
-		Charts.draw();
-
-		//TODO remove debug output
-		if (window.globals.properties.debug) {
-			// fill item list
-			var items = db.query('item');
-			for (var i = 0; i < items.length; i++) {
-
-				row = items[i];
-
-				$('#stats-item-list').append('<tr>' + '  <td>' + row.uniqueid + '</td>' + '  <td>' + row.timestamp + '</td>' + '  <td>' + row.lastupdate + '</td>' + '  <td>' + row.synchronized + '</td>' + '  <td>' + row.account + '</td>' + '  <td>' + row.category + '</td>' + '  <td>' + row.price + '</td>' + '  <td>' + row.description + '</td>' + '  <td>' + row.deleted + '</td>' + '  <td>' + row.version + '</td>' + '</tr>');
-			}
-		}
 	});
 
 	//////////////////////////////////////////////////////////////////

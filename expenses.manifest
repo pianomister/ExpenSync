@@ -1,7 +1,6 @@
 CACHE MANIFEST
 dist/main.min.css
-dist/vendor.min.js
-dist/app.min.js
+dist/main.js
 fonts/icomoon.eot
 fonts/icomoon.svg
 fonts/icomoon.ttf

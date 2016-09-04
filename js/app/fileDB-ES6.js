@@ -359,22 +359,27 @@ class Table {
 				var df, f, results;
 				this.data = tableFile.getDataArray();
 				this.tableFileData = this.data[0];
-				//results = [];
+				var promises = [];
 
 				for (df of this.tableFileData.data_files) {
 					f = new File(df, this.client);
 					this.dataFileObjects.push(f);
-          f.readFile()
-          .then((data) => {
-            if (promiseResolve) {
-              promiseResolve(f.getName());
-            }
-            //results.push(data);
-          });
+          promises.push(f.readFile());
 				}
-        // TODO check if we need to catch this call, too
-        // TODO check if this is needed at all :D
-				//return results;
+
+        Promise.all(promises)
+        .then((values) => {
+          if (promiseResolve) {
+            console.debug("[Table.constructor] successfully loaded files for", tableName, values);
+            promiseResolve(values);
+          }
+        })
+        .catch((error) => {
+          console.error("[Table.constructor] error when loading file:", error);
+          if (promiseReject) {
+            promiseReject(f.getName());
+          }
+        });
 			});
 		}
 	}
