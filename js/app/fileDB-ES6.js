@@ -1,8 +1,9 @@
+// TODO insertOrUpdate method
+
 class File {
 
 	constructor(fileName, client) {
 		this.fileName = fileName;
-		//this.sync = bind(this.sync, this);
 		this.syncing = false;
 		this.syncingAddedData = null;
 		this.timeExtension = 0;
@@ -58,6 +59,22 @@ class File {
 
 		return this.query(param);
 	}
+
+  updateByFunction(query, updateFunction) {
+    var result = this.queryHelper(query);
+
+    console.debug("[File.updateByFunction] affected rows: ", this.toDataArray(result).length);
+
+    for (id in result) {
+			if (!result.hasOwnProperty(id)) continue;
+			var row = result[id];
+			var newRow = updateFunction( this.clone(row) );
+      this.remove(this.dataObject[id]);
+			this.insert(newRow);
+    }
+
+    return this.query(query);
+  }
 
 	insert(data) {
 		this.scheduleSync();
@@ -145,6 +162,7 @@ class File {
 	}
 
 	sync() {
+    console.debug("[File.sync] start sync", "fileStats:", this.fileStats);
 		var oldVersionTag, time, promise;
 		this.syncing = false;
 		time = (new Date()).getTime();
@@ -156,17 +174,24 @@ class File {
 
 		this.readStat()
 			.then((value) => {
-				var oldData;
+        console.debug("[File.sync] after readStat", oldVersionTag, this.fileStats.versionTag);
 				if (oldVersionTag !== this.fileStats.versionTag) {
-					oldData = this.clone(this.dataObject);
-
+          // if there are changes on server side,
+          // they need to be merged with local changes
+					var oldData = this.clone(this.dataObject);
+          console.debug("[File.sync] version tags do differ");
 					this.readFile()
 						.then((data) => {
+              console.debug("[File.sync] after readFile");
 							this.dataObject = this.merge(oldData, this.dataObject);
 							this.timeLastRead = time;
-							return this.writeFile();
+							this.writeFile();
 						});
-				}
+				} else {
+          // versions are identical, file can be overridden without loss
+          this.timeLastRead = time;
+          this.writeFile();
+        }
 			});
 	}
 
@@ -240,6 +265,7 @@ class File {
 		return new Promise((resolve, reject) => {
 			this.client.stat(this.fileName, (err, stats) => {
 				if (this.error(err)) {
+          console.debug("[readStat] stats:", stats);
 					this.fileStats = stats;
 					resolve(stats);
 				}
@@ -391,12 +417,12 @@ class Table {
 		}
 	}
 
-  /**
-   * @returns Array with table field names as Strings.
-   */
-  getTableFields() {
-    return this.tableFileData.fields;
-  }
+	/**
+	 * @returns Array with table field names as Strings.
+	 */
+	getTableFields() {
+		return this.tableFileData.fields;
+	}
 
 	updateTableData() {
 		var dataFile, dfo;
@@ -424,20 +450,18 @@ class Table {
 		return df.insert(insertData);
 	}
 
-	query(queryString, sort, start, limit) {
+	query(query, sort, start, limit) {
 		var dfo, result, s;
-		if (!queryString) {
-			queryString = null;
+		if (!query) {
+			query = null;
 		}
 		if (!sort) {
 			sort = null;
 		}
 
-		//    console.debug("FileDB.query", this.tableName, queryString, sort);
-
 		result = [];
 		for (dfo of this.dataFileObjects) {
-			result = result.concat(dfo.query(queryString));
+			result = result.concat(dfo.query(query));
 		}
 
 		// there are sorting params
@@ -461,6 +485,16 @@ class Table {
 
 		return result;
 	}
+
+  update(query, updateFunction) {
+    var result = [];
+
+		for (dfo of this.dataFileObjects) {
+			result = result.concat(dfo.updateByFunction(query, updateFunction));
+		}
+
+    return result;
+  }
 
 	createNewDatafile() {
 		var file, name;
@@ -569,6 +603,21 @@ class FileDB {
 	}
 
 	/**
+	 * Update rows affected by query.
+	 */
+	update(tableName, query, updateFunction) {
+    if(!query) query = null;
+    if(typeof updateFunction !== "function") {
+      console.warn("updateFunction is empty, but required.")
+      return [];
+    }
+
+		var result = this.allTables[tableName].update(query, updateFunction);
+    console.debug("[FileDB.update] result of update:", result);
+    return result;
+	}
+
+	/**
 	 * Returns number of rows for given table.
 	 */
 	rowCount(tableName) {
@@ -607,12 +656,12 @@ class FileDB {
 		return this.allTables[tableName].insert(data);
 	}
 
-  /**
-   * @returns Array with all fields for given table.
-   */
-   tableFields(tableName) {
-     return this.allTables[tableName].getTableFields();
-   }
+	/**
+	 * @returns Array with all fields for given table.
+	 */
+	tableFields(tableName) {
+		return this.allTables[tableName].getTableFields();
+	}
 
 	/**
 	 * Returns true if database was just created

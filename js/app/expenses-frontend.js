@@ -9,6 +9,8 @@
  * Stephan Giesau                  *
  ***********************************/
 
+ // TODO fix issue with item update: time shifted +2 hours
+
 // create app object
 var expApp = new Framework7({
 	init: false, // disabled so page callbacks for initial pages work

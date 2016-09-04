@@ -243,12 +243,13 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+// TODO insertOrUpdate method
+
 var File = function () {
 	function File(fileName, client) {
 		_classCallCheck(this, File);
 
 		this.fileName = fileName;
-		//this.sync = bind(this.sync, this);
 		this.syncing = false;
 		this.syncingAddedData = null;
 		this.timeExtension = 0;
@@ -308,6 +309,23 @@ var File = function () {
 			}
 
 			return this.query(param);
+		}
+	}, {
+		key: "updateByFunction",
+		value: function updateByFunction(query, updateFunction) {
+			var result = this.queryHelper(query);
+
+			console.debug("[File.updateByFunction] affected rows: ", this.toDataArray(result).length);
+
+			for (id in result) {
+				if (!result.hasOwnProperty(id)) continue;
+				var row = result[id];
+				var newRow = updateFunction(this.clone(row));
+				this.remove(this.dataObject[id]);
+				this.insert(newRow);
+			}
+
+			return this.query(query);
 		}
 	}, {
 		key: "insert",
@@ -406,6 +424,7 @@ var File = function () {
 		value: function sync() {
 			var _this2 = this;
 
+			console.debug("[File.sync] start sync", "fileStats:", this.fileStats);
 			var oldVersionTag, time, promise;
 			this.syncing = false;
 			time = new Date().getTime();
@@ -416,15 +435,22 @@ var File = function () {
 			}
 
 			this.readStat().then(function (value) {
-				var oldData;
+				console.debug("[File.sync] after readStat", oldVersionTag, _this2.fileStats.versionTag);
 				if (oldVersionTag !== _this2.fileStats.versionTag) {
-					oldData = _this2.clone(_this2.dataObject);
-
+					// if there are changes on server side,
+					// they need to be merged with local changes
+					var oldData = _this2.clone(_this2.dataObject);
+					console.debug("[File.sync] version tags do differ");
 					_this2.readFile().then(function (data) {
+						console.debug("[File.sync] after readFile");
 						_this2.dataObject = _this2.merge(oldData, _this2.dataObject);
 						_this2.timeLastRead = time;
-						return _this2.writeFile();
+						_this2.writeFile();
 					});
+				} else {
+					// versions are identical, file can be overridden without loss
+					_this2.timeLastRead = time;
+					_this2.writeFile();
 				}
 			});
 		}
@@ -518,6 +544,7 @@ var File = function () {
 			return new Promise(function (resolve, reject) {
 				_this5.client.stat(_this5.fileName, function (err, stats) {
 					if (_this5.error(err)) {
+						console.debug("[readStat] stats:", stats);
 						_this5.fileStats = stats;
 						resolve(stats);
 					}
@@ -759,16 +786,14 @@ var Table = function () {
 		}
 	}, {
 		key: "query",
-		value: function query(queryString, sort, start, limit) {
+		value: function query(_query, sort, start, limit) {
 			var dfo, result, s;
-			if (!queryString) {
-				queryString = null;
+			if (!_query) {
+				_query = null;
 			}
 			if (!sort) {
 				sort = null;
 			}
-
-			//    console.debug("FileDB.query", this.tableName, queryString, sort);
 
 			result = [];
 			var _iteratorNormalCompletion3 = true;
@@ -779,7 +804,7 @@ var Table = function () {
 				for (var _iterator3 = this.dataFileObjects[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
 					dfo = _step3.value;
 
-					result = result.concat(dfo.query(queryString));
+					result = result.concat(dfo.query(_query));
 				}
 
 				// there are sorting params
@@ -835,6 +860,38 @@ var Table = function () {
 				result = result.slice(start);
 			} else if (limit) {
 				result = result.slice(start, limit);
+			}
+
+			return result;
+		}
+	}, {
+		key: "update",
+		value: function update(query, updateFunction) {
+			var result = [];
+
+			var _iteratorNormalCompletion5 = true;
+			var _didIteratorError5 = false;
+			var _iteratorError5 = undefined;
+
+			try {
+				for (var _iterator5 = this.dataFileObjects[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+					dfo = _step5.value;
+
+					result = result.concat(dfo.updateByFunction(query, updateFunction));
+				}
+			} catch (err) {
+				_didIteratorError5 = true;
+				_iteratorError5 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion5 && _iterator5.return) {
+						_iterator5.return();
+					}
+				} finally {
+					if (_didIteratorError5) {
+						throw _iteratorError5;
+					}
+				}
 			}
 
 			return result;
@@ -934,13 +991,13 @@ var FileDB = function () {
 
 	}, {
 		key: "query",
-		value: function query(tableName, _query, sort, start, limit) {
-			if (!_query) _query = null;
+		value: function query(tableName, _query2, sort, start, limit) {
+			if (!_query2) _query2 = null;
 			if (!sort) sort = null;
 			if (!start) start = null;
 			if (!limit) limit = null;
 
-			return this.allTables[tableName].query(_query, sort, start, limit);
+			return this.allTables[tableName].query(_query2, sort, start, limit);
 		}
 
 		/**
@@ -955,6 +1012,24 @@ var FileDB = function () {
 			} else {
 				return this.query(tableName, params.hasOwnProperty('query') ? params.query : null, params.hasOwnProperty('sort') ? params.sort : null, params.hasOwnProperty('start') ? params.start : null, params.hasOwnProperty('limit') ? params.limit : null);
 			}
+		}
+
+		/**
+   * Update rows affected by query.
+   */
+
+	}, {
+		key: "update",
+		value: function update(tableName, query, updateFunction) {
+			if (!query) query = null;
+			if (typeof updateFunction !== "function") {
+				console.warn("updateFunction is empty, but required.");
+				return [];
+			}
+
+			var result = this.allTables[tableName].update(query, updateFunction);
+			console.debug("[FileDB.update] result of update:", result);
+			return result;
 		}
 
 		/**
@@ -1047,13 +1122,13 @@ var FileDB = function () {
 				var file,
 				    promises = [];
 
-				var _iteratorNormalCompletion5 = true;
-				var _didIteratorError5 = false;
-				var _iteratorError5 = undefined;
+				var _iteratorNormalCompletion6 = true;
+				var _didIteratorError6 = false;
+				var _iteratorError6 = undefined;
 
 				try {
-					for (var _iterator5 = files[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-						file = _step5.value;
+					for (var _iterator6 = files[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+						file = _step6.value;
 
 						// files beginning with _ are containing data,
 						// tables do not have prefix - we need the tables here
@@ -1070,16 +1145,16 @@ var FileDB = function () {
 
 					// wait for all files to be loaded successfully
 				} catch (err) {
-					_didIteratorError5 = true;
-					_iteratorError5 = err;
+					_didIteratorError6 = true;
+					_iteratorError6 = err;
 				} finally {
 					try {
-						if (!_iteratorNormalCompletion5 && _iterator5.return) {
-							_iterator5.return();
+						if (!_iteratorNormalCompletion6 && _iterator6.return) {
+							_iterator6.return();
 						}
 					} finally {
-						if (_didIteratorError5) {
-							throw _iteratorError5;
+						if (_didIteratorError6) {
+							throw _iteratorError6;
 						}
 					}
 				}
@@ -1809,6 +1884,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  * CONTRIBUTORS                    *
  * Stephan Giesau                  *
  ***********************************/
+
+// TODO fix issue with item update: time shifted +2 hours
 
 // create app object
 var expApp = new Framework7({
