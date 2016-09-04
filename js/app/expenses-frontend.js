@@ -730,7 +730,6 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 			}
 
 			itemQuery = function (row) {
-				console.log("in updateItemList timerange query", page);
 					if (!row.deleted &&
 						row.timestamp >= page.query.start &&
 						row.timestamp < page.query.end &&
@@ -1555,46 +1554,6 @@ expApp.onPageInit('backup', function (page) {
 			expApp.alert('The data import into <strong>' + importTableName + '</strong> was completed. Updated <strong>' + importStats.updated + '</strong> existing entries, created <strong>' + importStats.created + '</strong> new entries.', 'Import completed');
 		}
 	});
-});
-
-
-
-//////////////////////////////////////////////////////////////////
-// stats-chartist                                               //
-//////////////////////////////////////////////////////////////////
-expApp.onPageInit('stats-chartist', function (page) {
-
-	// handler for selection
-	$("#form-stats-date-start").on('change', onStatsDateChange);
-	$("#form-stats-date-end").on('change', onStatsDateChange);
-
-	// draw charts
-	Charts.draw();
-
-	//TODO remove debug output
-	if (window.globals.properties.debug) {
-		// fill item list
-		var items = db.query('item');
-		for(var i = 0; i < items.length; i++) {
-
-			row = items[i];
-
-			$('#stats-item-list').append(
-				'<tr>' +
-				'  <td>' + row.uniqueid + '</td>' +
-				'  <td>' + row.timestamp + '</td>' +
-				'  <td>' + row.lastupdate + '</td>' +
-				'  <td>' + row.synchronized + '</td>' +
-				'  <td>' + row.account + '</td>' +
-				'  <td>' + row.category + '</td>' +
-				'  <td>' + row.price + '</td>' +
-				'  <td>' + row.description + '</td>' +
-				'  <td>' + row.deleted + '</td>' +
-				'  <td>' + row.version + '</td>' +
-				'</tr>'
-			);
-		}
-	}
 });
 
 
