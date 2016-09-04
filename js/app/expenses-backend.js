@@ -42,7 +42,7 @@ window.i18n = {
 window.globals = {
 
 	properties: {
-		version: '0.3',
+		version: '0.3.1',
 		appname: 'ExpenSync',
 		appkey: 'z0bumu7k3mv0nu3',
 		developer: 'Stephan Giesau',
@@ -233,7 +233,6 @@ function createLocalDatabase() {
 		order: 1,
 		disabled: false
 	}]);
-
 }
 
 

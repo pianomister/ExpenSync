@@ -1,5 +1,7 @@
 "use strict";
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -368,7 +370,10 @@ var File = function () {
 
 var Table = function () {
 
-	// TODO callback with promise
+	/**
+  * init Table.
+  * @param create If Table is new and shall be created, expects Array of Table fields (not 'true'!)
+  */
 	function Table(tableName, create, client, promiseResolve, promiseReject) {
 		var _this6 = this;
 
@@ -392,6 +397,10 @@ var Table = function () {
 				maxSize: 62500, // 62500 bytes = 50kB
 				dataFiles: []
 			};
+			// add table fields to table metadata
+			if (typeof create === "Array") {
+				this.data[0].fields = create;
+			}
 			file = this.createNewDatafile();
 			this.dataFileObjects.push(file);
 			this.data[0].dataFiles.push(file.getName());
@@ -415,7 +424,7 @@ var Table = function () {
 				var _iteratorError = undefined;
 
 				try {
-					for (var _iterator = _this6.tableFileData.data_files[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+					for (var _iterator = _this6.tableFileData.dataFiles[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 						df = _step.value;
 
 						f = new File(df, _this6.client);
@@ -452,11 +461,21 @@ var Table = function () {
 		}
 	}
 
+	/**
+  * @returns Array with table field names as Strings.
+  */
+
+
 	_createClass(Table, [{
+		key: "getTableFields",
+		value: function getTableFields() {
+			return this.tableFileData.fields;
+		}
+	}, {
 		key: "updateTableData",
 		value: function updateTableData() {
 			var dataFile, dfo;
-			dataFile = [];
+			dataFiles = [];
 
 			var _iteratorNormalCompletion2 = true;
 			var _didIteratorError2 = false;
@@ -466,7 +485,7 @@ var Table = function () {
 				for (var _iterator2 = this.dataFileObjects[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
 					dfo = _step2.value;
 
-					dataFile.push(dfo.getName());
+					dataFiles.push(dfo.getName());
 				}
 			} catch (err) {
 				_didIteratorError2 = true;
@@ -484,7 +503,7 @@ var Table = function () {
 			}
 
 			return tableFile.update(void 0, {
-				'data_files': dataFiles
+				'dataFiles': dataFiles
 			});
 		}
 	}, {
@@ -712,13 +731,13 @@ var FileDB = function () {
 		}
 
 		/**
-   * Creates a new table with given name.
+   * Creates a new table with given name and fields.
    */
 
 	}, {
 		key: "createTable",
-		value: function createTable(tableName) {
-			return this.allTables[tableName] = new Table(tableName, true, this.client);
+		value: function createTable(tableName, fields) {
+			return this.allTables[tableName] = new Table(tableName, fields, this.client);
 		}
 
 		/**
@@ -729,11 +748,15 @@ var FileDB = function () {
 	}, {
 		key: "createTableWithData",
 		value: function createTableWithData(tableName, data) {
-			var d, i, len;
-			this.createTable(tableName);
-			for (i = 0, len = data.length; i < len; i++) {
-				d = data[i];
-				this.insert(tableName, d);
+			if ((typeof data === "undefined" ? "undefined" : _typeof(data)) !== 'object' || !data.length || data.length < 1) {
+				error("Data supplied isn't in object form. Example: [{k:v,k:v},{k:v,k:v} ..]");
+			}
+
+			var fields = Object.keys(data[0]);
+			this.createTable(tableName, fields);
+
+			for (var i = 0; i < data.length; i++) {
+				this.insert(tableName, data[i]);
 			}
 			return this.query(tableName);
 		}
@@ -746,6 +769,16 @@ var FileDB = function () {
 		key: "insert",
 		value: function insert(tableName, data) {
 			return this.allTables[tableName].insert(data);
+		}
+
+		/**
+   * @returns Array with all fields for given table.
+   */
+
+	}, {
+		key: "tableFields",
+		value: function tableFields(tableName) {
+			return this.allTables[tableName].getTableFields();
 		}
 
 		/**
@@ -853,7 +886,7 @@ window.i18n = {
 window.globals = {
 
 	properties: {
-		version: '0.3',
+		version: '0.3.1',
 		appname: 'ExpenSync',
 		appkey: 'z0bumu7k3mv0nu3',
 		developer: 'Stephan Giesau',

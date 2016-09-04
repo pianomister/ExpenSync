@@ -154,20 +154,20 @@ class File {
 			oldVersionTag = this.fileStats.versionTag;
 		}
 
-    this.readStat()
-    .then((value) => {
-			var oldData;
-			if (oldVersionTag !== this.fileStats.versionTag) {
-				oldData = this.clone(this.dataObject);
+		this.readStat()
+			.then((value) => {
+				var oldData;
+				if (oldVersionTag !== this.fileStats.versionTag) {
+					oldData = this.clone(this.dataObject);
 
-				this.readFile()
-        .then((data) => {
-					this.dataObject = this.merge(oldData, this.dataObject);
-					this.timeLastRead = time;
-					return this.writeFile();
-				});
-			}
-		});
+					this.readFile()
+						.then((data) => {
+							this.dataObject = this.merge(oldData, this.dataObject);
+							this.timeLastRead = time;
+							return this.writeFile();
+						});
+				}
+			});
 	}
 
 	getVersionTag() {
@@ -205,10 +205,10 @@ class File {
 		return this.clone(array);
 	}
 
-  /**
-   * reads file contents into local variable representation.
-   * Returns promise to listen on.
-   */
+	/**
+	 * reads file contents into local variable representation.
+	 * Returns promise to listen on.
+	 */
 	readFile() {
 		return new Promise((resolve, reject) => {
 			this.client.readFile(this.fileName, (err, data, stats) => {
@@ -221,19 +221,19 @@ class File {
 		});
 	}
 
-  /**
-   * writes local data representation into file.
-   * Returns promise to listen on.
-   */
+	/**
+	 * writes local data representation into file.
+	 * Returns promise to listen on.
+	 */
 	writeFile() {
-    return new Promise((resolve, reject) => {
-    	this.client.writeFile(this.fileName, JSON.stringify(this.dataObject), (err, stats) => {
-    		if (this.error(err)) {
-    			this.fileStats = stats;
-    			resolve(stats);
-    		}
-    	});
-    });
+		return new Promise((resolve, reject) => {
+			this.client.writeFile(this.fileName, JSON.stringify(this.dataObject), (err, stats) => {
+				if (this.error(err)) {
+					this.fileStats = stats;
+					resolve(stats);
+				}
+			});
+		});
 	}
 
 	readStat() {
@@ -322,7 +322,10 @@ class File {
 
 class Table {
 
-	// TODO callback with promise
+	/**
+	 * init Table.
+	 * @param create If Table is new and shall be created, expects Array of Table fields (not 'true'!)
+	 */
 	constructor(tableName, create, client, promiseResolve, promiseReject) {
 		create = create || false;
 		promiseResolve = promiseResolve || false;
@@ -342,58 +345,69 @@ class Table {
 				maxSize: 62500, // 62500 bytes = 50kB
 				dataFiles: []
 			};
+			// add table fields to table metadata
+			if (typeof create === "Array") {
+				this.data[0].fields = create;
+			}
 			file = this.createNewDatafile();
 			this.dataFileObjects.push(file);
 			this.data[0].dataFiles.push(file.getName());
 			tableFile.insert(this.data[0]);
 			this.tableFileData = this.data[0];
 
-      promise.then((data) => {
-        if (promiseResolve) {
-          promiseResolve(file.getName());
-        }
-      });
+			promise.then((data) => {
+				if (promiseResolve) {
+					promiseResolve(file.getName());
+				}
+			});
 		} else {
 			tableFile.readFile()
-      .then((data) => {
-				var df, f, results;
-				this.data = tableFile.getDataArray();
-				this.tableFileData = this.data[0];
-				var promises = [];
+				.then((data) => {
+					var df, f, results;
+					this.data = tableFile.getDataArray();
+					this.tableFileData = this.data[0];
+					var promises = [];
 
-				for (df of this.tableFileData.data_files) {
-					f = new File(df, this.client);
-					this.dataFileObjects.push(f);
-          promises.push(f.readFile());
-				}
+					for (df of this.tableFileData.dataFiles) {
+						f = new File(df, this.client);
+						this.dataFileObjects.push(f);
+						promises.push(f.readFile());
+					}
 
-        Promise.all(promises)
-        .then((values) => {
-          if (promiseResolve) {
-            console.debug("[Table.constructor] successfully loaded files for", tableName, values);
-            promiseResolve(values);
-          }
-        })
-        .catch((error) => {
-          console.error("[Table.constructor] error when loading file:", error);
-          if (promiseReject) {
-            promiseReject(f.getName());
-          }
-        });
-			});
+					Promise.all(promises)
+						.then((values) => {
+							if (promiseResolve) {
+								console.debug("[Table.constructor] successfully loaded files for", tableName, values);
+								promiseResolve(values);
+							}
+						})
+						.catch((error) => {
+							console.error("[Table.constructor] error when loading file:", error);
+							if (promiseReject) {
+								promiseReject(f.getName());
+							}
+						});
+				});
 		}
 	}
 
+  /**
+   * @returns Array with table field names as Strings.
+   */
+  getTableFields() {
+    return this.tableFileData.fields;
+  }
+
 	updateTableData() {
 		var dataFile, dfo;
-		dataFile = [];
+		dataFiles = [];
 
 		for (dfo of this.dataFileObjects) {
-			dataFile.push(dfo.getName());
+			dataFiles.push(dfo.getName());
 		}
 
 		return tableFile.update(void 0, {
-			'data_files': dataFiles
+			'dataFiles': dataFiles
 		});
 	}
 
@@ -459,7 +473,7 @@ class Table {
 
 		file = new File("_" + name, this.client);
 		file.readFile();
-    // TODO check if we need to wait for file reading here
+		// TODO check if we need to wait for file reading here
 		return file;
 	}
 
@@ -516,7 +530,7 @@ class FileDB {
 
 		promise
 			.then((value) => {
-        console.debug("[setupDropbox] all promises resolved, calling callback function");
+				console.debug("[setupDropbox] all promises resolved, calling callback function");
 				callback();
 			})
 			.catch((error) => {
@@ -562,10 +576,10 @@ class FileDB {
 	}
 
 	/**
-	 * Creates a new table with given name.
+	 * Creates a new table with given name and fields.
 	 */
-	createTable(tableName) {
-		return this.allTables[tableName] = new Table(tableName, true, this.client);
+	createTable(tableName, fields) {
+		return this.allTables[tableName] = new Table(tableName, fields, this.client);
 	}
 
 	/**
@@ -573,11 +587,15 @@ class FileDB {
 	 * given data as initial data set.
 	 */
 	createTableWithData(tableName, data) {
-		var d, i, len;
-		this.createTable(tableName);
-		for (i = 0, len = data.length; i < len; i++) {
-			d = data[i];
-			this.insert(tableName, d);
+		if (typeof data !== 'object' || !data.length || data.length < 1) {
+			error("Data supplied isn't in object form. Example: [{k:v,k:v},{k:v,k:v} ..]");
+		}
+
+		var fields = Object.keys(data[0]);
+		this.createTable(tableName, fields);
+
+		for (var i = 0; i < data.length; i++) {
+			this.insert(tableName, data[i]);
 		}
 		return this.query(tableName);
 	}
@@ -588,6 +606,13 @@ class FileDB {
 	insert(tableName, data) {
 		return this.allTables[tableName].insert(data);
 	}
+
+  /**
+   * @returns Array with all fields for given table.
+   */
+   tableFields(tableName) {
+     return this.allTables[tableName].getTableFields();
+   }
 
 	/**
 	 * Returns true if database was just created
@@ -616,8 +641,8 @@ class FileDB {
 					continue;
 				}
 
-        // add a promise for this file to promises list
-        console.debug("[loadTables] add promise for file", file);
+				// add a promise for this file to promises list
+				console.debug("[loadTables] add promise for file", file);
 				promises.push(
 					new Promise((_resolve, _reject) => {
 						this.allTables[file] = new Table(file, false, this.client, _resolve, _reject);
@@ -625,14 +650,14 @@ class FileDB {
 				);
 			}
 
-      // wait for all files to be loaded successfully
+			// wait for all files to be loaded successfully
 			Promise.all(promises)
 				.then((values) => {
-          console.debug("[loadTables] all files loaded successfully, values:", values);
+					console.debug("[loadTables] all files loaded successfully, values:", values);
 					resolve(values);
 				})
 				.catch((error) => {
-          console.debug("[loadTables] failed loading at least one file, error of failed promise:", error);
+					console.debug("[loadTables] failed loading at least one file, error of failed promise:", error);
 					reject(error);
 				});
 		});

@@ -54,7 +54,7 @@ var jsFiles = {
 		paths.src.js + 'app/fileDB-ES6.js',
 		paths.src.js + 'app/expenses-backend.js',
 		paths.src.js + 'app/expenses-stats.js',
-		paths.src.js + 'app/expenses-sync.js',
+		//paths.src.js + 'app/expenses-sync.js',
 		paths.src.js + 'app/expenses-frontend.js'
 	]
 };

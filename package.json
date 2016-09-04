@@ -1,6 +1,6 @@
 {
-  "name": "expensync",
-  "version": "0.3.0",
+  "name": "ExpenSync",
+  "version": "0.3.1",
   "description": "Track your expenses anywhere, on any device, and synchronize them using Dropbox.",
   "main": "index.html",
   "scripts": {
