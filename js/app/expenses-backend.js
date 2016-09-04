@@ -277,7 +277,8 @@ function getSettings(settingName) {
 	var props = db.query('settings', query);
 	var propsAll = db.query('settings', null);//TODO delete
 
-	console.debug("getSettings settingName", settingName, query, props, propsAll);
+	//TODO remove debug
+	//console.debug("getSettings settingName", settingName, query, props, propsAll);
 
 	if (query) {
 

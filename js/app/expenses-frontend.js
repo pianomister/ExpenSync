@@ -766,7 +766,6 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 
 	// add page title
 	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
-	console.debug("updateItemList query", itemQuery);
 	// add items to list
 	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID, infiniteScrollReset );
 }
@@ -1226,7 +1225,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 // expenses-list                                                //
 //////////////////////////////////////////////////////////////////
 expApp.onPageInit('expenses-list', function (page) {
-console.debug("in expenses list");
+
 	// save page query for later usage in globals.temp
 	var tempID = createUniqueid(Date.now(), page.query.request);
 	window.globals.temp[tempID] = page;
