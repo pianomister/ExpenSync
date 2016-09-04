@@ -6649,6 +6649,27 @@ g.dc-legend-item.fadeout {
 /**
 * @section app layout
 */
+/* splash screen */
+.splash-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: #39c;
+  z-index: 9999; }
+  .splash-screen img, .splash-screen span, .splash-screen h1, .splash-screen p {
+    margin: .5em;
+    font-size: 1.5em;
+    font-weight: 300;
+    color: #fff !important; }
+  .splash-screen img {
+    border: 2px solid #fff; }
+
 /* color adjustments for blue app theme */
 .theme-white .item-link.list-button,
 .theme-white a {

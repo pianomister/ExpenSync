@@ -33,11 +33,14 @@ var mainView = expApp.addView('.view-main', {
 // Load DB
 // Initialise. If the database doesn't exist, it is created
 var db = new FileDB(window.globals.properties.appkey);
-db.setupDropbox(function () {
+db.setupDropbox(() => {
 	// Check if the database was just created. Then create all tables
 	if ( db.isNew() ) {
 		createLocalDatabase();
 	}
+
+	$('.splash-screen').hide();
+
 	initApp();
 });
 

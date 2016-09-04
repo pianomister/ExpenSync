@@ -8,42 +8,72 @@
  * CONTRIBUTORS                    *
  * Stephan Giesau                  *
  ***********************************/
+
+$color-primary: #39c;
+
 /* quick fixes of platform bugs */
 /* FF: right alignment of item-after elements */
 .list-block .item-after {
 	margin-left: auto;
 }
+
 /**
 * @section app layout
 */
+/* splash screen */
+.splash-screen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+	justify-content: center;
+	width: 100vw;
+	height: 100vh;
+	background: $color-primary;
+	z-index: 9999;
+
+	img, span, h1, p {
+		margin: .5em;
+		font-size: 1.5em;
+		font-weight: 300;
+		color: #fff !important;
+	}
+
+	img {
+		border: 2px solid #fff;
+	}
+}
+
 /* color adjustments for blue app theme */
 .theme-white .item-link.list-button,
 .theme-white a {
-	color: #39c;
+	color: $color-primary;
 }
 
 .color-white.button:not(.button-fill),
 .color-white.buttons-row .button,
 .theme-white .button:not(.button-fill) {
-	border-color: #39c;
+	border-color: $color-primary;
 }
 
 .theme-white label.label-checkbox input[type="checkbox"]:checked + .item-media i.icon-form-checkbox,
 .theme-white label.label-checkbox input[type="radio"]:checked + .item-media i.icon-form-checkbox {
-	background: #39c;
+	background: $color-primary;
 }
 
 .label-switch input[type="checkbox"]:checked + .checkbox {
-	background-color: #39c !important;
+	background-color: $color-primary !important;
 }
 
 label.label-checkbox i.icon-form-checkbox {
-	border-color: #39c;
+	border-color: $color-primary;
 }
 
 .navbar {
 	color: #fff;
-	background: #39c;
+	background: $color-primary;
 	border-color: transparent !important;
 
 	a.link {
@@ -52,7 +82,7 @@ label.label-checkbox i.icon-form-checkbox {
 }
 /* adapt statusbar color/layout to navbars */
 .statusbar-overlay {
-	background: #39c;
+	background: $color-primary;
 	-webkit-transition: 400ms;
 	transition: 400ms;
 }
@@ -170,7 +200,7 @@ div[data-page="index-1"] .list-block {
 }*/
 /* colors for charts */
 .ct-series.ct-series-a .ct-slice {
-	fill: #39c !important;
+	fill: $color-primary !important;
 }
 
 .ct-series.ct-series-b .ct-slice {
@@ -210,7 +240,7 @@ div[data-page="index-1"] .list-block {
 }
 
 .ct-series.ct-series-k .ct-slice {
-	fill: #39c !important;
+	fill: $color-primary !important;
 }
 
 .ct-series.ct-series-l .ct-slice {
@@ -222,7 +252,7 @@ div[data-page="index-1"] .list-block {
 }
 
 .ct-series.ct-series-a .ct-bar {
-	stroke: #39c !important;
+	stroke: $color-primary !important;
 }
 
 .ct-series.ct-series-b .ct-bar {
@@ -262,7 +292,7 @@ div[data-page="index-1"] .list-block {
 }
 
 .ct-series.ct-series-k .ct-bar {
-	stroke: #39c !important;
+	stroke: $color-primary !important;
 }
 
 .ct-series.ct-series-l .ct-bar {
