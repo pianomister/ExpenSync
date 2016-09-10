@@ -1223,7 +1223,7 @@ window.globals = {
 function createLocalDatabase() {
 
 	// create 'settings' table
-	var settings_rows = [{ key: 'db_version', value: window.globals.properties.version, description: 'Version of created database' }, { key: 'ui_lang', value: 'EN', description: 'Language' }, { key: 'ui_money_format', value: 'comma', description: 'Money Format' }, { key: 'sync_enabled', value: true, description: 'Sync enabled' }, { key: 'sync_startup', value: false, description: 'Sync on startup' }, { key: 'sync_continuous', value: true, description: 'Sync continuously or only manually' }, { key: 'sync_lastupdate', value: 1, description: 'Timestamp of last sync' }];
+	var settings_rows = [{ key: 'db_version', value: window.globals.properties.version, description: 'Version of created database' }, { key: 'ui_lang', value: 'EN', description: 'Language' }, { key: 'ui_money_format', value: 'comma', description: 'Money Format' }, { key: 'ui_months_shown', value: 6, description: 'Number of months shown' }, { key: 'sync_enabled', value: true, description: 'Sync enabled' }, { key: 'sync_startup', value: false, description: 'Sync on startup' }, { key: 'sync_continuous', value: true, description: 'Sync continuously or only manually' }, { key: 'sync_lastupdate', value: 1, description: 'Timestamp of last sync' }];
 	db.createTableWithData('settings', settings_rows);
 
 	// create 'category' table
@@ -1296,9 +1296,6 @@ function getSettings(settingName) {
 
 	var props = db.query('settings', query);
 	var propsAll = db.query('settings', null); //TODO delete
-
-	//TODO remove debug
-	//console.debug("getSettings settingName", settingName, query, props, propsAll);
 
 	if (query) {
 
@@ -1588,287 +1585,6 @@ function getAccountBalance(accountID) {
   }
 
   return accBalance + accInitBalance;
-}
-'use strict';
-
-/***********************************
- * ExpenSync                       *
- *                                 *
- * EXPENSES-SYNC.JS                *
- * All functionality necessary     *
- * for Dropbox synchronization     *
- *                                 *
- * CONTRIBUTORS                    *
- * Stephan Giesau                  *
- ***********************************/
-
-var DROPBOX_APP_KEY = 'sf6zic5mzuzi7k4';
-
-window.client = null; // dropbox client
-var ds = null; // dropbox datastore
-var dsTable = null; // dropbox main table
-
-
-// init dropbox client if sync is activated
-function syncInit() {
-
-	expApp.showPreloader('Sync with Dropbox ...');
-
-	if (getSettings('sync_enabled')) {
-
-		if (!window.client) {
-			window.client = new Dropbox.Client({ key: DROPBOX_APP_KEY });
-		}
-
-		// authentication
-		window.client.authenticate(null, function (error) {
-			if (error) expApp.alert(error);else syncSetup();
-		});
-	} else {
-		expApp.hidePreloader();
-		expApp.alert('Please enable sync in settings first before using it.');
-	}
-}
-
-// after-authentication actions for sync setup
-function syncSetup() {
-
-	if (window.globals.properties.debug) console.log('syncSetup');
-
-	if (window.client && window.client.isAuthenticated()) {
-
-		// setup datastore
-		if (!ds) {
-
-			client.getDatastoreManager().openDefaultDatastore(function (error, datastore) {
-				if (error) {
-					expApp.alert('Sync error when opening default datastore: ' + error);
-				} else {
-
-					ds = datastore;
-					dsTable = ds.getTable('sync');
-
-					// Ensure that future changes sync automatically
-					/*if( getSettings('sync_continuous') ) {
-     			console.debug('sync continous enabled');//TODO
-     	ds.recordsChanged.addListener(syncRequest);
-     }*/
-
-					window.setTimeout(function () {
-						sync();
-					}, 1000);
-				}
-			});
-		} else {
-			if (window.globals.properties.debug) console.log('syncSetup/else');
-			window.setTimeout(function () {
-				sync();
-			}, 1000);
-		}
-	} else {
-		expApp.hidePreloader();
-		expApp.alert('Sync failed because you are not authenticated with Dropbox yet.');
-	}
-}
-
-function syncSignOut() {
-
-	if (!window.client) {
-		window.client = new Dropbox.Client({ key: DROPBOX_APP_KEY });
-	}
-
-	// authentication
-	window.client.authenticate(null, function (error) {
-		if (error) {
-			expApp.alert(error);
-		} else {
-			if (client.isAuthenticated()) client.signOut();
-		}
-	});
-}
-
-function getSyncTime() {
-
-	return ds ? ds.getModifiedTime() : false;
-}
-
-/*function syncRequest(update) {
-
-	console.log('syncRequest');//TODO
-
-	if(ds && !update.isLocal() )
-		sync();
-}*/
-
-function sync() {
-
-	if (window.globals.properties.debug) console.log('sync');
-
-	var lastSync = getSettings('sync_lastupdate');
-
-	////////////////////
-	// item           //
-	////////////////////
-
-	// get data
-	var syncTable = dsTable.getOrInsert('sync', { name: 'items', json: '[]' });
-	var syncTable2 = dsTable.getOrInsert('sync2', { name: 'items2', json: '' });
-	var syncTable3 = dsTable.getOrInsert('sync3', { name: 'items3', json: '' });
-	var syncJSON = JSON.parse(syncTable.get('json') + syncTable2.get('json') + syncTable3.get('json'));
-
-	// if data available in datastore, merge it and save it back
-	if (syncJSON.length > 0) {
-
-		// server has newer data, merge server data to local DB and update server
-		if (lastSync < getSyncTime().getTime()) {
-
-			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'item');
-
-			if (window.globals.properties.debug) console.log('Merge input: ' + merge_input);
-
-			for (i = 0; i < merge_input.length; i++) {
-
-				db.insertOrUpdate('item', { uniqueid: merge_input[i].uniqueid }, merge_input[i]);
-			}
-
-			// update timestamp on entries with 'synchronized = false'
-			// so these entries are definitely synchronized to other clients
-			db.update('item', { synchronized: false }, function (row) {
-				row.lastupdate = Date.now();
-				row.synchronized = true;
-				return row;
-			});
-
-			db.commit();
-		} else {
-
-			if (window.globals.properties.debug) console.log('Everything is up to date.');
-		}
-
-		// if no data in datastore yet, insert local data
-	} else {}
-
-		// see below
-
-
-		// update with local data
-		// 3 chunks
-	syncItems = JSON.stringify(db.query('item'));
-	itemChunks = chunkString(syncItems, Math.ceil(syncItems.length / 3));
-
-	dsTable.query({ name: 'items' })[0].update({
-		json: itemChunks[0]
-	});
-	dsTable.query({ name: 'items2' })[0].update({
-		json: itemChunks[1]
-	});
-	dsTable.query({ name: 'items3' })[0].update({
-		json: itemChunks[2]
-	});
-
-	////////////////////
-	// category       //
-	////////////////////
-
-	// get data
-	var syncTable = dsTable.getOrInsert('category', { name: 'category', json: '[]' });
-	var syncJSON = JSON.parse(syncTable.get('json'));
-
-	// if data available in datastore, merge it and save it back
-	if (syncJSON.length > 0) {
-
-		// server has newer data, merge server data to local DB and update server
-		if (lastSync < getSyncTime().getTime()) {
-
-			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'category');
-
-			if (window.globals.properties.debug) console.log('Merge input: ' + merge_input);
-
-			for (i = 0; i < merge_input.length; i++) {
-
-				db.insertOrUpdate('category', { uniqueid: merge_input[i].uniqueid }, merge_input[i]);
-			}
-
-			// update timestamp on entries with 'synchronized = false'
-			// so these entries are definitely synchronized to other clients
-			db.update('category', { synchronized: false }, function (row) {
-				row.lastupdate = Date.now();
-				row.synchronized = true;
-				return row;
-			});
-
-			db.commit();
-		} else {
-
-			if (window.globals.properties.debug) console.log('Everything is up to date.');
-		}
-
-		// if no data in datastore yet, insert local data
-	} else {}
-
-		// see below
-
-
-		// update with local data
-	dsTable.query({ name: 'category' })[0].update({
-		json: JSON.stringify(db.query('category'))
-	});
-
-	////////////////////
-	// account        //
-	////////////////////
-
-	// get data
-	var syncTable = dsTable.getOrInsert('account', { name: 'account', json: '[]' });
-	var syncJSON = JSON.parse(syncTable.get('json'));
-
-	// if data available in datastore, merge it and save it back
-	if (syncJSON.length > 0) {
-
-		// server has newer data, merge server data to local DB and update server
-		if (lastSync < getSyncTime().getTime()) {
-
-			var merge_input = getEntriesNewerThan(syncJSON, lastSync, 'account');
-
-			if (window.globals.properties.debug) console.log('Merge input: ' + merge_input);
-
-			for (i = 0; i < merge_input.length; i++) {
-
-				db.insertOrUpdate('account', { uniqueid: merge_input[i].uniqueid }, merge_input[i]);
-			}
-
-			// update timestamp on entries with 'synchronized = false'
-			// so these entries are definitely synchronized to other clients
-			db.update('account', { synchronized: false }, function (row) {
-				row.lastupdate = Date.now();
-				row.synchronized = true;
-				return row;
-			});
-
-			db.commit();
-		} else {
-
-			if (window.globals.properties.debug) console.log('Everything is up to date.');
-		}
-
-		// if no data in datastore yet, insert local data
-	} else {}
-
-		// see below
-
-
-		// update with local data
-	dsTable.query({ name: 'account' })[0].update({
-		json: JSON.stringify(db.query('account'))
-	});
-
-	// update local sync timestamp
-	setSettings('sync_lastupdate', Date.now());
-
-	// refresh views
-	pageIndexLeft.trigger();
-	pageIndex.trigger();
-	expApp.hidePreloader();
 }
 'use strict';
 
@@ -2767,9 +2483,10 @@ function initApp() {
 
 		$('#menu-list').empty();
 		var entriesAvailable = false;
+		var amountOfMonthsShown = getSettings('ui_months_shown');
 
 		// TODO parameter to set amount of months to be shown
-		for (var i = 15; i >= 0; i--) {
+		for (var i = amountOfMonthsShown - 1; i >= 0; i--) {
 
 			startDate.setFullYear(currentYear, currentMonth);
 			endDate.setFullYear(currentYear, currentMonth + 1);
@@ -2998,9 +2715,9 @@ function initApp() {
 		// load settings
 		var settings = getSettings();
 
-		console.log(settings);
-
+		// SET VALUES IN SETTINGS UI
 		$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
+		$('#settings-ui_months_shown').find('option[value="' + settings['ui_months_shown'] + '"]').attr('selected', 'selected');
 
 		if (settings['sync_enabled']) $('#settings-sync_enabled').prop('checked', 'checked');
 
@@ -3011,6 +2728,11 @@ function initApp() {
 		$('#settings-ui_money_format').on('change', function () {
 			setSettings('ui_money_format', $('#settings-ui_money_format').val());
 			console.log(getSettings('ui_money_format'));
+		});
+		// change handler: ui_money_format
+		$('#settings-ui_months_shown').on('change', function () {
+			setSettings('ui_months_shown', $('#settings-ui_months_shown').val());
+			console.log(getSettings('ui_months_shown'));
 		});
 		// change handler: sync_enabled
 		$('#settings-sync_enabled').on('change', function () {

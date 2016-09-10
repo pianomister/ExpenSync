@@ -192,6 +192,7 @@ function createLocalDatabase() {
 		{key: 'db_version', value: window.globals.properties.version, description: 'Version of created database'},
 		{key: 'ui_lang', value: 'EN', description: 'Language'},
 		{key: 'ui_money_format', value: 'comma', description: 'Money Format'},
+		{key: 'ui_months_shown', value: 6, description: 'Number of months shown'},
 		{key: 'sync_enabled', value: true, description: 'Sync enabled'},
 		{key: 'sync_startup', value: false, description: 'Sync on startup'},
 		{key: 'sync_continuous', value: true, description: 'Sync continuously or only manually'},
@@ -275,9 +276,6 @@ function getSettings(settingName) {
 
 	var props = db.query('settings', query);
 	var propsAll = db.query('settings', null);//TODO delete
-
-	//TODO remove debug
-	//console.debug("getSettings settingName", settingName, query, props, propsAll);
 
 	if (query) {
 

@@ -1025,9 +1025,10 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 
 	$('#menu-list').empty();
 	var entriesAvailable = false;
+	var amountOfMonthsShown = getSettings('ui_months_shown');
 
 	// TODO parameter to set amount of months to be shown
-	for(var i = 15; i >= 0; i--) {
+	for(var i = amountOfMonthsShown - 1; i >= 0; i--) {
 
 		startDate.setFullYear(currentYear, currentMonth);
 		endDate.setFullYear(currentYear, currentMonth+1);
@@ -1294,9 +1295,9 @@ expApp.onPageInit('settings', function (page) {
 	// load settings
 	var settings = getSettings();
 
-	console.log(settings);
-
+	// SET VALUES IN SETTINGS UI
 	$('#settings-ui_money_format').find('option[value="' + settings['ui_money_format'] + '"]').attr('selected', 'selected');
+	$('#settings-ui_months_shown').find('option[value="' + settings['ui_months_shown'] + '"]').attr('selected', 'selected');
 
 	if (settings['sync_enabled'])
 		$('#settings-sync_enabled').prop('checked', 'checked');
@@ -1309,6 +1310,11 @@ expApp.onPageInit('settings', function (page) {
 	$('#settings-ui_money_format').on('change', function () {
 		setSettings('ui_money_format', $('#settings-ui_money_format').val() );
 		console.log(getSettings('ui_money_format'));
+	});
+	// change handler: ui_money_format
+	$('#settings-ui_months_shown').on('change', function () {
+		setSettings('ui_months_shown', $('#settings-ui_months_shown').val() );
+		console.log(getSettings('ui_months_shown'));
 	});
 	// change handler: sync_enabled
 	$('#settings-sync_enabled').on('change', function () {
