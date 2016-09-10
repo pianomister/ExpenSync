@@ -22,7 +22,8 @@
     "d3": "^3.5.0",
     "dc": "2.1.0-dev",
     "framework7": "1.0.1",
-    "jquery": "^2.2.4"
+    "jquery": "^2.2.4",
+    "multideviceDatabase": "git://github.com/pianomister/multideviceDatabase.git"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.14.0",

@@ -2,6 +2,7 @@
 // Thanks to awesome documentation collected throughout the web.
 // https://www.viget.com/articles/gulp-browserify-starter-faq
 
+// TODO clean this mess up ...
 
 // include gulp
 var gulp = require('gulp');
@@ -46,12 +47,10 @@ var jsFiles = {
 		// local 3rd party libs
 		paths.src.js + 'vendor/md5.js',
 		paths.src.js + 'vendor/dropbox-datastores-1.2.0.js'
-		// fileDB lib
-		//, paths.src.js + 'multideviceDatabase/fileDB.js'
 	],
 	app: [
-    // fileDB lib
-		paths.src.js + 'app/fileDB-ES6.js',
+		// fileDB lib
+		'node_modules/multideviceDatabase/dist/fileDB.min.js',
 		paths.src.js + 'app/expenses-backend.js',
 		paths.src.js + 'app/expenses-stats.js',
 		//paths.src.js + 'app/expenses-sync.js',
