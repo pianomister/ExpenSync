@@ -4,9 +4,6 @@
  * EXPENSES-BACKEND.JS             *
  * Backend functions working with  *
  * data and database only          *
- *                                 *
- * CONTRIBUTORS                    *
- * Stephan Giesau                  *
  ***********************************/
 
 

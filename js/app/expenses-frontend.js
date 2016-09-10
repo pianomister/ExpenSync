@@ -4,9 +4,6 @@
  * EXPENSES-FRONTEND.JS            *
  * Frontend functions related to   *
  * UI logic and support            *
- *                                 *
- * CONTRIBUTORS                    *
- * Stephan Giesau                  *
  ***********************************/
 
  // TODO fix issue with item update: time shifted +2 hours

@@ -4,9 +4,6 @@
  * EXPENSES-STATS.JS               *
  * Statistical functions and       *
  * charting functionality          *
- *                                 *
- * CONTRIBUTORS                    *
- * Stephan Giesau                  *
  ***********************************/
 
 
