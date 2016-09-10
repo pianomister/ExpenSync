@@ -202,6 +202,76 @@ function createCategoryOptions(domElement, selectedID, appendZero, allEntries) {
 
 
 /**
+ * adds all months as options to select dropdown
+ * and optionally selects one entry by month identifier (0-11)
+ *
+ * @param {domSelector/jQueryObject} domElement selector or element representing a select dropdown
+ * @param {int} selectedID (optional) ID number of month to select (zero based)
+ */
+function createMonthOptions(domElement, selectedID) {
+
+	selectedID = selectedID || false;
+	var $list = $(domElement);
+	var $temp = $('<div />');
+
+	// empty dropdown list
+	$list.empty();
+
+	var months = window.i18n.month;
+
+	for(i = 0; i < months.length; i++) {
+
+		var $option = $('<option>').val(i).text(months[i]);
+
+		// select entry if defined
+		if (selectedID && selectedID == i)
+			$option.attr('selected', 'selected');
+
+		$temp.append( $option );
+	}
+
+	// add to actual list
+	$list.append( $temp.html() );
+}
+
+
+
+/**
+ * adds years as options to select dropdown
+ * and optionally selects one entry
+ *
+ * @param {domSelector/jQueryObject} domElement selector or element representing a select dropdown
+ * @param {int} selectedID (optional) year to select
+ */
+function createYearOptions(domElement, selectedID) {
+
+	selectedID = selectedID || false;
+	var $list = $(domElement);
+	var $temp = $('<div />');
+
+	// empty dropdown list
+	$list.empty();
+
+	var startYear = new Date().getFullYear();
+
+	for(i = startYear + 1; i > startYear - 10; i--) {
+
+		var $option = $('<option>').val(i).text(i);
+
+		// select entry if defined
+		if (selectedID && selectedID == i)
+			$option.attr('selected', 'selected');
+
+		$temp.append( $option );
+	}
+
+	// add to actual list
+	$list.append( $temp.html() );
+}
+
+
+
+/**
 * adds accounts as options to select dropdown
 * and optionally selects one entry
 *
@@ -717,13 +787,35 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 	var itemLimit = null;
 	var itemDomBalance = $(page.container).find('#expenses-list-balance');
 	var itemNoDelete = false;
+	var request = page.query.request;
 
 	// add filter for category
 	if (filterCategory != 0)
 		itemQuery.category = filterCategory;
 
+	// with selectmonth time filter
+	if (page.query.request === 'selectmonth') {
+		page.query.title = 'Select month';
+
+		// on every reload need to re-calculate start and end
+		var selectedMonth = parseInt( $(page.container).find('#expenses-list-month').val() );
+		var selectedYear = parseInt( $(page.container).find('#expenses-list-year').val() );
+		var startDate = new Date(selectedYear, selectedMonth, 1, 0, 0, 0, 0);
+		var endDate = new Date(selectedYear, selectedMonth, 1, 0, 0, 0, 0);
+		startDate.setFullYear(selectedYear, selectedMonth);
+		endDate.setFullYear(selectedYear, selectedMonth+1);
+
+		console.debug("selectmonth change handler", selectedYear, selectedMonth);
+
+		page.query.start = startDate.getTime();
+		page.query.end = endDate.getTime();
+
+		// set request to timerange for proper handling
+		request = 'timerange';
+	}
+
 	// override standards for special conditions
-	switch(page.query.request) {
+	switch(request) {
 
 		case 'timerange':
 
@@ -1027,7 +1119,6 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 	var entriesAvailable = false;
 	var amountOfMonthsShown = getSettings('ui_months_shown');
 
-	// TODO parameter to set amount of months to be shown
 	for(var i = amountOfMonthsShown - 1; i >= 0; i--) {
 
 		startDate.setFullYear(currentYear, currentMonth);
@@ -1087,6 +1178,10 @@ pageIndexLeft = expApp.onPageInit('index-left', function (page) {
 	} else {
 
 		$('#menu-list').append(
+			'<li><a href="expenses-list.html?request=selectmonth" data-view=".view-main" class="item-link close-panel item-content">' +
+			'	<div class="item-inner">' +
+			'		Select month' +
+			'</div></a></li>' +
 				'<li><a href="expenses-list.html?request=lastupdate" data-view=".view-main" class="item-link close-panel item-content">' +
 				'	<div class="item-inner">' +
 				'		Last updated' +
@@ -1235,7 +1330,7 @@ expApp.onPageInit('expenses-list', function (page) {
 	// save page query for later usage in globals.temp
 	var tempID = createUniqueid(Date.now(), page.query.request);
 	window.globals.temp[tempID] = page;
-	$(page.container).find('#expenses-list-category').attr('data-temppage', tempID);
+	$(page.container).find('#expenses-list-category, #expenses-list-month, #expenses-list-year').attr('data-temppage', tempID);
 
 	// add categories to dropdown select
 	createCategoryOptions( $(page.container).find('#expenses-list-category'), false, true );
@@ -1250,6 +1345,26 @@ expApp.onPageInit('expenses-list', function (page) {
 		console.debug("change list category", e, catID, tempID);
 	});
 
+	// if page has month/year filter, activate
+	if (page.query.request === 'selectmonth') {
+		$(page.container).find('.expenses-list-time-wrapper').show();
+
+		// fill dropdowns with values
+		createMonthOptions( $(page.container).find('#expenses-list-month'), new Date().getMonth() );
+		createYearOptions( $(page.container).find('#expenses-list-year'), new Date().getFullYear() );
+
+		// onchange handler
+		// month or year dropdown: onchange handler
+		$(page.container).find('#expenses-list-month, #expenses-list-year').on('change', function (e) {
+
+			var tempID = $(e.delegateTarget).attr('data-temppage');
+			var catID = $(window.globals.temp[tempID].container).find('#expenses-list-category').val();
+
+			updateItemList(catID, tempID, true);
+			console.debug("change list time", e, catID, tempID);
+		});
+	}
+
 	// add tempID to page-content container and attach infinite scroll
 	$(page.container).find('.page-content').addClass('infinite-scroll-' + tempID);
 	expApp.attachInfiniteScroll('.infinite-scroll-' + tempID);
@@ -1263,7 +1378,7 @@ expApp.onPageInit('expenses-list', function (page) {
 	  // Set loading flag
 	  window.globals.state.infiniteScrollLoading = true;
 
-	  // Emulate 1s loading
+	  // Emulate 100ms loading
 	  setTimeout(function () {
 	    // Reset loading flag
 	    window.globals.state.infiniteScrollLoading = false;
