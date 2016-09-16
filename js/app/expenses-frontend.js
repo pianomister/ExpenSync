@@ -1839,7 +1839,7 @@ expApp.onPageInit('stats', function (page) {
 			return $('#dc-month-chart').width();
 		})
 		.height(200)
-		.margins({left: 35, right: 30, top: 20, bottom: 20})
+		.margins({left: 40, right: 30, top: 20, bottom: 20})
 		.dimension(dateDim)
 		.group(dateTotal)
 		.x( monthScale )
@@ -1868,7 +1868,7 @@ expApp.onPageInit('stats', function (page) {
 			return $('#dc-trend-chart').width();
 		})
 		.height(200)
-		.margins({left: 35, right: 30, top: 20, bottom: 20})
+		.margins({left: 40, right: 30, top: 20, bottom: 20})
 		.dimension(fullDateDim)
 		.brushOn(false)
 		.elasticX(true)
@@ -1887,7 +1887,7 @@ expApp.onPageInit('stats', function (page) {
 		})
 		.renderHorizontalGridLines(true)
 		.x( d3.time.scale() )
-		.legend(dc.legend().x(40).y(20).gap(10))
+		.legend(dc.legend().x(50).y(20).gap(10))
 		.compose([
 			dc.lineChart(trendChart)
 				.ordinalColors(['#ff9500'])
