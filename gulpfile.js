@@ -39,8 +39,7 @@ var jsFiles = {
 	vendor: [
 		// 3rd party libs
 		'node_modules/jquery/dist/jquery.min.js',
-		//'node_modules/framework7/dist/framework7.min.js',
-    paths.src.js + 'delete/framework7.min.js',
+		'node_modules/framework7/dist/framework7.min.js',
 		'node_modules/crossfilter2/crossfilter.min.js',
 		'node_modules/d3/d3.min.js',
 		'node_modules/dc/dc.min.js',

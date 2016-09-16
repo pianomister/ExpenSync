@@ -2345,7 +2345,7 @@ function initApp() {
 
 		monthChart.width(function () {
 			return $('#dc-month-chart').width();
-		}).height(200).margins({ left: 35, right: 30, top: 20, bottom: 20 }).dimension(dateDim).group(dateTotal).x(monthScale).xUnits(d3.time.months).elasticX(true).elasticY(true).colors(d3.scale.ordinal().domain(["positive", "negative"]).range(["#4cd964", "#ff3b30"])).colorAccessor(function (d) {
+		}).height(200).margins({ left: 40, right: 30, top: 20, bottom: 20 }).dimension(dateDim).group(dateTotal).x(monthScale).xUnits(d3.time.months).elasticX(true).elasticY(true).colors(d3.scale.ordinal().domain(["positive", "negative"]).range(["#4cd964", "#ff3b30"])).colorAccessor(function (d) {
 			if (d.value > 0) return "positive";
 			return "negative";
 		}).brushOn(true).round(d3.time.month.round).title(function (d) {
@@ -2356,7 +2356,7 @@ function initApp() {
 
 		trendChart.width(function () {
 			return $('#dc-trend-chart').width();
-		}).height(200).margins({ left: 35, right: 30, top: 20, bottom: 20 }).dimension(fullDateDim).brushOn(false).elasticX(true).elasticY(true).title(function (d) {
+		}).height(200).margins({ left: 40, right: 30, top: 20, bottom: 20 }).dimension(fullDateDim).brushOn(false).elasticX(true).elasticY(true).title(function (d) {
 			var dateObj = d.key;
 			var title = dateObj.getDate() + '.' + (dateObj.getMonth() + 1) + '.' + dateObj.getFullYear() + ':';
 			if (d.value.type === 'price') {
@@ -2367,7 +2367,7 @@ function initApp() {
 			// TODO debug delete
 			title += " ||| debug:" + JSON.stringify(d.value);
 			return title;
-		}).renderHorizontalGridLines(true).x(d3.time.scale()).legend(dc.legend().x(40).y(20).gap(10)).compose([dc.lineChart(trendChart).ordinalColors(['#ff9500']).group(removeEmptyBinsCount(averageGroup), 'Daily expense').valueAccessor(function (d) {
+		}).renderHorizontalGridLines(true).x(d3.time.scale()).legend(dc.legend().x(50).y(20).gap(10)).compose([dc.lineChart(trendChart).ordinalColors(['#ff9500']).group(removeEmptyBinsCount(averageGroup), 'Daily expense').valueAccessor(function (d) {
 			return d.value.total;
 		}), dc.lineChart(trendChart).ordinalColors(['#4cd964']).group(accumulateGroup(removeEmptyBinsCount(runningTotalGroup), accountSum), 'Total balance').valueAccessor(function (d) {
 			return d.value.accumulated;
