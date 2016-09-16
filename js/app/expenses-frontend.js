@@ -6,7 +6,7 @@
  * UI logic and support            *
  ***********************************/
 
- // TODO fix issue with item update: time shifted +2 hours
+ // TODO fix issue with item update: time shifted +2 hours -> use moment.js
 
 // create app object
 var expApp = new Framework7({
@@ -609,7 +609,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		expApp.addNotification({
 			title: 'Item removed',
 			message: formatPrice(delItem[0].price) + '</span> for <span class="color-blue">' + delItemCategory[0].description + '</span>' + notificationDescription,
-			hold: 1000
+			hold: 2000
 		});
 
 	});
@@ -801,8 +801,6 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 		var endDate = new Date(selectedYear, selectedMonth, 1, 0, 0, 0, 0);
 		startDate.setFullYear(selectedYear, selectedMonth);
 		endDate.setFullYear(selectedYear, selectedMonth+1);
-
-		console.debug("selectmonth change handler", selectedYear, selectedMonth);
 
 		page.query.start = startDate.getTime();
 		page.query.end = endDate.getTime();
@@ -1269,7 +1267,7 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 				expApp.addNotification({
 					title: 'Expense added',
 					message: formatPrice(addPrice) + ' for <span class="color-blue">' + addCategoryDescription[0].description + '</span>' + notificationDescription,
-					hold: 1000
+					hold: 2000
 				});
 
 				//trigger refresh of menu
@@ -1304,7 +1302,6 @@ pageIndex = expApp.onPageInit('index index-1', function (page) {
 	for(var a = 0; a < accounts.length; a++) {
 
 		var balance = getAccountBalance(accounts[a].uniqueid);
-		//TODO console.debug('index page, account balances: ', accounts[a].uniqueid, balance);
 
 		$(page.container).find('#index-account-balance').append(
 			'<li><div class="item-content">' +
@@ -1339,7 +1336,6 @@ expApp.onPageInit('expenses-list', function (page) {
 		var tempID = $(e.delegateTarget).attr('data-temppage');
 
 		updateItemList(catID, tempID, true);
-		console.debug("change list category", e, catID, tempID);
 	});
 
 	// if page has month/year filter, activate
@@ -1358,7 +1354,6 @@ expApp.onPageInit('expenses-list', function (page) {
 			var catID = $(window.globals.temp[tempID].container).find('#expenses-list-category').val();
 
 			updateItemList(catID, tempID, true);
-			console.debug("change list time", e, catID, tempID);
 		});
 	}
 
@@ -1713,36 +1708,48 @@ expApp.onPageInit('stats', function (page) {
 		categories[c.uniqueid] = c.description;
 	});
 
-	var runningTotal = accountSum;
+	//var runningTotal = accountSum;
 	data.sort(function (a, b) {
 		return (a.date < b.date) ? -1 : (a.date > b.date ? 1 : 0);
 	});
 	data.forEach(function (d) {
 		d.timestamp = new Date(d.timestamp);
+		d.timestampDay = new Date(d.timestamp.getFullYear(), d.timestamp.getMonth(), d.timestamp.getDate());
 		d.monthYear = d3.time.format("%Y/%m").parse( d.timestamp.getFullYear() + '/' + (d.timestamp.getMonth()+1) );
 
-		runningTotal += d.price;
-		d.runningTotal = runningTotal;
+		//runningTotal += d.price;
+		//d.runningTotal = runningTotal;
 	});
 
-	// reduce functions for running total
+	// reduce functions for daily total and average
 	function reduceAdd(p, v) {
     p.total += v.price;
     p.count++;
-    p.average = p.total / p.count;
+    //p.average = p.total / p.count;
     return p;
 	}
 	function reduceRemove(p, v) {
 			p.total -= v.price;
 			p.count--;
-			p.average = p.total / p.count;
+			//p.average = p.total / p.count;
 			return p;
 	}
 	function reduceInitial() {
 			return {
 					total: 0,
 					count: 0,
-					average: 0,
+					//average: 0,
+					type: 'price'
+			};
+	}
+
+	// reduce functions for running total
+	function runningReduceInitial() {
+			return {
+					total: 0,
+					count: 0,
+					//average: 0,
+					type: 'runningTotal'
 			};
 	}
 
@@ -1754,10 +1761,10 @@ expApp.onPageInit('stats', function (page) {
 	var minDate = dateDim.bottom(1)[0].timestamp;
 	var maxDate = dateDim.top(1)[0].timestamp;
 
-	//facts.groupAll();
-	var fullDateDim = facts.dimension( dc.pluck('timestamp') );
+	facts.groupAll();
+	var fullDateDim = facts.dimension( dc.pluck('timestampDay') );
 	var averageGroup = fullDateDim.group().reduce(reduceAdd, reduceRemove, reduceInitial);
-	var runningTotalGroup = fullDateDim.group().reduceSum( dc.pluck('runningTotal') );
+	var runningTotalGroup = fullDateDim.group().reduce(reduceAdd, reduceRemove, runningReduceInitial);
 
 	facts.groupAll();
 	var categoryDim = facts.dimension( dc.pluck('category') );
@@ -1805,6 +1812,27 @@ expApp.onPageInit('stats', function (page) {
 		$('#dc-account-total-minus-sum').text(getFormattedPrice(accountTotalMinusSum.value()));
 		$('#dc-account-total-plus-sum').text(getFormattedPrice(accountTotalPlusSum.value()));
 	};
+	var removeEmptyBinsCount = function (sourceGroup) {
+    return {
+      all: () => {
+        return sourceGroup.all().filter(function(d) {
+          return d.value.count != 0;
+        });
+      }
+    };
+	};
+	var accumulateGroup = function (sourceGroup, startValue) {
+    return {
+      all: () => {
+        var cumulate = startValue;
+        return sourceGroup.all().map(function(d) {
+          cumulate += d.value.total;
+					d.value.accumulated = cumulate;
+          return d;
+      	});
+      }
+    };
+	};
 
 	monthChart
 		.width(function () {
@@ -1846,11 +1874,15 @@ expApp.onPageInit('stats', function (page) {
 		.elasticX(true)
 		.elasticY(true)
 		.title(function (d) {
-			var title = d.key.getDay() + '.' + (d.key.getMonth() + 1) + '.' + d.key.getFullYear() + ':';
-			if (typeof d.value === 'object')
+			var dateObj = d.key;
+			var title = dateObj.getDate() + '.' + (dateObj.getMonth() + 1) + '.' + dateObj.getFullYear() + ':';
+			if (d.value.type === 'price') {
 				title += ' expense for this day ' + parseFloat(d.value.total).toFixed(2);
-			else
-				title += ' overall total balance ' + parseFloat(d.value).toFixed(2);
+			} else {
+				title += ' overall total balance ' + parseFloat(d.value.accumulated).toFixed(2);
+			}
+			// TODO debug delete
+			title += " ||| debug:" + JSON.stringify(d.value);
 			return title;
 		})
 		.renderHorizontalGridLines(true)
@@ -1859,13 +1891,16 @@ expApp.onPageInit('stats', function (page) {
 		.compose([
 			dc.lineChart(trendChart)
 				.ordinalColors(['#ff9500'])
-				.group(averageGroup, 'Daily expense')
+				.group( removeEmptyBinsCount(averageGroup), 'Daily expense')
 				.valueAccessor(function (d) {
-					return d.value.average;
+					return d.value.total;
 				}),
 			dc.lineChart(trendChart)
 				.ordinalColors(['#4cd964'])
-				.group(runningTotalGroup, 'Total balance')
+				.group( accumulateGroup(removeEmptyBinsCount(runningTotalGroup), accountSum), 'Total balance')
+				.valueAccessor(function (d) {
+					return d.value.accumulated;
+				})
 		])
 		.yAxis().ticks(4);
 
