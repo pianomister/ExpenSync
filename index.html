@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html manifest="expenses.manifest" class="with-statusbar-overlay">
+<html manifest="expensync.manifest" class="with-statusbar-overlay">
   <head>
     <meta charset="utf-8">
     <title>ExpenSync</title>
@@ -14,13 +14,16 @@
 	  <link rel="apple-touch-startup-image" sizes="640x920" href="img/startup640x920.png" />
     <!-- iPhone 6 -->
     <link href="750x1294.png" media="(device-width: 375px) and (device-height: 667px) and (orientation: portrait) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image">
-    <link rel="stylesheet" href="css/framework7.min.css">
-    <link rel="stylesheet" href="css/framework7.themes.min.css">
-    <link rel="stylesheet" href="css/icomoon.css">
-		<link rel="stylesheet" href="css/dc.css">
-    <link rel="stylesheet" href="css/expenses.css">
+    <link rel="stylesheet" href="dist/main.min.css">
   </head>
   <body class="theme-white">
+    <!-- Splash screen -->
+    <div class="splash-screen">
+      <img src="img/icon128.png" width="64" height="64" />
+      <p>Connect with Dropbox ...</p>
+      <span style="width:42px; height:42px" class="preloader preloader-white"></span>
+    </div>
+
     <!-- Status bar overlay for homescreen mode-->
     <div class="statusbar-overlay"></div>
 
@@ -306,6 +309,17 @@
     			<div data-page="index-1" class="page">
     				<!-- Scrollable page content-->
     				<div class="page-content">
+              <!--div class="row">
+                <div class="col-100">
+                  <div class="content-block tablet-inset">
+                    <div class="content-block-inner color-white" style="background-color: #ff3b30">
+                      <p>
+                        This app is in development mode! Features are not tested yet, and still not all functionality is implemented.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div-->
     					<div class="row">
     						<div class="col-100 tablet-50">
 
@@ -360,12 +374,6 @@
     								</ul>
     							</div>
 
-                  <div class="content-block-title">Backup &amp; Sync</div>
-                  <div class="content-block index-sync">
-                    <p><a class="button" onclick="syncInit();"><i class="ion icon-ion-social-dropbox"></i> Sync now with Dropbox</a></p>
-                    <p>You might be asked to login with Dropbox first before you can use synchronization.</p>
-                  </div>
-
     						</div>
     						<div class="col-100 tablet-50">
 
@@ -413,8 +421,13 @@
         </div>
       </div>
     </div>
-    <!-- Path to JS Libraries -->
-	  <script type="text/javascript" src="js/framework7.min.js"></script>
+    <!-- Paths to JS Libraries -->
+    <!--
+	  <script type="text/javascript" src="dist/vendor.js"></script>
+	  <script type="text/javascript" src="dist/app.js"></script>
+    -->
+	  <script type="text/javascript" src="dist/main.js"></script>
+	  <!--script type="text/javascript" src="js/framework7.min.js"></script>
   	<script type="text/javascript" src="js/jquery.min.js"></script>
   	<script type="text/javascript" src="js/localstoragedb.min.js"></script>
   	<script type="text/javascript" src="js/dropbox-datastores-1.2.0.js"></script>
@@ -424,7 +437,7 @@
 		<script type="text/javascript" src="js/dc.min.js"></script>
   	<script type="text/javascript" src="js/expenses-backend.js"></script>
     <script type="text/javascript" src="js/expenses-stats.js"></script>
-    <script type="text/javascript" src="js/expenses-sync.js"></script>
-    <script type="text/javascript" src="js/expenses-frontend.js"></script>
+    <script type="text/javascript" src="js/multideviceDatabase/fileDB.js"></script>
+    <script type="text/javascript" src="js/expenses-frontend.js"></script-->
   </body>
 </html>

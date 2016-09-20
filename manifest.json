@@ -6,7 +6,7 @@
   "app": {
     "background": {
 			"persistent": false,
-      "scripts": ["js/appstarter-chrome.js"]
+      "scripts": ["js/app/appstarter-chrome.js"]
     }
   },
 	"permissions": [

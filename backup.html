@@ -15,6 +15,19 @@
 					<div class="content-block-title">Data Export</div>
 					<div class="list-block tablet-inset">
 						<ul>
+							<li><div class="item-content">
+									<div class="item-inner">
+										<div class="item-title label">Which data?</div>
+										<div class="item-input">
+											<select id="export-table">
+												<option value="item" selected>Items (Expenses)</option>
+												<option value="category">Categories</option>
+												<option value="account">Accounts</option>
+												<option value="settings">Settings</option>
+											</select>
+										</div>
+									</div>
+								</div></li>
 							<li>
 								<a class="item-link list-button external" id="export-csv">Export CSV file</a>
 							</li>
@@ -35,13 +48,53 @@
 				</div>
 				<div class="col-100 tablet-50">
 
+					<!--
 					<div class="content-block-title">Dropbox Backup</div>
 					<div class="content-block tablet-inset">
 						<div class="content-block-inner">
 							Please activate dropbox on overview page and set preferences in settings.
 						</div>
 					</div>
+					-->
 
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-100 tablet-50">
+					<div class="content-block-title">Data Import from JSON</div>
+					<div class="list-block tablet-inset">
+						<ul>
+							<li><div class="item-content">
+								<div class="item-inner">
+									<div class="item-title label">Which data?</div>
+									<div class="item-input">
+										<select id="form-import-table">
+											<option value="item" selected>Items (Expenses)</option>
+											<option value="category">Categories</option>
+											<option value="account">Accounts</option>
+											<option value="settings">Settings</option>
+										</select>
+									</div>
+								</div>
+							</div></li>
+							<li class="align-top"><div class="item-content">
+								<div class="item-inner">
+									<div class="item-title label">JSON data</div>
+									<div class="item-input">
+										<textarea id="form-import-json-data" placeholder="JSON import data"></textarea>
+									</div>
+								</div>
+							</div></li>
+							<li>
+								<a id="form-import-json-submit" class="list-button item-link">Import data</a>
+							</li>
+						</ul>
+						<div class="list-block-label">
+							<p>
+								You may use this to import data from an export you did earlier in JSON format. This will overwrite existing entries with the same ID.
+							</p>
+						</div>
+					</div>
 				</div>
 			</div>
 

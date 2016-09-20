@@ -5,8 +5,8 @@
  * All functionality necessary     *
  * for Dropbox synchronization     *
  *                                 *
- * CONTRIBUTORS                    *
- * Stephan Giesau                  *
+ * TODO file can be deleted        *
+ *      after API upgrade          *
  ***********************************/
 
 
