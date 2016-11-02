@@ -129,25 +129,25 @@ function _classCallCheck(e, t) {
 }(),
     Table = function () {
   function e(t, n, a, i, r) {
-    var l = this;_classCallCheck(this, e), n = n || !1, i = i || !1, r = r || !1;var o, s;if (this.tableFileData = {}, this.dataFileObjects = [], this.data = [], this.client = a, this.tableName = t, s = new File(t, a), n) {
-      var u = s.readFile();this.data[0] = { maxSize: 62500, dataFiles: [] }, "Array" == typeof n && (this.data[0].fields = n), o = this.createNewDatafile(), this.dataFileObjects.push(o), this.data[0].dataFiles.push(o.getName()), s.insert(this.data[0]), this.tableFileData = this.data[0], u.then(function (e) {
+    var l = this;_classCallCheck(this, e), n = n || !1, i = i || !1, r = r || !1;var o;if (this.tableFileData = {}, this.dataFileObjects = [], this.data = [], this.client = a, this.tableFile = new File(t, a), n) {
+      var s = this.tableFile.readFile();this.data[0] = { maxSize: 62500, dataFiles: [] }, "Array" == typeof n && (this.data[0].fields = n), o = this.createNewDatafile(), this.dataFileObjects.push(o), this.data[0].dataFiles.push(o.getName()), this.tableFile.insert(this.data[0]), this.tableFileData = this.data[0], s.then(function (e) {
         i && i(o.getName());
       });
-    } else s.readFile().then(function (e) {
-      var n, a;l.data = s.getDataArray(), l.tableFileData = l.data[0];var o = [],
-          u = !0,
-          c = !1,
-          f = void 0;try {
-        for (var y, h = l.tableFileData.dataFiles[Symbol.iterator](); !(u = (y = h.next()).done); u = !0) {
-          n = y.value, a = new File(n, l.client), l.dataFileObjects.push(a), o.push(a.readFile());
+    } else this.tableFile.readFile().then(function (e) {
+      var n, a;l.data = l.tableFile.getDataArray(), l.tableFileData = l.data[0];var o = [],
+          s = !0,
+          u = !1,
+          c = void 0;try {
+        for (var f, h = l.tableFileData.dataFiles[Symbol.iterator](); !(s = (f = h.next()).done); s = !0) {
+          n = f.value, a = new File(n, l.client), l.dataFileObjects.push(a), o.push(a.readFile());
         }
       } catch (e) {
-        c = !0, f = e;
+        u = !0, c = e;
       } finally {
         try {
-          !u && h.return && h.return();
+          !s && h.return && h.return();
         } finally {
-          if (c) throw f;
+          if (u) throw c;
         }
       }Promise.all(o).then(function (e) {
         i && (console.debug("[Table.constructor] successfully loaded files for", t, e), i(e));
@@ -172,9 +172,9 @@ function _classCallCheck(e, t) {
         } finally {
           if (n) throw a;
         }
-      }return tableFile.update(void 0, { dataFiles: dataFiles });
+      }return this.tableFile.update(void 0, { dataFiles: dataFiles });
     } }, { key: "insert", value: function value(e) {
-      var t = this.dataFileObjects[this.dataFileObjects.length - 1];return t.getSize() > this.tableFileData.maxSize && (t = createNewDatafile(), this.dataFileObjects.push(t), this.tableFileData.dataFiles.push(t.getName()), this.updateTableData()), t.insert(e);
+      var t = this.dataFileObjects[this.dataFileObjects.length - 1];return t.getSize() > this.tableFileData.maxSize && (t = this.createNewDatafile(), this.dataFileObjects.push(t), this.tableFileData.dataFiles.push(t.getName()), this.updateTableData()), t.insert(e);
     } }, { key: "query", value: function value(e, t, n, a) {
       var i, r, l;e || (e = null), t || (t = null), r = [];var o = !0,
           s = !1,
@@ -191,19 +191,19 @@ function _classCallCheck(e, t) {
           if (s) throw u;
         }
       }if (null != t && t instanceof Array) {
-        var y = !0,
-            h = !1,
+        var h = !0,
+            y = !1,
             d = void 0;try {
-          for (var v, b = t[Symbol.iterator](); !(y = (v = b.next()).done); y = !0) {
+          for (var v, b = t[Symbol.iterator](); !(h = (v = b.next()).done); h = !0) {
             l = v.value, r.sort(this.sortResults(l[0], l.length > 1 ? l[1] : null));
           }
         } catch (e) {
-          h = !0, d = e;
+          y = !0, d = e;
         } finally {
           try {
-            !y && b.return && b.return();
+            !h && b.return && b.return();
           } finally {
-            if (h) throw d;
+            if (y) throw d;
           }
         }
       }return n = n && "number" == typeof n ? n : null, a = a && "number" == typeof a ? a : null, n && a ? r = r.slice(n, n + a) : n ? r = r.slice(n) : a && (r = r.slice(n, a)), r;
