@@ -35,7 +35,7 @@ var jsFiles = {
 		'node_modules/dc/dc.min.js',
 		// local 3rd party libs
 		paths.src.js + 'vendor/md5.js',
-		paths.src.js + 'vendor/dropbox-datastores-1.2.0.js'
+		paths.src.js + 'vendor/dropbox-sdk-2.5.10.min.js'
 	],
 	app: [
 		// fileDB lib
