@@ -1,5 +1,340 @@
 "use strict";
 
+var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+function _classCallCheck(e, t) {
+  if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
+}function _classCallCheck(e, t) {
+  if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
+}function _classCallCheck(e, t) {
+  if (!(e instanceof t)) throw new TypeError("Cannot call a class as a function");
+}var _createClass = function () {
+  function e(e, t) {
+    for (var n = 0; n < t.length; n++) {
+      var a = t[n];a.enumerable = a.enumerable || !1, a.configurable = !0, "value" in a && (a.writable = !0), Object.defineProperty(e, a.key, a);
+    }
+  }return function (t, n, a) {
+    return n && e(t.prototype, n), a && e(t, a), t;
+  };
+}(),
+    File = function () {
+  function e(t, n) {
+    _classCallCheck(this, e), this.fileName = t, this.syncing = !1, this.syncingAddedData = null, this.timeExtension = 0, this.timeLastRead = 0, this.fileStats = null, this.dataObject = {}, this.client = n;
+  }return _createClass(e, [{ key: "query", value: function value(e) {
+      return this.toDataArray(this.queryHelper(e));
+    } }, { key: "queryHelper", value: function value(e) {
+      return "function" == typeof e ? this.queryByFunction(e) : null == e ? this.dataObject : this.queryByValue(e);
+    } }, { key: "remove", value: function value(e) {
+      var t, n;this.scheduleSync(), n = this.queryHelper(e);for (t in n) {
+        n.hasOwnProperty(t) && delete this.dataObject[t];
+      }return this.query(e);
+    } }, { key: "update", value: function value(e, t) {
+      var n, a, i, r, l, o;r = this.queryHelper(e);for (a in r) {
+        if (r.hasOwnProperty(a)) {
+          l = r[a], i = this.clone(l);for (n in t) {
+            t.hasOwnProperty(n) && (o = t[n], i[n] = o);
+          }this.remove(this.dataObject[a]), this.insert(i);
+        }
+      }return this.query(e);
+    } }, { key: "updateByFunction", value: function value(e, t) {
+      var n = this.queryHelper(e);for (id in n) {
+        if (n.hasOwnProperty(id)) {
+          var a = n[id],
+              i = t(this.clone(a));this.remove(this.dataObject[id]), this.insert(i);
+        }
+      }return this.query(e);
+    } }, { key: "insert", value: function value(e) {
+      this.scheduleSync();var t = this.getNextId();return this.dataObject[t] = e;
+    } }, { key: "queryByFunction", value: function value(e) {
+      var t, n, a, i;a = {}, n = this.dataObject;for (t in n) {
+        n.hasOwnProperty(t) && (i = n[t], e(this.clone(i)) === !0 && (a[t] = this.clone(i)));
+      }return a;
+    } }, { key: "queryByValue", value: function value(e) {
+      var t, n, a, i, r, l;r = {}, i = this.dataObject;for (a in i) {
+        if (i.hasOwnProperty(a)) {
+          l = i[a], n = null;for (t in e) {
+            e.hasOwnProperty(t) && (n = l[t] === e[t] && (null === n || n && !0));
+          }n && (r[a] = this.clone(l));
+        }
+      }return r;
+    } }, { key: "getNextId", value: function value() {
+      var e, t;return t = new Date().getTime(), this.timeExtension++, e = this.timeExtension % 1e3, e < 10 ? t + "00" + e : e < 100 ? t + "0" + e : "" + t + e;
+    } }, { key: "scheduleSync", value: function value() {
+      var e = this;if (!this.syncing) return this.syncing = !0, setTimeout(function () {
+        e.sync();
+      }, 0);
+    } }, { key: "sync", value: function value() {
+      var e,
+          t,
+          n = this;this.syncing = !1, t = new Date().getTime(), e = "0", null != this.fileStats && (e = this.fileStats.rev), this.readStat().then(function (a) {
+        if (e !== n.fileStats.rev) {
+          var i = n.clone(n.dataObject);n.readFile().then(function (e) {
+            n.dataObject = n.merge(i, n.dataObject), n.timeLastRead = t, n.writeFile();
+          });
+        } else n.timeLastRead = t, n.writeFile();
+      });
+    } }, { key: "getVersionTag", value: function value() {
+      return this.fileStats.rev;
+    } }, { key: "getSize", value: function value() {
+      var e;return e = 0, null != this.syncingAddedData && (e = JSON.stringify(this.syncingAddedData).length), JSON.stringify(this.dataObject).length + e;
+    } }, { key: "getName", value: function value() {
+      return this.fileName;
+    } }, { key: "getData", value: function value() {
+      return this.clone(this.dataObject);
+    } }, { key: "getDataArray", value: function value() {
+      return this.toDataArray(this.dataObject);
+    } }, { key: "toDataArray", value: function value(e) {
+      var t, n;t = [];for (n in e) {
+        t.push(e[n]);
+      }return this.clone(t);
+    } }, { key: "readFile", value: function value() {
+      var e = this;return new Promise(function (t, n) {
+        e.client.filesDownload({ path: "/" + e.fileName }).then(function (n) {
+          e.fileStats = n;var a = n.fileBlob,
+              i = new FileReader();i.addEventListener("loadend", function () {
+            e.dataObject = JSON.parse(i.result), t(e.dataObject);
+          }), i.readAsText(a);
+        }).catch(function (t) {
+          e.error(t);
+        });
+      });
+    } }, { key: "writeFile", value: function value() {
+      var e = this;return new Promise(function (t, n) {
+        e.client.filesUpload({ path: "/" + e.fileName, contents: JSON.stringify(e.dataObject), mode: "overwrite" }).then(function (n) {
+          e.fileStats = n, t(n);
+        }).catch(function (t) {
+          e.error(t);
+        });
+      });
+    } }, { key: "readStat", value: function value() {
+      var e = this;return new Promise(function (t, n) {
+        e.client.filesGetMetadata({ path: "/" + e.fileName }).then(function (n) {
+          e.fileStats = n, t(n);
+        }).catch(function (t) {
+          e.error(t);
+        });
+      });
+    } }, { key: "error", value: function value(e) {
+      var t;if (t = !0, null != e) switch (e.status) {case 409:
+          t = !1, console.info("File not found - creating new file"), this.writeFile();break;default:
+          console.error(e), t = !1;}return t;
+    } }, { key: "merge", value: function value(e, t) {
+      var n, a, i;console.info("Merging files"), a = {}, i = 0;for (n in t) {
+        t.hasOwnProperty(n) && (null != e[n] && (a[n] = t[n]), null == e[n] && (i = parseInt(n.slice(0, 13)), i > this.timeLastRead && (a[n] = e[n])));
+      }return a;
+    } }, { key: "clone", value: function value(e) {
+      var t = JSON.stringify(e);return JSON.parse(t);
+    } }, { key: "call", value: function value(e) {
+      return "function" == typeof e ? e() : void 0;
+    } }]), e;
+}(),
+    _createClass = function () {
+  function e(e, t) {
+    for (var n = 0; n < t.length; n++) {
+      var a = t[n];a.enumerable = a.enumerable || !1, a.configurable = !0, "value" in a && (a.writable = !0), Object.defineProperty(e, a.key, a);
+    }
+  }return function (t, n, a) {
+    return n && e(t.prototype, n), a && e(t, a), t;
+  };
+}(),
+    Table = function () {
+  function e(t, n, a, i, r) {
+    var l = this;_classCallCheck(this, e), n = n || !1, i = i || !1, r = r || !1;var o;if (this.tableFileData = {}, this.dataFileObjects = [], this.data = [], this.client = a, this.tableFile = new File(t, a), n) {
+      var s = this.tableFile.readFile();this.data[0] = { maxSize: 62500, dataFiles: [] }, "Array" == typeof n && (this.data[0].fields = n), o = this.createNewDatafile(), this.dataFileObjects.push(o), this.data[0].dataFiles.push(o.getName()), this.tableFile.insert(this.data[0]), this.tableFileData = this.data[0], s.then(function (e) {
+        i && i(o.getName());
+      });
+    } else this.tableFile.readFile().then(function (e) {
+      var t, n;l.data = l.tableFile.getDataArray(), l.tableFileData = l.data[0];var a = [],
+          o = !0,
+          s = !1,
+          u = void 0;try {
+        for (var c, f = l.tableFileData.dataFiles[Symbol.iterator](); !(o = (c = f.next()).done); o = !0) {
+          t = c.value, n = new File(t, l.client), l.dataFileObjects.push(n), a.push(n.readFile());
+        }
+      } catch (e) {
+        s = !0, u = e;
+      } finally {
+        try {
+          !o && f.return && f.return();
+        } finally {
+          if (s) throw u;
+        }
+      }Promise.all(a).then(function (e) {
+        i && i(e);
+      }).catch(function (e) {
+        console.error("[Table.constructor] error when loading file:", e), r && r(n.getName());
+      });
+    });
+  }return _createClass(e, [{ key: "getTableFields", value: function value() {
+      return this.tableFileData.fields;
+    } }, { key: "updateTableData", value: function value() {
+      var e;dataFiles = [];var t = !0,
+          n = !1,
+          a = void 0;try {
+        for (var i, r = this.dataFileObjects[Symbol.iterator](); !(t = (i = r.next()).done); t = !0) {
+          e = i.value, dataFiles.push(e.getName());
+        }
+      } catch (e) {
+        n = !0, a = e;
+      } finally {
+        try {
+          !t && r.return && r.return();
+        } finally {
+          if (n) throw a;
+        }
+      }return this.tableFile.update(void 0, { dataFiles: dataFiles });
+    } }, { key: "insert", value: function value(e) {
+      var t = this.dataFileObjects[this.dataFileObjects.length - 1];return t.getSize() > this.tableFileData.maxSize && (t = this.createNewDatafile(), this.dataFileObjects.push(t), this.tableFileData.dataFiles.push(t.getName()), this.updateTableData()), t.insert(e);
+    } }, { key: "query", value: function value(e, t, n, a) {
+      var i, r, l;e || (e = null), t || (t = null), r = [];var o = !0,
+          s = !1,
+          u = void 0;try {
+        for (var c, f = this.dataFileObjects[Symbol.iterator](); !(o = (c = f.next()).done); o = !0) {
+          i = c.value, r = r.concat(i.query(e));
+        }
+      } catch (e) {
+        s = !0, u = e;
+      } finally {
+        try {
+          !o && f.return && f.return();
+        } finally {
+          if (s) throw u;
+        }
+      }if (null != t && t instanceof Array) {
+        var h = !0,
+            y = !1,
+            d = void 0;try {
+          for (var v, b = t[Symbol.iterator](); !(h = (v = b.next()).done); h = !0) {
+            l = v.value, r.sort(this.sortResults(l[0], l.length > 1 ? l[1] : null));
+          }
+        } catch (e) {
+          y = !0, d = e;
+        } finally {
+          try {
+            !h && b.return && b.return();
+          } finally {
+            if (y) throw d;
+          }
+        }
+      }return n = n && "number" == typeof n ? n : null, a = a && "number" == typeof a ? a : null, n && a ? r = r.slice(n, n + a) : n ? r = r.slice(n) : a && (r = r.slice(n, a)), r;
+    } }, { key: "update", value: function value(e, t) {
+      var n = [],
+          a = !0,
+          i = !1,
+          r = void 0;try {
+        for (var l, o = this.dataFileObjects[Symbol.iterator](); !(a = (l = o.next()).done); a = !0) {
+          dfo = l.value, n = n.concat(dfo.updateByFunction(e, t));
+        }
+      } catch (e) {
+        i = !0, r = e;
+      } finally {
+        try {
+          !a && o.return && o.return();
+        } finally {
+          if (i) throw r;
+        }
+      }return n;
+    } }, { key: "createNewDatafile", value: function value() {
+      var e, t;return t = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (e) {
+        var t, n;return t = 16 * Math.random() | 0, n = "x" === e ? t : 3 & t | 8, n.toString(16);
+      }), e = new File("_" + t, this.client), e.readFile(), e;
+    } }, { key: "sortResults", value: function value(e, t) {
+      return t || (t = null), function (n, a) {
+        var i = "string" == typeof n[e] ? n[e].toLowerCase() : n[e],
+            r = "string" == typeof a[e] ? a[e].toLowerCase() : a[e];return "DESC" === t ? i == r ? 0 : i < r ? 1 : -1 : i == r ? 0 : i > r ? 1 : -1;
+      };
+    } }, { key: "call", value: function value(e) {
+      return "function" == typeof e ? e() : void 0;
+    } }]), e;
+}(),
+    _typeof = "function" == typeof Symbol && "symbol" == _typeof2(Symbol.iterator) ? function (e) {
+  return typeof e === "undefined" ? "undefined" : _typeof2(e);
+} : function (e) {
+  return e && "function" == typeof Symbol && e.constructor === Symbol ? "symbol" : typeof e === "undefined" ? "undefined" : _typeof2(e);
+},
+    _createClass = function () {
+  function e(e, t) {
+    for (var n = 0; n < t.length; n++) {
+      var a = t[n];a.enumerable = a.enumerable || !1, a.configurable = !0, "value" in a && (a.writable = !0), Object.defineProperty(e, a.key, a);
+    }
+  }return function (t, n, a) {
+    return n && e(t.prototype, n), a && e(t, a), t;
+  };
+}(),
+    FileDB = function () {
+  function e(t) {
+    _classCallCheck(this, e), this.apiKey = t, this.allTables = {}, e.file = File, this.client = null;
+  }return _createClass(e, [{ key: "getAccessToken", value: function value() {
+      var e = null;if ("undefined" != typeof Storage) {
+        var t = localStorage.getItem("ACCESS_TOKEN");"string" == typeof t && (e = t);
+      }var n = window.location.hash;return !e && n && n.length > 0 && n.substr(1).split("&").forEach(function (t) {
+        var n = t.split("=");"access_token" === n[0] && "string" == typeof n[1] && (e = n[1], localStorage.setItem("ACCESS_TOKEN", e));
+      }), e;
+    } }, { key: "isAuthenticated", value: function value() {
+      return !!this.getAccessToken();
+    } }, { key: "setupDropbox", value: function value(e) {
+      var t = this,
+          n = new Promise(function (e, n) {
+        var a = t.getAccessToken();if (a) t.client = new window.Dropbox({ accessToken: a }), t.loadTables(e, n);else {
+          t.client = new window.Dropbox({ clientId: t.apiKey });var i = t.client.getAuthenticationUrl(window.location);window.location.href = i;
+        }
+      });n.then(function (t) {
+        e();
+      }).catch(function (e) {
+        console.error("[setupDropbox] Error on authentication or table initialization.", e);
+      });
+    } }, { key: "query", value: function value(e, t, n, a, i) {
+      return t || (t = null), n || (n = null), a || (a = null), i || (i = null), this.allTables[e].query(t, n, a, i);
+    } }, { key: "queryAll", value: function value(e, t) {
+      return t ? this.query(e, t.hasOwnProperty("query") ? t.query : null, t.hasOwnProperty("sort") ? t.sort : null, t.hasOwnProperty("start") ? t.start : null, t.hasOwnProperty("limit") ? t.limit : null) : this.query(e);
+    } }, { key: "update", value: function value(e, t, n) {
+      if (t || (t = null), "function" != typeof n) return console.warn("updateFunction is empty, but required."), [];var a = this.allTables[e].update(t, n);return a;
+    } }, { key: "rowCount", value: function value(e) {
+      return this.query(e).length;
+    } }, { key: "createTable", value: function value(e, t) {
+      return this.allTables[e] = new Table(e, t, this.client);
+    } }, { key: "createTableWithData", value: function value(e, t) {
+      ("object" !== ("undefined" == typeof t ? "undefined" : _typeof(t)) || !t.length || t.length < 1) && error("Data supplied isn't in object form. Example: [{k:v,k:v},{k:v,k:v} ..]");var n = Object.keys(t[0]);this.createTable(e, n);for (var a = 0; a < t.length; a++) {
+        this.insert(e, t[a]);
+      }return this.query(e);
+    } }, { key: "insert", value: function value(e, t) {
+      return this.allTables[e].insert(t);
+    } }, { key: "tableFields", value: function value(e) {
+      return this.allTables[e].getTableFields();
+    } }, { key: "isNew", value: function value() {
+      return 0 === Object.keys(this.allTables).length;
+    } }, { key: "loadTables", value: function value(e, t) {
+      var n = this;this.client.filesListFolder({ path: "" }).then(function (a) {
+        var i,
+            r = [],
+            l = !0,
+            o = !1,
+            s = void 0;try {
+          for (var u, c = a.entries[Symbol.iterator](); !(l = (u = c.next()).done); l = !0) {
+            i = u.value, "_" !== i.name[0] && r.push(new Promise(function (e, t) {
+              n.allTables[i.name] = new Table(i.name, !1, n.client, e, t);
+            }));
+          }
+        } catch (e) {
+          o = !0, s = e;
+        } finally {
+          try {
+            !l && c.return && c.return();
+          } finally {
+            if (o) throw s;
+          }
+        }Promise.all(r).then(function (t) {
+          console.info("[loadTables] all files loaded successfully"), e(t);
+        }).catch(function (e) {
+          console.debug("[loadTables] failed loading at least one file, error of failed promise:", e), t(e);
+        });
+      }).catch(function (e) {
+        t(e);
+      });
+    } }]), e;
+}();
+"use strict";
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 /***********************************

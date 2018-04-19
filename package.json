@@ -22,7 +22,7 @@
     "d3": "^3.5.0",
     "dc": "2.1.0-dev",
     "framework7": "1.0.1",
-    "jquery": "^2.2.4",
+    "jquery": "^3.3.1",
     "multideviceDatabase": "git://github.com/pianomister/multideviceDatabase.git"
   },
   "devDependencies": {
