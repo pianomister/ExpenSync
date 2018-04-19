@@ -2058,39 +2058,4 @@ expApp.init();
 if (window.globals.properties.debug)
 	console.debug("DB content: ", JSON.parse(db.serialize()) );
 
-
-// Firefox install button
-var button = document.getElementById('button-install-firefox');
-
-if (navigator && navigator.mozApps) {
-	var manifest_url = location.href + 'manifest.webapp';
-
-	function install(ev) {
-	  ev.preventDefault();
-		//Manifest URL Definieren
-		// App Installieren
-	  var installLocFind = navigator.mozApps.install(manifest_url);
-	  installLocFind.onsuccess = function (data) {
-	    // Wenn die App Installiert ist
-			expApp.alert('ExpenSync was successfully installed!');
-	  };
-	  installLocFind.onerror = function () {
-	    // App ist nicht Installiert
-	    // installapp.error.name
-	    expApp.alert(installLocFind.error.name);
-	  };
-	};
-
-	var installCheck = navigator.mozApps.checkInstalled(manifest_url);
-
-	installCheck.onsuccess = function () {
-	  if (installCheck.result) {
-	    button.style.display = "none";
-	  } else {
-	    button.addEventListener('click', install, false);
-	  };
-	};
-} else {
-	button.style.display = "none";
-}
 }// end initApp()
