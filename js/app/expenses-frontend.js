@@ -418,7 +418,7 @@ function createItemListElements(domList, itemQuery, itemSort, itemLimit, domBala
 		page.infiniteScroll = {
 			endReached: false,
 			lastIndex: 0
-		}
+		};
 		// remove loader if list is shorter than load limit
 		if (items.length <= window.globals.static.infiniteScrollItemsPerLoad) {
 			expApp.detachInfiniteScroll('.infinite-scroll-' + tempID);
@@ -857,7 +857,7 @@ function updateItemList(filterCategory, tempID, infiniteScrollReset) {
 	}
 
 	// add page title
-	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ') );
+	$(page.navbarInnerContainer).find('#expenses-list-title').html( (page.query.title).replace('+', ' ').replace('%20', ' ') );
 	// add items to list
 	createItemListElements( $(page.container).find('#expenses-list-items'), itemQuery, itemSort, itemLimit, itemDomBalance, itemNoDelete, tempID, infiniteScrollReset );
 }

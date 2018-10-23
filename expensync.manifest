@@ -6,6 +6,7 @@ fonts/icomoon.eot
 fonts/icomoon.svg
 fonts/icomoon.ttf
 fonts/icomoon.woff
+img/icon128.png
 img/startup640x920.png
 img/startup750x1294.png
 about.html
@@ -21,4 +22,4 @@ stats.html
 NETWORK:
 *
 
-#19.04.2018 23:29
+#23.10.2018 20:00
