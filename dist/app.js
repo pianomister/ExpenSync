@@ -1716,15 +1716,23 @@ function initApp() {
 		$('#menu-list').empty();
 		var entriesAvailable = false;
 		var amountOfMonthsShown = getSettings('ui_months_shown');
+		var setFutureEntry = true;
 
 		for (var i = amountOfMonthsShown - 1; i >= 0; i--) {
 
-			startDate.setFullYear(currentYear, currentMonth);
-			endDate.setFullYear(currentYear, currentMonth + 1);
+			var monthLabel = setFutureEntry ? 'Future expenses' : window.i18n.month[currentMonth] + ' ' + currentYear;
+
+			if (setFutureEntry) {
+				startDate.setFullYear(currentYear, currentMonth + 1);
+				endDate.setFullYear(currentYear + 10, currentMonth + 1);
+				setFutureEntry = false;
+			} else {
+				startDate.setFullYear(currentYear, currentMonth);
+				endDate.setFullYear(currentYear, currentMonth + 1);
+			}
 
 			// create menu link label and data object (is given to expenses page)
 			// data object contains information which list to show
-			var monthLabel = window.i18n.month[currentMonth] + ' ' + currentYear;
 			var dataObj = {
 				request: 'timerange',
 				start: startDate.getTime(),
