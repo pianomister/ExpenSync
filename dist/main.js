@@ -1955,14 +1955,13 @@ function initApp() {
 		var amountOfMonthsShown = getSettings('ui_months_shown');
 		var setFutureEntry = true;
 
-		for (var i = amountOfMonthsShown - 1; i >= 0; i--) {
+		for (var i = amountOfMonthsShown; i >= 0; i--) {
 
 			var monthLabel = setFutureEntry ? 'Future expenses' : window.i18n.month[currentMonth] + ' ' + currentYear;
 
 			if (setFutureEntry) {
 				startDate.setFullYear(currentYear, currentMonth + 1);
 				endDate.setFullYear(currentYear + 10, currentMonth + 1);
-				setFutureEntry = false;
 			} else {
 				startDate.setFullYear(currentYear, currentMonth);
 				endDate.setFullYear(currentYear, currentMonth + 1);
@@ -1995,10 +1994,14 @@ function initApp() {
 				$('#menu-list').append('<li><a href="expenses-list.html?' + $.param(dataObj) + '" data-view=".view-main" class="item-link close-panel item-content">' + '	<div class="item-inner">' + '		<div class="item-title">' + monthLabel + '</div>' + '		<div class="item-after">' + formatPrice(monthBalance) + '</div>' + '</div></a></li>');
 			}
 
-			currentMonth--;
-			if (currentMonth == -1) {
-				currentMonth = 11;
-				currentYear--;
+			if (setFutureEntry) {
+				setFutureEntry = false;
+			} else {
+				currentMonth--;
+				if (currentMonth == -1) {
+					currentMonth = 11;
+					currentYear--;
+				}
 			}
 		}
 
