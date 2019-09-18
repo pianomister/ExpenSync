@@ -1761,7 +1761,7 @@ function initApp() {
 				setFutureEntry = false;
 			} else {
 				currentMonth--;
-				if (currentMonth == -1) {
+				if (currentMonth === -1) {
 					currentMonth = 11;
 					currentYear--;
 				}
