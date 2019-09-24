@@ -23,7 +23,7 @@
     "crossfilter2": "^1.4.7",
     "d3": "^3.5.0",
     "dc": "^2.1.0",
-    "framework7": "^1.0.1",
+    "framework7": "~1.0.7",
     "jquery": "^3.4.1",
     "multideviceDatabase": "git://github.com/pianomister/multideviceDatabase.git"
   },
